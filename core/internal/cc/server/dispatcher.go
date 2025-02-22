@@ -105,5 +105,13 @@ func operationDispatcher(w http.ResponseWriter, r *http.Request) {
 		handleModuleRun(w, r)
 	case transport.OperatorModuleSetOption:
 		handleModuleSetOption(w, r)
+	case transport.OperatorListModules:
+		handleListModules(w, r)
+	case transport.OperatorSearchModule:
+		handleSearchModule(w, r)
+	case transport.OperatorModuleListOptions:
+		handleModuleListOptions(w, r)
+	default:
+		w.WriteHeader(http.StatusBadRequest)
 	}
 }

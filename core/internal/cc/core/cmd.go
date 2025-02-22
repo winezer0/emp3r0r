@@ -93,7 +93,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "module",
 			Short:   "What options do we have?",
 			Args:    cobra.NoArgs,
-			Run:     cmdListModOptionsTable,
+			Run:     cmdModuleListOptions,
 		}
 		rootCmd.AddCommand(infoCmd)
 
@@ -333,7 +333,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "module",
 			Short:   "List all modules",
 			Args:    cobra.NoArgs,
-			Run:     CmdLsModules,
+			Run:     cmdListModules,
 		}
 		rootCmd.AddCommand(lsModCmd)
 
@@ -352,7 +352,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			Short:   "Search for a module",
 			Example: "search shell",
 			Args:    cobra.ExactArgs(1),
-			Run:     modules.ModuleSearch,
+			Run:     cmdSearchModule,
 		}
 		rootCmd.AddCommand(searchCmd)
 

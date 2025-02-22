@@ -59,16 +59,44 @@ func handleModuleSetOption(wrt http.ResponseWriter, req *http.Request) {
 	wrt.WriteHeader(http.StatusOK)
 }
 
-func handleListModules(wrt http.ResponseWriter, req *http.Request) {
-	// List all modules
-	mod_comment_map := make(map[string]string)
-	for mod_name, mod := range def.Modules {
-		mod_comment_map[mod_name] = mod.Comment
+// handleListModules returns a list of def.ModuleConfig
+func handleListModules(wrt http.ResponseWriter, _ *http.Request) {
+	// Send response
+	wrt.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(wrt).Encode(def.Modules); err != nil {
+		http.Error(wrt, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// handleSearchModule searches for a module and return a list of def.ModuleConfig
+func handleSearchModule(wrt http.ResponseWriter, req *http.Request) {
+	// Decode JSON request body
+	operation, err := DecodeJSONBody[def.Operation](wrt, req)
+	if err != nil {
+		return
+	}
+	if !operation.IsOptionSet("module_name") {
+		http.Error(wrt, "No module selected", http.StatusBadRequest)
+		return
+	}
+
+	// Search module
+	results := modules.ModuleSearch(*operation.ModuleName)
+	wrt.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(wrt).Encode(results); err != nil {
+		http.Error(wrt, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func handleModuleListOptions(wrt http.ResponseWriter, _ *http.Request) {
+	options := make([]def.ModOption, 0)
+	for _, option := range live.AvailableModuleOptions {
+		options = append(options, *option)
 	}
 
 	// Send response
 	wrt.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(wrt).Encode(mod_comment_map); err != nil {
+	if err := json.NewEncoder(wrt).Encode(options); err != nil {
 		http.Error(wrt, err.Error(), http.StatusInternalServerError)
 	}
 }

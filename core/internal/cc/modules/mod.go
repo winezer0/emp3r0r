@@ -7,7 +7,6 @@ import (
 
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
-	"github.com/jm33-m0/emp3r0r/core/lib/cli"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/spf13/cobra"
@@ -125,9 +124,12 @@ func ModuleRun() {
 	}
 }
 
+func CmdModuleSearch(cmd *cobra.Command, args []string) {
+	ModuleSearch(args[0])
+}
+
 // search modules, powered by fuzzysearch
-func ModuleSearch(cmd *cobra.Command, args []string) {
-	keyword := args[0]
+func ModuleSearch(keyword string) []*def.ModuleConfig {
 	search_targets := new([]string)
 	for name, mod_config := range def.Modules {
 		*search_targets = append(*search_targets, fmt.Sprintf("%s: %s", name, mod_config.Comment))
@@ -135,14 +137,12 @@ func ModuleSearch(cmd *cobra.Command, args []string) {
 	result := fuzzy.Find(keyword, *search_targets)
 
 	// render results
-	search_results := make(map[string]string)
+	search_results := make([]*def.ModuleConfig, 0)
 	for _, r := range result {
-		r_split := strings.Split(r, ": ")
-		if len(r_split) == 2 {
-			search_results[r_split[0]] = r_split[1]
-		}
+		mod := def.Modules[r]
+		search_results = append(search_results, mod)
 	}
-	cli.CliPrettyPrint("Module", "Comment", &search_results)
+	return search_results
 }
 
 func CmdSetActiveModule(cmd *cobra.Command, args []string) {

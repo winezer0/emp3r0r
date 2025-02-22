@@ -14,8 +14,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// cmdListModOptionsTable list currently available options for `set`, in a table
-func cmdListModOptionsTable(_ *cobra.Command, _ []string) {
+// listModOptionsTable list currently available options for `set`, in a table
+func listModOptionsTable(_ *cobra.Command, _ []string) {
 	if live.ActiveModule == "none" {
 		logging.Warningf("No module selected")
 		return
@@ -118,7 +118,7 @@ func cmdSetOptVal(cmd *cobra.Command, args []string) {
 
 	// hand to SetOption helper
 	live.SetOption(opt, val)
-	cmdListModOptionsTable(cmd, args)
+	listModOptionsTable(cmd, args)
 
 	operation := def.Operation{
 		AgentTag:   live.ActiveAgent.Tag,
@@ -145,4 +145,42 @@ func cmdSetActiveModule(cmd *cobra.Command, args []string) {
 	if err := sendJSONRequest(url, operation); err != nil {
 		logging.Errorf("Failed to set active module: %v", err)
 	}
+}
+
+func cmdListModules(_ *cobra.Command, _ []string) {
+	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorListModules)
+	operation := def.Operation{
+		Action:   "module",
+		AgentTag: live.ActiveAgent.Tag,
+	}
+	if err := sendJSONRequest(url, operation); err != nil {
+		logging.Errorf("Failed to list modules: %v", err)
+	}
+	// TODO: handle response
+}
+
+func cmdSearchModule(cmd *cobra.Command, args []string) {
+	moduleName := args[0]
+	operation := def.Operation{
+		Action:     "module",
+		ModuleName: &moduleName,
+	}
+
+	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorSearchModule)
+	if err := sendJSONRequest(url, operation); err != nil {
+		logging.Errorf("Failed to search module: %v", err)
+	}
+	// TODO: handle response
+}
+
+func cmdModuleListOptions(_ *cobra.Command, _ []string) {
+	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorModuleListOptions)
+	operation := def.Operation{
+		Action:   "module",
+		AgentTag: live.ActiveAgent.Tag,
+	}
+	if err := sendJSONRequest(url, operation); err != nil {
+		logging.Errorf("Failed to list module options: %v", err)
+	}
+	// TODO: handle response
 }

@@ -30,4 +30,10 @@ const (
 	OperatorModuleRun = OperatorRoot + "/module_run"
 	// OperatorModuleSetOption
 	OperatorModuleSetOption = OperatorRoot + "/module_set_option"
+	// OperatorListModules
+	OperatorListModules = OperatorRoot + "/list_modules"
+	// OperatorSearchModule
+	OperatorSearchModule = OperatorRoot + "/search_module"
+	// OperatorModuleListOptions
+	OperatorModuleListOptions = OperatorRoot + "/module_list_options"
 )
