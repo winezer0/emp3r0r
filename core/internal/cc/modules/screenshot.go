@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/server"
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
@@ -36,7 +36,7 @@ func ProcessScreenshot(out string, target *def.Emp3r0rAgent) (err error) {
 		return fmt.Errorf("%s", out)
 	}
 	logging.Infof("We will get %s screenshot file for you, wait", strconv.Quote(out))
-	_, err = server.GetFile(out, target)
+	_, err = ftp.GetFile(out, target)
 	if err != nil {
 		err = fmt.Errorf("get screenshot: %v", err)
 		return

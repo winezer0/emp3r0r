@@ -86,3 +86,24 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 		wrt.WriteHeader(http.StatusBadRequest)
 	}
 }
+
+// operationDispatcher routes operator requests to the correct handler.
+func operationDispatcher(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	api := vars["api"]
+	token := vars["token"]
+	logging.Debugf("Operator request: API: %s, token: %s", api, token)
+
+	switch api {
+	case transport.OperatorSetActiveAgent:
+		handleSetActiveAgent(w, r)
+	case transport.OperatorSendCommand:
+		handleSendCommand(w, r)
+	case transport.OperatorSetActiveModule:
+		handleSetActiveModule(w, r)
+	case transport.OperatorModuleRun:
+		handleModuleRun(w, r)
+	case transport.OperatorModuleSetOption:
+		handleModuleSetOption(w, r)
+	}
+}

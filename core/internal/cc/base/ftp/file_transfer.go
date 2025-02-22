@@ -1,4 +1,4 @@
-package server
+package ftp
 
 import (
 	"encoding/json"
@@ -85,8 +85,8 @@ func PutFile(lpath, rpath string, a *def.Emp3r0rAgent) error {
 	return nil
 }
 
-// generateGetFilePaths generates paths and filenames for GetFile
-func generateGetFilePaths(file_path string) (write_dir, save_to_file, tempname, lock string) {
+// GenerateGetFilePaths generates paths and filenames for GetFile
+func GenerateGetFilePaths(file_path string) (write_dir, save_to_file, tempname, lock string) {
 	file_path = filepath.Clean(file_path)
 	write_dir = fmt.Sprintf("%s%s", live.FileGetDir, filepath.Dir(file_path))
 	save_to_file = fmt.Sprintf("%s/%s", write_dir, util.FileBaseName(file_path))
@@ -99,7 +99,7 @@ func generateGetFilePaths(file_path string) (write_dir, save_to_file, tempname, 
 func GetFile(file_path string, agent *def.Emp3r0rAgent) (ftpSh *network.StreamHandler, err error) {
 	logging.Infof("Waiting for response from agent %s", agent.Tag)
 
-	write_dir, save_to_file, tempname, lock := generateGetFilePaths(file_path)
+	write_dir, save_to_file, tempname, lock := GenerateGetFilePaths(file_path)
 	logging.Debugf("Get file: %s, save to: %s, tempname: %s, lock: %s", file_path, save_to_file, tempname, lock)
 
 	// create directories

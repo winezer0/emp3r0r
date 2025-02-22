@@ -1,4 +1,4 @@
-package server
+package ftp
 
 import (
 	"fmt"
@@ -102,7 +102,7 @@ func downloadFromAgent(cmd *cobra.Command, args []string) {
 			// check if downloads are successful
 			for _, file := range files {
 				// filenames
-				_, target_file, tempname, lock := generateGetFilePaths(file)
+				_, target_file, tempname, lock := GenerateGetFilePaths(file)
 				// check if download is successful
 				if util.IsFileExist(tempname) || util.IsFileExist(lock) || !util.IsFileExist(target_file) {
 					logging.Warningf("%s: download seems unsuccessful", file)

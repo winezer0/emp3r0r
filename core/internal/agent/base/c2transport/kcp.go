@@ -28,7 +28,7 @@ func KCPC2Client() {
 		log.Print("KCPC2Client exited")
 		KCPC2Cancel()
 	}()
-	kcp_server_addr := fmt.Sprintf("%s:%s", common.RuntimeConfig.CCHost, common.RuntimeConfig.KCPServerPort)
+	kcp_server_addr := fmt.Sprintf("%s:%s", common.RuntimeConfig.CCAddress, common.RuntimeConfig.KCPServerPort)
 	err := transport.KCPTunClient(kcp_server_addr, common.RuntimeConfig.KCPClientPort,
 		common.RuntimeConfig.Password, def.MagicString, KCPC2Ctx, KCPC2Cancel)
 	if err != nil {

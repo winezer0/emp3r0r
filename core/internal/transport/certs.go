@@ -58,6 +58,8 @@ func GenCerts(
 	hosts []string,
 	outcert string,
 	outkey string,
+	caKeyFile string,
+	caCertFile string,
 	isCA bool,
 ) ([]byte, error) {
 	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -105,15 +107,15 @@ func GenCerts(
 		}
 
 		// ca key file
-		ca_data, err := os.ReadFile(CA_KEY_FILE)
+		ca_data, err := os.ReadFile(caKeyFile)
 		if err != nil {
-			return nil, fmt.Errorf("read %s: %v", CA_KEY_FILE, err)
+			return nil, fmt.Errorf("read %s: %v", caKeyFile, err)
 		}
 		block, _ := pem.Decode(ca_data)
 		cakey, _ = x509.ParseECPrivateKey(block.Bytes)
 
 		// ca cert file
-		ca_data, err = os.ReadFile(CA_CERT_FILE)
+		ca_data, err = os.ReadFile(caCertFile)
 		if err != nil {
 			return nil, fmt.Errorf("read %s: %v", CA_CERT_FILE, err)
 		}

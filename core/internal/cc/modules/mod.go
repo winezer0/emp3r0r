@@ -9,9 +9,7 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
-	"github.com/jm33-m0/emp3r0r/core/lib/util"
 	"github.com/lithammer/fuzzysearch/fuzzy"
-	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -91,7 +89,7 @@ func UpdateOptions(modName string) (exist bool) {
 }
 
 // ModuleRun run current module
-func ModuleRun(_ *cobra.Command, _ []string) {
+func ModuleRun() {
 	modObj := def.Modules[live.ActiveModule]
 	if modObj == nil {
 		logging.Errorf("ModuleRun: module %s not found", strconv.Quote(live.ActiveModule))
@@ -147,103 +145,12 @@ func ModuleSearch(cmd *cobra.Command, args []string) {
 	cli.CliPrettyPrint("Module", "Comment", &search_results)
 }
 
-// CmdListModOptionsTable list currently available options for `set`, in a table
-func CmdListModOptionsTable(_ *cobra.Command, _ []string) {
-	if live.ActiveModule == "none" {
-		logging.Warningf("No module selected")
-		return
-	}
-	live.AgentControlMapMutex.RLock()
-	defer live.AgentControlMapMutex.RUnlock()
-	opts := make(map[string]string)
-
-	opts["module"] = live.ActiveModule
-	if live.ActiveAgent != nil {
-		_, exist := live.AgentControlMap[live.ActiveAgent]
-		if exist {
-			shortName := strings.Split(live.ActiveAgent.Tag, "-agent")[0]
-			opts["target"] = shortName
-		} else {
-			opts["target"] = "<blank>"
-		}
-	} else {
-		opts["target"] = "<blank>"
-	}
-
-	for opt_name, opt := range live.AvailableModuleOptions {
-		if opt != nil {
-			opts[opt_name] = opt.Name
-		}
-	}
-
-	// build table
-	tdata := [][]string{}
-	tableString := &strings.Builder{}
-	table := tablewriter.NewWriter(tableString)
-	table.SetHeader([]string{"Option", "Help", "Value"})
-	table.SetBorder(true)
-	table.SetRowLine(true)
-	table.SetAutoWrapText(true)
-	table.SetColWidth(50)
-
-	// color
-	table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor})
-	table.SetColumnColor(tablewriter.Colors{tablewriter.FgHiBlueColor},
-		tablewriter.Colors{tablewriter.FgBlueColor},
-		tablewriter.Colors{tablewriter.FgBlueColor})
-
-	// fill table
-	module_obj := def.Modules[live.ActiveModule]
-	if module_obj == nil {
-		logging.Errorf("Module %s not found", live.ActiveModule)
-		return
-	}
-	for opt_name, opt_obj := range live.AvailableModuleOptions {
-		help := "N/A"
-		if opt_obj == nil {
-			continue
-		}
-		help = opt_obj.Desc
-		switch opt_name {
-		case "module":
-			help = "Selected module"
-		case "target":
-			help = "Selected target"
-		}
-		val := ""
-		currentOpt, ok := live.AvailableModuleOptions[opt_name]
-		if ok {
-			val = currentOpt.Val
-		}
-
-		tdata = append(tdata,
-			[]string{
-				util.SplitLongLine(opt_name, 50),
-				util.SplitLongLine(help, 50),
-				util.SplitLongLine(val, 50),
-			})
-	}
-	table.AppendBulk(tdata)
-	table.Render()
-	out := tableString.String()
-	cli.AdaptiveTable(out)
-	logging.Printf("\n%s", out)
-}
-
-// CmdSetOptVal set an option to value: `set` command
-func CmdSetOptVal(cmd *cobra.Command, args []string) {
-	opt := args[0]
-	val := args[1]
-	// hand to SetOption helper
-	live.SetOption(opt, val)
-	CmdListModOptionsTable(cmd, args)
+func CmdSetActiveModule(cmd *cobra.Command, args []string) {
+	SetActiveModule(args[0])
 }
 
 // SetActiveModule set the active module to use: `use` command
-func CmdSetActiveModule(cmd *cobra.Command, args []string) {
-	modName := args[0]
+func SetActiveModule(modName string) {
 	for mod := range ModuleHelpers {
 		if mod == modName {
 			live.ActiveModule = modName
@@ -257,8 +164,6 @@ func CmdSetActiveModule(cmd *cobra.Command, args []string) {
 			if exists {
 				logging.Printf("%s", mod.Comment)
 			}
-			CmdListModOptionsTable(cmd, args)
-
 			return
 		}
 	}

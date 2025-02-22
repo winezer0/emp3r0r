@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/tools"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/modules"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/server"
@@ -82,7 +83,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			Short:   "Use a module",
 			Example: "use bring2cc",
 			Args:    cobra.ExactArgs(1),
-			Run:     modules.CmdSetActiveModule,
+			Run:     cmdSetActiveModule,
 		}
 		rootCmd.AddCommand(useModuleCmd)
 		carapace.Gen(useModuleCmd).PositionalCompletion(carapace.ActionCallback(listMods))
@@ -92,7 +93,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "module",
 			Short:   "What options do we have?",
 			Args:    cobra.NoArgs,
-			Run:     modules.CmdListModOptionsTable,
+			Run:     cmdListModOptionsTable,
 		}
 		rootCmd.AddCommand(infoCmd)
 
@@ -102,7 +103,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			Short:   "Set an option of the current module",
 			Example: "set cc_host \"emp3r0r.com\"",
 			Args:    cobra.ExactArgs(2),
-			Run:     modules.CmdSetOptVal,
+			Run:     cmdSetOptVal,
 		}
 		rootCmd.AddCommand(setCmd)
 		carapace.Gen(setCmd).PositionalCompletion(
@@ -114,7 +115,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "module",
 			Short:   "Run the current module",
 			Args:    cobra.NoArgs,
-			Run:     modules.ModuleRun,
+			Run:     cmdModuleRun,
 		}
 		rootCmd.AddCommand(runCmd)
 
@@ -124,7 +125,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			Short:   "Set active target",
 			Example: "target 0",
 			Args:    cobra.ExactArgs(1),
-			Run:     agents.CmdSetActiveAgent,
+			Run:     cmdSetActiveAgent,
 		}
 		rootCmd.AddCommand(targetCmd)
 		carapace.Gen(targetCmd).PositionalCompletion(carapace.ActionCallback(listTargetIndexTags))
@@ -282,7 +283,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "filesystem",
 			Short:   "Download a file from selected agent",
 			Example: "get [--recursive] [--regex '*.pdf'] --path /tmp/1.txt",
-			Run:     server.CmdDownloadFromAgent,
+			Run:     ftp.CmdDownloadFromAgent,
 		}
 		getCmd.Flags().BoolP("recursive", "r", false, "Download recursively")
 		getCmd.Flags().StringP("path", "f", "", "Path to download")
@@ -298,7 +299,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "filesystem",
 			Short:   "Upload a file to selected agent",
 			Example: "put --src /tmp/1.txt --dst /tmp/2.txt",
-			Run:     server.CmdUploadToAgent,
+			Run:     ftp.CmdUploadToAgent,
 		}
 		putCmd.Flags().StringP("src", "s", "", "Source file")
 		putCmd.Flags().StringP("dst", "d", "", "Destination file")

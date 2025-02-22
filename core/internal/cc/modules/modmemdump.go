@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/server"
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
@@ -47,7 +47,7 @@ func moduleMemDump() {
 		return
 	}
 
-	_, err = server.GetFile(path, live.ActiveAgent)
+	_, err = ftp.GetFile(path, live.ActiveAgent)
 	if err != nil {
 		logging.Errorf("GetFile: %v", err)
 		return

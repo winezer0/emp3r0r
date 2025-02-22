@@ -267,13 +267,13 @@ func MakeConfig(cmd *cobra.Command) (err error) {
 	}
 
 	// CC names and certs
-	live.RuntimeConfig.CCHost = cc_host
-	logging.Printf("C2 server name: %s", live.RuntimeConfig.CCHost)
+	live.RuntimeConfig.CCAddress = cc_host
+	logging.Printf("C2 server name: %s", live.RuntimeConfig.CCAddress)
 	existing_names := transport.NamesInCert(live.ServerCrtFile)
 	cc_hosts := existing_names
 	exists := false
 	for _, c2_name := range existing_names {
-		if c2_name == live.RuntimeConfig.CCHost {
+		if c2_name == live.RuntimeConfig.CCAddress {
 			exists = true
 			break
 		}
@@ -281,19 +281,19 @@ func MakeConfig(cmd *cobra.Command) (err error) {
 	// if user is requesting a new server name, server cert needs to be re-generated
 	if !exists {
 		logging.Warningf("Name '%s' is not covered by our server cert, re-generating",
-			live.RuntimeConfig.CCHost)
-		cc_hosts = append(cc_hosts, live.RuntimeConfig.CCHost) // append new name
+			live.RuntimeConfig.CCAddress)
+		cc_hosts = append(cc_hosts, live.RuntimeConfig.CCAddress) // append new name
 		// remove old certs
 		os.RemoveAll(live.ServerCrtFile)
 		os.RemoveAll(live.ServerKeyFile)
-		_, err = transport.GenCerts(cc_hosts, live.ServerCrtFile, live.ServerKeyFile, false)
+		_, err = transport.GenCerts(cc_hosts, live.ServerCrtFile, live.ServerKeyFile, live.CAKeyFile, live.CACrtFile, false)
 		if err != nil {
 			return fmt.Errorf("failed to generate certs: %v", err)
 		}
 		err = network.EmpTLSServer.Shutdown(network.EmpTLSServerCtx)
 		if err != nil {
 			return fmt.Errorf("%v. You will need to restart emp3r0r C2 server to apply name '%s'",
-				err, live.RuntimeConfig.CCHost)
+				err, live.RuntimeConfig.CCAddress)
 		} else {
 			logging.Warningf("Restarting C2 TLS service at port %s to apply new server cert", live.RuntimeConfig.CCPort)
 

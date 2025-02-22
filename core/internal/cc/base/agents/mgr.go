@@ -11,7 +11,6 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
 	"github.com/posener/h2conn"
-	"github.com/spf13/cobra"
 )
 
 // GetConnectedAgents returns a slice of connected emp3r0r agents.
@@ -81,9 +80,9 @@ func SendMessageToAgent(msg_data *def.MsgTunData, agent *def.Emp3r0rAgent) (err 
 	return
 }
 
-// CmdSetActiveAgent set the active agent as the target
-func CmdSetActiveAgent(cmd *cobra.Command, args []string) {
-	parsedArgs := util.ParseCmd(args[0])
+// SetActiveAgent set the active agent as the target
+func SetActiveAgent(identifier string) {
+	parsedArgs := util.ParseCmd(identifier)
 	target := parsedArgs[0]
 	var target_to_set *def.Emp3r0rAgent
 

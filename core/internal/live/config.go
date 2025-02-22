@@ -40,10 +40,14 @@ var (
 	CAT = ""
 
 	// certs
-	CACrtFile     string
-	CAKeyFile     string
-	ServerCrtFile string
-	ServerKeyFile string
+	CACrtFile         string // CA cert for C2 TLS
+	CAKeyFile         string // CA key for C2 TLS
+	ServerCrtFile     string // C2 TLS cert
+	ServerKeyFile     string // C2 TLS key
+	OperatorCACrtFile string // CA cert for operator mTLS
+	OperatorCAKeyFile string // CA key for operator mTLS
+	OperatorCrtFile   string // operator mTLS cert
+	OperatorKeyFile   string // operator mTLS key
 )
 
 const (
@@ -170,9 +174,25 @@ func InitMagicAgentOneTimeBytes() {
 func init_certs_config() error {
 	if _, err := os.Stat(CACrtFile); os.IsNotExist(err) {
 		logging.Warningf("CA cert not found, generating a new one")
-		_, err := transport.GenCerts(nil, CACrtFile, CAKeyFile, true)
+		_, err := transport.GenCerts(nil, CACrtFile, CAKeyFile, "", "", true)
 		if err != nil {
 			return fmt.Errorf("GenCerts: %v", err)
+		}
+	}
+
+	// generate mTLS cert for operator
+	if _, err := os.Stat(OperatorCACrtFile); os.IsNotExist(err) {
+		logging.Warningf("mTLS cert not found, generating a new one")
+		// CA cert
+		_, err := transport.GenCerts(nil, OperatorCACrtFile, OperatorCAKeyFile, "", "", true)
+		if err != nil {
+			return fmt.Errorf("generating operator CA: %v", err)
+		}
+
+		// client cert signed by CA
+		_, err = transport.GenCerts(nil, OperatorCrtFile, OperatorKeyFile, OperatorCAKeyFile, OperatorCACrtFile, false)
+		if err != nil {
+			return fmt.Errorf("generating operator cert: %v", err)
 		}
 	}
 
@@ -187,7 +207,7 @@ func init_certs_config() error {
 		hosts = strings.Fields(input)
 		hosts = append(hosts, "127.0.0.1") // sometimes we need to connect to a relay that listens on localhost
 		hosts = append(hosts, "localhost") // sometimes we need to connect to a relay that listens on localhost
-		_, certErr := transport.GenCerts(hosts, ServerCrtFile, ServerKeyFile, false)
+		_, certErr := transport.GenCerts(hosts, ServerCrtFile, ServerKeyFile, CAKeyFile, CACrtFile, false)
 		if certErr != nil {
 			return certErr
 		}

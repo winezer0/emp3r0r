@@ -24,6 +24,7 @@ func SaveConfigJSON() (err error) {
 // InitConfigFile generate a new emp3r0r.json
 func InitConfigFile(cc_host string) (err error) {
 	// random ports
+	RuntimeConfig.CCAddress = cc_host
 	RuntimeConfig.CCHost = cc_host
 	RuntimeConfig.CCPort = fmt.Sprintf("%v", util.RandInt(1025, 65534))
 	RuntimeConfig.AgentSocksServerPort = fmt.Sprintf("%v", util.RandInt(1025, 65534))

