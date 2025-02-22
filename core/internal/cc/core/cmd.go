@@ -342,7 +342,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "agent",
 			Short:   "List connected agents",
 			Args:    cobra.NoArgs,
-			Run:     agents.CmdLsTargets,
+			Run:     agents.CmdLsTargets, // TODO: use operator API
 		}
 		rootCmd.AddCommand(lsTargetCmd)
 
@@ -360,7 +360,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			Use:     "ls_port_fwds",
 			GroupID: "network",
 			Short:   "List active port mappings",
-			Run:     server.ListPortFwds,
+			Run:     server.ListPortFwds, // TODO: use operator API
 		}
 		rootCmd.AddCommand(lsPortMapppingsCmd)
 
@@ -369,7 +369,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "network",
 			Short:   "Delete a port mapping session",
 			Example: "delete_port_fwd --id <session_id>",
-			Run:     server.DeletePortFwdSession,
+			Run:     server.DeletePortFwdSession, // TODO: use operator API
 		}
 		rmPortMappingCmd.Flags().StringP("id", "", "", "Port mapping ID")
 		rmPortMappingCmd.MarkFlagRequired("id")
@@ -383,7 +383,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "agent",
 			Short:   "Label an agent with custom name",
 			Example: "label --id <agent_id> --label <custom_name>",
-			Run:     agents.CmdSetAgentLabel,
+			Run:     agents.CmdSetAgentLabel, // TODO: use operator API
 		}
 		labelAgentCmd.Flags().StringP("id", "", "0", "Agent ID")
 		labelAgentCmd.Flags().StringP("label", "", "no-label", "Custom name")
@@ -400,7 +400,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "util",
 			Short:   "Execute a command on selected agent",
 			Example: "exec --cmd 'ls -la'",
-			Run:     execCmd,
+			Run:     execCmd, // TODO: use operator API
 		}
 		execCmd.Flags().StringP("cmd", "c", "", "Command to execute on agent")
 		execCmd.MarkFlagRequired("cmd")
@@ -426,8 +426,14 @@ func execCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	agent := agents.MustGetActiveAgent()
+	if agent == nil {
+		logging.Errorf("No active agent")
+		return
+	}
+
 	// execute command
-	err = agents.SendCmdToCurrentAgent(fmt.Sprintf("exec --cmd %s", strconv.Quote(cmdStr)), "")
+	err = operatorSendCommand2Agent(fmt.Sprintf("exec --cmd %s", strconv.Quote(cmdStr)), "", agent.Tag)
 	if err != nil {
 		logging.Errorf("Error executing command: %v", err)
 	}

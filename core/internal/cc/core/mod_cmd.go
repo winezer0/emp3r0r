@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
-	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -24,16 +24,17 @@ func listModOptionsTable(_ *cobra.Command, _ []string) {
 	defer live.AgentControlMapMutex.RUnlock()
 	opts := make(map[string]string)
 
+	agent := agents.MustGetActiveAgent()
+
 	opts["module"] = live.ActiveModule
-	if live.ActiveAgent != nil {
-		_, exist := live.AgentControlMap[live.ActiveAgent]
-		if exist {
-			shortName := strings.Split(live.ActiveAgent.Tag, "-agent")[0]
-			opts["target"] = shortName
-		} else {
-			opts["target"] = "<blank>"
-		}
+	_, exist := live.AgentControlMap[agent]
+	if exist {
+		shortName := strings.Split(agent.Tag, "-agent")[0]
+		opts["target"] = shortName
 	} else {
+		opts["target"] = "<blank>"
+	}
+	if agent == nil {
 		opts["target"] = "<blank>"
 	}
 
@@ -43,25 +44,8 @@ func listModOptionsTable(_ *cobra.Command, _ []string) {
 		}
 	}
 
-	// build table
-	tdata := [][]string{}
-	tableString := &strings.Builder{}
-	table := tablewriter.NewWriter(tableString)
-	table.SetHeader([]string{"Option", "Help", "Value"})
-	table.SetBorder(true)
-	table.SetRowLine(true)
-	table.SetAutoWrapText(true)
-	table.SetColWidth(50)
-
-	// color
-	table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor})
-	table.SetColumnColor(tablewriter.Colors{tablewriter.FgHiBlueColor},
-		tablewriter.Colors{tablewriter.FgBlueColor},
-		tablewriter.Colors{tablewriter.FgBlueColor})
-
-	// fill table
+	// build table rows
+	rows := [][]string{}
 	module_obj := def.Modules[live.ActiveModule]
 	if module_obj == nil {
 		logging.Errorf("Module %s not found", live.ActiveModule)
@@ -85,31 +69,38 @@ func listModOptionsTable(_ *cobra.Command, _ []string) {
 			val = currentOpt.Val
 		}
 
-		tdata = append(tdata,
+		rows = append(rows,
 			[]string{
 				util.SplitLongLine(opt_name, 50),
 				util.SplitLongLine(help, 50),
 				util.SplitLongLine(val, 50),
 			})
 	}
-	table.AppendBulk(tdata)
-	table.Render()
-	out := tableString.String()
-	cli.AdaptiveTable(out)
-	logging.Printf("\n%s", out)
+
+	// reuse BuildTable helper
+	tableStr := cli.BuildTable([]string{"Option", "Help", "Value"}, rows)
+	cli.AdaptiveTable(tableStr)
+	logging.Printf("\n%s", tableStr)
+}
+
+func executeModuleOperation(action string, moduleName *string, opt *string, val *string) {
+	agent := agents.MustGetActiveAgent()
+	operation := def.Operation{
+		AgentTag:   agent.Tag,
+		Action:     action,
+		ModuleName: moduleName,
+		SetOption:  opt,
+		SetValue:   val,
+	}
+
+	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorSendCommand)
+	if err := sendJSONRequest(url, operation); err != nil {
+		logging.Errorf("Failed to execute module operation: %v", err)
+	}
 }
 
 func cmdModuleRun(_ *cobra.Command, _ []string) {
-	operation := def.Operation{
-		AgentTag:   live.ActiveAgent.Tag,
-		Action:     "module",
-		ModuleName: &live.ActiveModule,
-	}
-
-	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorModuleRun)
-	if err := sendJSONRequest(url, operation); err != nil {
-		logging.Errorf("Failed to run module: %v", err)
-	}
+	executeModuleOperation("module", &live.ActiveModule, nil, nil)
 }
 
 func cmdSetOptVal(cmd *cobra.Command, args []string) {
@@ -120,67 +111,25 @@ func cmdSetOptVal(cmd *cobra.Command, args []string) {
 	live.SetOption(opt, val)
 	listModOptionsTable(cmd, args)
 
-	operation := def.Operation{
-		AgentTag:   live.ActiveAgent.Tag,
-		Action:     "module",
-		ModuleName: &live.ActiveModule,
-		SetOption:  &opt,
-		SetValue:   &val,
-	}
-
-	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorSendCommand)
-	if err := sendJSONRequest(url, operation); err != nil {
-		logging.Errorf("Failed to set option value: %v", err)
-	}
+	// send to C2 server to sync
+	executeModuleOperation("module", &live.ActiveModule, &opt, &val)
 }
 
 func cmdSetActiveModule(cmd *cobra.Command, args []string) {
-	operation := def.Operation{
-		AgentTag:   live.ActiveAgent.Tag,
-		Action:     "module",
-		ModuleName: &args[0],
-	}
-
-	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorSetActiveModule)
-	if err := sendJSONRequest(url, operation); err != nil {
-		logging.Errorf("Failed to set active module: %v", err)
-	}
+	executeModuleOperation("module", &args[0], nil, nil)
 }
 
 func cmdListModules(_ *cobra.Command, _ []string) {
-	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorListModules)
-	operation := def.Operation{
-		Action:   "module",
-		AgentTag: live.ActiveAgent.Tag,
-	}
-	if err := sendJSONRequest(url, operation); err != nil {
-		logging.Errorf("Failed to list modules: %v", err)
-	}
+	executeModuleOperation("module", nil, nil, nil)
 	// TODO: handle response
 }
 
 func cmdSearchModule(cmd *cobra.Command, args []string) {
-	moduleName := args[0]
-	operation := def.Operation{
-		Action:     "module",
-		ModuleName: &moduleName,
-	}
-
-	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorSearchModule)
-	if err := sendJSONRequest(url, operation); err != nil {
-		logging.Errorf("Failed to search module: %v", err)
-	}
+	executeModuleOperation("module", &args[0], nil, nil)
 	// TODO: handle response
 }
 
 func cmdModuleListOptions(_ *cobra.Command, _ []string) {
-	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorModuleListOptions)
-	operation := def.Operation{
-		Action:   "module",
-		AgentTag: live.ActiveAgent.Tag,
-	}
-	if err := sendJSONRequest(url, operation); err != nil {
-		logging.Errorf("Failed to list module options: %v", err)
-	}
+	executeModuleOperation("module", nil, nil, nil)
 	// TODO: handle response
 }
