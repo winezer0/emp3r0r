@@ -8,6 +8,8 @@ A post-exploitation framework for Linux/Windows
 
 ---
 
+**v3 is in development**, this version tries to separate operator and C2 server to enable more possibilities of this project.
+
 ## How to use
 
 ```bash
