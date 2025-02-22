@@ -40,7 +40,7 @@ func sendJSONRequest(url string, data interface{}) error {
 }
 
 // operatorSendCommand2Agent sends a command to an agent through the mTLS C2 operator server
-func operatorSendCommand2Agent(cmd, cmdID, agentTag string) {
+func operatorSendCommand2Agent(cmd, cmdID, agentTag string) error {
 	operation := def.Operation{
 		AgentTag:  agentTag,
 		Action:    "command",
@@ -49,9 +49,7 @@ func operatorSendCommand2Agent(cmd, cmdID, agentTag string) {
 	}
 
 	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorSendCommand)
-	if err := sendJSONRequest(url, operation); err != nil {
-		logging.Errorf("Failed to send command: %v", err)
-	}
+	return sendJSONRequest(url, operation)
 }
 
 func cmdSetActiveAgent(cmd *cobra.Command, args []string) {

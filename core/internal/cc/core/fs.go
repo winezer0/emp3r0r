@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -131,8 +132,8 @@ func executeCmd(cmd string) {
 		logging.Errorf("%s: no active target", cmd)
 		return
 	}
-	err := agents.SendCmdToCurrentAgent(cmd, "")
+	err := operatorSendCommand2Agent(cmd, "", activeAgent.Tag)
 	if err != nil {
-		logging.Errorf("%s failed: %v", cmd, err)
+		logging.Errorf("Failed to send command %s to %s", strconv.Quote(cmd), activeAgent.Tag)
 	}
 }
