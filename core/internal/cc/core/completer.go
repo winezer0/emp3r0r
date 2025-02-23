@@ -23,7 +23,7 @@ func listValChoices(ctx carapace.Context) carapace.Action {
 	ret := make([]string, 0)
 	argc := len(ctx.Args)
 	prev_word := ctx.Args[argc-1]
-	for _, opt := range live.AvailableModuleOptions {
+	for _, opt := range live.ActiveModule.Options {
 		if prev_word == opt.Name {
 			ret = append(ret, opt.Vals...)
 			break
@@ -35,7 +35,7 @@ func listValChoices(ctx carapace.Context) carapace.Action {
 // autocomplete modules names
 func listMods(ctx carapace.Context) carapace.Action {
 	names := make([]string, 0)
-	for mod := range modules.ModuleHelpers {
+	for mod := range modules.ModuleRunners {
 		names = append(names, mod)
 	}
 	return carapace.ActionValues(names...)
@@ -67,7 +67,7 @@ func listTargetIndexTags(ctx carapace.Context) carapace.Action {
 func listOptions(ctx carapace.Context) carapace.Action {
 	names := make([]string, 0)
 
-	for opt := range live.AvailableModuleOptions {
+	for opt := range live.ActiveModule.Options {
 		names = append(names, opt)
 	}
 	return carapace.ActionValues(names...)

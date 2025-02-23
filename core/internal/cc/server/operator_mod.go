@@ -89,14 +89,14 @@ func handleSearchModule(wrt http.ResponseWriter, req *http.Request) {
 }
 
 func handleModuleListOptions(wrt http.ResponseWriter, _ *http.Request) {
-	options := make([]def.ModOption, 0)
-	for _, option := range live.AvailableModuleOptions {
-		options = append(options, *option)
+	if live.ActiveModule == nil {
+		http.Error(wrt, "No module selected", http.StatusBadRequest)
+		return
 	}
 
 	// Send response
 	wrt.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(wrt).Encode(options); err != nil {
+	if err := json.NewEncoder(wrt).Encode(live.ActiveModule); err != nil {
 		http.Error(wrt, err.Error(), http.StatusInternalServerError)
 	}
 }

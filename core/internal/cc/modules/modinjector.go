@@ -18,18 +18,18 @@ func moduleInjector() {
 		logging.Errorf("Target not exist")
 		return
 	}
-	if live.AvailableModuleOptions["method"] == nil || live.AvailableModuleOptions["pid"] == nil {
+	if live.ActiveModule.Options["method"] == nil || live.ActiveModule.Options["pid"] == nil {
 		logging.Errorf("One or more required options are nil")
 		return
 	}
-	method := live.AvailableModuleOptions["method"].Val
+	method := live.ActiveModule.Options["method"].Val
 
 	checksum := ""
 	shellcode_file := "shellcode.txt"
 	so_file := "to_inject.so"
 
 	// shellcode.txt
-	pid := live.AvailableModuleOptions["pid"].Val
+	pid := live.ActiveModule.Options["pid"].Val
 	if method == "shellcode" && !util.IsExist(live.WWWRoot+shellcode_file) {
 		logging.Warningf("Custom shellcode '%s%s' does not exist, will inject guardian shellcode", live.WWWRoot, shellcode_file)
 	} else {

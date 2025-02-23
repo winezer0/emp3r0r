@@ -14,7 +14,7 @@ import (
 )
 
 func moduleMemDump() {
-	pidOpt, ok := live.AvailableModuleOptions["pid"]
+	pidOpt, ok := live.ActiveModule.Options["pid"]
 	if !ok {
 		logging.Errorf("Option 'pid' not found")
 		return

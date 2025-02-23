@@ -23,7 +23,11 @@ import (
 
 // moduleCustom run a custom module
 func moduleCustom() {
-	config, exists := def.Modules[live.ActiveModule]
+	if live.ActiveModule == nil {
+		logging.Warningf("No module selected")
+		return
+	}
+	config, exists := def.Modules[live.ActiveModule.Name]
 	if !exists {
 		logging.Errorf("Config of %s does not exist", live.ActiveModule)
 		return
@@ -78,7 +82,7 @@ func build_module(config *def.ModuleConfig) (out []byte, err error) {
 	}
 	defer os.Chdir(live.EmpWorkSpace)
 
-	for _, opt := range live.AvailableModuleOptions {
+	for _, opt := range live.ActiveModule.Options {
 		if opt == nil {
 			continue
 		}
@@ -97,7 +101,7 @@ func build_module(config *def.ModuleConfig) (out []byte, err error) {
 }
 
 func getDownloadAddr() string {
-	download_url_opt, ok := live.AvailableModuleOptions["download_addr"]
+	download_url_opt, ok := live.ActiveModule.Options["download_addr"]
 	if ok {
 		return download_url_opt.Val
 	}
@@ -105,7 +109,7 @@ func getDownloadAddr() string {
 }
 
 func handleInMemoryModule(config def.ModuleConfig, payload_type, envStr, download_addr string) {
-	hosted_file := live.WWWRoot + live.ActiveModule + ".xz"
+	hosted_file := live.WWWRoot + live.ActiveModule.Name + ".xz"
 	logging.Infof("Compressing %s with xz...", live.ActiveModule)
 
 	// only one file is allowed
@@ -144,7 +148,7 @@ func handleInMemoryModule(config def.ModuleConfig, payload_type, envStr, downloa
 }
 
 func handleCompressedModule(config def.ModuleConfig, payload_type, exec_cmd, envStr, download_addr string) {
-	tarball_path := live.WWWRoot + live.ActiveModule + ".tar.xz"
+	tarball_path := live.WWWRoot + live.ActiveModule.Name + ".tar.xz"
 	file_to_download := filepath.Base(tarball_path)
 	if !util.IsFileExist(tarball_path) {
 		logging.Infof("Compressing %s with tar.xz...", live.ActiveModule)
@@ -303,7 +307,7 @@ func InitModules() {
 			}
 
 			// add to module helpers
-			ModuleHelpers[config.Name] = moduleCustom
+			ModuleRunners[config.Name] = moduleCustom
 
 			// add module meta data
 			def.Modules[config.Name] = config

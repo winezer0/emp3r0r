@@ -10,14 +10,14 @@ import (
 )
 
 func moduleBring2CC() {
-	addrOpt, ok := live.AvailableModuleOptions["addr"]
+	addrOpt, ok := live.ActiveModule.Options["addr"]
 	if !ok {
 		logging.Errorf("Option 'addr' not found")
 		return
 	}
 	addr := addrOpt.Val
 
-	kcpOpt, ok := live.AvailableModuleOptions["kcp"]
+	kcpOpt, ok := live.ActiveModule.Options["kcp"]
 	if !ok {
 		logging.Errorf("Option 'kcp' not found")
 		return

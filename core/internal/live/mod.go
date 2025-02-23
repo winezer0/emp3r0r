@@ -12,16 +12,13 @@ var (
 	ModuleDirs []string
 
 	// ActiveModule selected module
-	ActiveModule = "none"
-
-	// AvailableModuleOptions currently available options for `set`
-	AvailableModuleOptions = make(map[string]*def.ModOption)
+	ActiveModule *def.ModuleConfig
 )
 
 // SetOption set an option to value, `set` command
 func SetOption(opt, val string) {
 	// set
-	optObj, ok := AvailableModuleOptions[opt]
+	optObj, ok := ActiveModule.Options[opt]
 	if !ok {
 		logging.Errorf("option %s not found", strconv.Quote(opt))
 		return

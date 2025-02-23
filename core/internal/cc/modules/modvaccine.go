@@ -21,7 +21,7 @@ func moduleVaccine() {
 			logging.Errorf("CreateVaccineArchive: %v", err)
 			return
 		}
-		downloadOpt, ok := live.AvailableModuleOptions["download_addr"]
+		downloadOpt, ok := live.ActiveModule.Options["download_addr"]
 		if !ok {
 			logging.Errorf("Option 'download_addr' not found")
 			return

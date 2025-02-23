@@ -29,7 +29,7 @@ func moduleLPE() {
 			logging.Errorf("Target not exist")
 			return
 		}
-		helperOpt, ok := live.AvailableModuleOptions["lpe_helper"]
+		helperOpt, ok := live.ActiveModule.Options["lpe_helper"]
 		if !ok {
 			logging.Errorf("Option 'lpe_helper' not found")
 			return

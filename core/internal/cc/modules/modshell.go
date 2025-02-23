@@ -18,7 +18,7 @@ func moduleCmd() {
 			logging.Errorf("moduleCmd: agent %s is not connected", target.Tag)
 			return
 		}
-		cmdOpt, ok := live.AvailableModuleOptions["cmd_to_exec"]
+		cmdOpt, ok := live.ActiveModule.Options["cmd_to_exec"]
 		if !ok {
 			logging.Errorf("Option 'cmd_to_exec' not found")
 			return
@@ -32,7 +32,7 @@ func moduleCmd() {
 	// find target
 	target := live.ActiveAgent
 	if target == nil {
-		logging.Warningf("emp3r0r will execute `%s` on all targets this time", live.AvailableModuleOptions["cmd_to_exec"].Val)
+		logging.Warningf("emp3r0r will execute `%s` on all targets this time", live.ActiveModule.Options["cmd_to_exec"].Val)
 		for per_target := range live.AgentControlMap {
 			execOnTarget(per_target)
 		}
@@ -68,21 +68,21 @@ func moduleShell() {
 	}
 
 	// options
-	shellOpt, ok := live.AvailableModuleOptions["shell"]
+	shellOpt, ok := live.ActiveModule.Options["shell"]
 	if !ok {
 		logging.Errorf("Option 'shell' not found")
 		return
 	}
 	shell := shellOpt.Val
 
-	argsOpt, ok := live.AvailableModuleOptions["args"]
+	argsOpt, ok := live.ActiveModule.Options["args"]
 	if !ok {
 		logging.Errorf("Option 'args' not found")
 		return
 	}
 	args := argsOpt.Val
 
-	portOpt, ok := live.AvailableModuleOptions["port"]
+	portOpt, ok := live.ActiveModule.Options["port"]
 	if !ok {
 		logging.Errorf("Option 'port' not found")
 		return

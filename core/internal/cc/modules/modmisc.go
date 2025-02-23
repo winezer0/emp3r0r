@@ -10,7 +10,7 @@ import (
 )
 
 func modulePersistence() {
-	methodOpt, ok := live.AvailableModuleOptions["method"]
+	methodOpt, ok := live.ActiveModule.Options["method"]
 	if !ok {
 		logging.Errorf("Option 'method' not found")
 		return
@@ -24,7 +24,7 @@ func modulePersistence() {
 }
 
 func moduleLogCleaner() {
-	keywordOpt, ok := live.AvailableModuleOptions["keyword"]
+	keywordOpt, ok := live.ActiveModule.Options["keyword"]
 	if !ok {
 		logging.Errorf("Option 'keyword' not found")
 		return

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -15,30 +16,25 @@ import (
 )
 
 // listModOptionsTable list currently available options for `set`, in a table
-func listModOptionsTable(_ *cobra.Command, _ []string) {
-	if live.ActiveModule == "none" {
+func listModOptionsTable() {
+	if live.ActiveModule == nil {
 		logging.Warningf("No module selected")
 		return
 	}
-	live.AgentControlMapMutex.RLock()
-	defer live.AgentControlMapMutex.RUnlock()
 	opts := make(map[string]string)
 
 	agent := agents.MustGetActiveAgent()
+	opts["target"] = "<blank>"
 
-	opts["module"] = live.ActiveModule
-	_, exist := live.AgentControlMap[agent]
-	if exist {
+	opts["module"] = live.ActiveModule.Name
+	if agent != nil {
 		shortName := strings.Split(agent.Tag, "-agent")[0]
 		opts["target"] = shortName
 	} else {
 		opts["target"] = "<blank>"
 	}
-	if agent == nil {
-		opts["target"] = "<blank>"
-	}
 
-	for opt_name, opt := range live.AvailableModuleOptions {
+	for opt_name, opt := range live.ActiveModule.Options {
 		if opt != nil {
 			opts[opt_name] = opt.Name
 		}
@@ -46,12 +42,12 @@ func listModOptionsTable(_ *cobra.Command, _ []string) {
 
 	// build table rows
 	rows := [][]string{}
-	module_obj := def.Modules[live.ActiveModule]
-	if module_obj == nil {
-		logging.Errorf("Module %s not found", live.ActiveModule)
+	_, ok := def.Modules[live.ActiveModule.Name]
+	if !ok {
+		logging.Errorf("Module %s not found", live.ActiveModule.Name)
 		return
 	}
-	for opt_name, opt_obj := range live.AvailableModuleOptions {
+	for opt_name, opt_obj := range live.ActiveModule.Options {
 		help := "N/A"
 		if opt_obj == nil {
 			continue
@@ -64,7 +60,7 @@ func listModOptionsTable(_ *cobra.Command, _ []string) {
 			help = "Selected target"
 		}
 		val := ""
-		currentOpt, ok := live.AvailableModuleOptions[opt_name]
+		currentOpt, ok := live.ActiveModule.Options[opt_name]
 		if ok {
 			val = currentOpt.Val
 		}
@@ -83,53 +79,94 @@ func listModOptionsTable(_ *cobra.Command, _ []string) {
 	logging.Printf("\n%s", tableStr)
 }
 
-func executeModuleOperation(action string, moduleName *string, opt *string, val *string) {
+func executeModuleOperation(moduleName *string, opt *string, val *string) (*def.ModuleConfig, error) {
 	agent := agents.MustGetActiveAgent()
+	if agent == nil {
+		logging.Errorf("No active agent")
+		return nil, fmt.Errorf("no active agent")
+	}
 	operation := def.Operation{
 		AgentTag:   agent.Tag,
-		Action:     action,
+		Action:     "module",
 		ModuleName: moduleName,
 		SetOption:  opt,
 		SetValue:   val,
 	}
 
 	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorSendCommand)
-	if err := sendJSONRequest(url, operation); err != nil {
+	resp, err := sendJSONRequest(url, operation)
+	if err != nil {
 		logging.Errorf("Failed to execute module operation: %v", err)
 	}
+	// decode response
+	mod := new(def.ModuleConfig)
+	err = json.Unmarshal(resp, mod)
+
+	return mod, err
+}
+
+func getModuleOptions() {
+	if live.ActiveModule == nil {
+		logging.Errorf("No module selected")
+		return
+	}
+	mod, err := executeModuleOperation(&live.ActiveModule.Name, nil, nil)
+	if err != nil {
+		logging.Errorf("Failed to get module options: %v", err)
+		return
+	}
+	live.ActiveModule = mod
+	listModOptionsTable()
 }
 
 func cmdModuleRun(_ *cobra.Command, _ []string) {
-	executeModuleOperation("module", &live.ActiveModule, nil, nil)
+	if live.ActiveModule == nil {
+		logging.Errorf("No module selected")
+		return
+	}
+	_, err := executeModuleOperation(&live.ActiveModule.Name, nil, nil)
+	if err != nil {
+		logging.Errorf("Failed to run module: %v", err)
+	}
 }
 
 func cmdSetOptVal(cmd *cobra.Command, args []string) {
+	if live.ActiveModule == nil {
+		logging.Errorf("No module selected")
+		return
+	}
 	opt := args[0]
 	val := args[1]
 
 	// hand to SetOption helper
 	live.SetOption(opt, val)
-	listModOptionsTable(cmd, args)
 
 	// send to C2 server to sync
-	executeModuleOperation("module", &live.ActiveModule, &opt, &val)
+	_, err := executeModuleOperation(&live.ActiveModule.Name, &opt, &val)
+	if err != nil {
+		logging.Errorf("Failed to set option: %v", err)
+	}
+	listModOptionsTable()
 }
 
 func cmdSetActiveModule(cmd *cobra.Command, args []string) {
-	executeModuleOperation("module", &args[0], nil, nil)
+	_, err := executeModuleOperation(&args[0], nil, nil)
+	if err != nil {
+		logging.Errorf("Failed to set active module: %v", err)
+	}
 }
 
 func cmdListModules(_ *cobra.Command, _ []string) {
-	executeModuleOperation("module", nil, nil, nil)
+	executeModuleOperation(nil, nil, nil)
 	// TODO: handle response
 }
 
 func cmdSearchModule(cmd *cobra.Command, args []string) {
-	executeModuleOperation("module", &args[0], nil, nil)
+	executeModuleOperation(&args[0], nil, nil)
 	// TODO: handle response
 }
 
 func cmdModuleListOptions(_ *cobra.Command, _ []string) {
-	executeModuleOperation("module", nil, nil, nil)
+	executeModuleOperation(nil, nil, nil)
 	// TODO: handle response
 }
