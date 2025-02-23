@@ -63,13 +63,13 @@ func listModOptionsTable() {
 }
 
 func executeModuleOperation(api string, moduleName *string, opt *string, val *string) ([]byte, error) {
+	agent_tag := "none"
 	agent := agents.MustGetActiveAgent()
-	if agent == nil {
-		logging.Errorf("No active agent")
-		return nil, fmt.Errorf("no active agent")
+	if agent != nil {
+		agent_tag = agent.Tag
 	}
 	operation := def.Operation{
-		AgentTag:   agent.Tag,
+		AgentTag:   agent_tag,
 		Action:     "module",
 		ModuleName: moduleName,
 		SetOption:  opt,

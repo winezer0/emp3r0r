@@ -27,11 +27,16 @@ type Options struct {
 	debug         bool
 }
 
+const (
+	operatorDefaultPort = 13377
+	operatorDefaultIP   = "127.0.0.1"
+)
+
 func parseFlags() *Options {
 	opts := &Options{}
 	flag.StringVar(&opts.cdnProxy, "cdn2proxy", "", "Start cdn2proxy server on this port")
-	flag.IntVar(&opts.operator_port, "port", 0, "C2 server port")
-	flag.StringVar(&opts.operator_ip, "ip", "", "Connect to this C2 server to start operations")
+	flag.IntVar(&opts.operator_port, "port", operatorDefaultPort, "C2 server port")
+	flag.StringVar(&opts.operator_ip, "ip", operatorDefaultIP, "Connect to this C2 server to start operations")
 	flag.BoolVar(&opts.debug, "debug", false, "Do not kill tmux session when crashing, so you can see the crash log")
 	flag.BoolVar(&opts.isServer, "server", false, "Run as C2 operator server (default: false, run as operator client)")
 	flag.Parse()
@@ -79,6 +84,10 @@ func main() {
 	if opts.isServer {
 		server.ServerMain(opts.operator_port)
 	} else {
+		if opts.operator_ip == operatorDefaultIP {
+			logging.Warningf("Operator server IP is %s, C2 server will run along with CLI", operatorDefaultIP)
+			go server.ServerMain(opts.operator_port)
+		}
 		operator.CliMain(opts.operator_ip, opts.operator_port)
 	}
 }
