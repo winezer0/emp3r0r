@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/tools"
-	opearator "github.com/jm33-m0/emp3r0r/core/internal/cc/operator"
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/operator"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/server"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
@@ -79,7 +79,7 @@ func main() {
 	if opts.isServer {
 		server.ServerMain(opts.operator_port)
 	} else {
-		opearator.CliMain(opts.operator_ip, opts.operator_port)
+		operator.CliMain(opts.operator_ip, opts.operator_port)
 	}
 }
 
