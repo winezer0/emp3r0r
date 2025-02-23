@@ -13,8 +13,8 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 )
 
-// StartTLSServer starts the TLS server.
-func StartTLSServer() {
+// StartC2TLSServer starts the TLS server.
+func StartC2TLSServer() {
 	if _, err := os.Stat(live.Temp + transport.WWW); os.IsNotExist(err) {
 		err = os.MkdirAll(live.Temp+transport.WWW, 0o700)
 		if err != nil {

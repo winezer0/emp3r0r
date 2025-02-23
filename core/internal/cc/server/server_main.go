@@ -29,7 +29,7 @@ func init() {
 
 func ServerMain(port int) {
 	// start all services
-	go StartTLSServer()
+	go StartC2TLSServer()
 	go KCPC2ListenAndServe()
 	go modules.InitModules()
 	go tarConfig()
