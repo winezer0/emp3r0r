@@ -44,7 +44,7 @@ func StartMTLSServer(port int) {
 		TLSConfig: tlsConfig,
 	}
 	network.MTLSServerCtx, network.MTLSServerCancel = context.WithCancel(context.Background())
-	logging.Printf("Starting C2 TLS service with mTLS at port %s", port)
+	logging.Printf("Starting C2 TLS service with mTLS at port %d", port)
 	err = network.MTLSServer.ListenAndServeTLS(live.ServerCrtFile, live.ServerKeyFile)
 	if err != nil {
 		if err == http.ErrServerClosed {
