@@ -142,10 +142,6 @@ func ModuleSearch(keyword string) []*def.ModuleConfig {
 	return search_results
 }
 
-func CmdSetActiveModule(cmd *cobra.Command, args []string) {
-	SetActiveModule(args[0])
-}
-
 // SetActiveModule set the active module to use: `use` command
 func SetActiveModule(modName string) {
 	for mod := range ModuleRunners {

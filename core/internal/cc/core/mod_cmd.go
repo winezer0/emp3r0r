@@ -21,23 +21,10 @@ func listModOptionsTable() {
 		logging.Warningf("No module selected")
 		return
 	}
-	opts := make(map[string]string)
-
 	agent := agents.MustGetActiveAgent()
-	opts["target"] = "none"
-
-	opts["module"] = live.ActiveModule.Name
+	shortName := "none"
 	if agent != nil {
-		shortName := strings.Split(agent.Tag, "-agent")[0]
-		opts["target"] = shortName
-	} else {
-		opts["target"] = "none"
-	}
-
-	for opt_name, opt := range live.ActiveModule.Options {
-		if opt != nil {
-			opts[opt_name] = opt.Name
-		}
+		shortName = strings.Split(agent.Tag, "-agent")[0]
 	}
 
 	// build table rows
@@ -48,7 +35,7 @@ func listModOptionsTable() {
 		return
 	}
 	rows = append(rows, []string{"module", "Selected module", live.ActiveModule.Name})
-	rows = append(rows, []string{"target", "Selected target", opts["target"]})
+	rows = append(rows, []string{"target", "Selected target", shortName})
 	for opt_name, opt_obj := range live.ActiveModule.Options {
 		help := "N/A"
 		if opt_obj == nil {
@@ -98,28 +85,6 @@ func executeModuleOperation(api string, moduleName *string, opt *string, val *st
 	return resp, err
 }
 
-// getModuleOptions get options for the selected module
-func getModuleOptions() {
-	if live.ActiveModule == nil {
-		logging.Errorf("No module selected")
-		return
-	}
-	resp, err := executeModuleOperation(transport.OperatorModuleListOptions, &live.ActiveModule.Name, nil, nil)
-	if err != nil {
-		logging.Errorf("Failed to get module options: %v", err)
-		return
-	}
-	mod := new(def.ModuleConfig)
-	err = json.Unmarshal(resp, mod)
-	if err != nil {
-		logging.Errorf("Failed to unmarshal: %v", err)
-		return
-	}
-
-	live.ActiveModule = mod
-	listModOptionsTable()
-}
-
 func cmdModuleRun(_ *cobra.Command, _ []string) {
 	if live.ActiveModule == nil {
 		logging.Errorf("No module selected")
@@ -164,19 +129,56 @@ func cmdSetActiveModule(cmd *cobra.Command, args []string) {
 	}
 	live.ActiveModule = mod
 	listModOptionsTable()
+	logging.Successf("Using %s (by %s on %s): %s", mod.Name, mod.Author, mod.Date, mod.Comment)
 }
 
 func cmdListModules(_ *cobra.Command, _ []string) {
-	executeModuleOperation(transport.OperatorListModules, nil, nil, nil)
-	// TODO: handle response
+	resp, err := executeModuleOperation(transport.OperatorListModules, nil, nil, nil)
+	if err != nil {
+		logging.Errorf("Failed to list modules: %v", err)
+		return
+	}
+	modules := []*def.ModuleConfig{}
+	err = json.Unmarshal(resp, &modules)
+	if err != nil {
+		logging.Errorf("Failed to unmarshal: %v", err)
+		return
+	}
+	for _, mod := range modules {
+		def.Modules[mod.Name] = mod
+	}
+
+	// table output
+	rows := [][]string{}
+	for _, mod := range modules {
+		rows = append(rows, []string{mod.Name, mod.Comment})
+	}
+	tableStr := cli.BuildTable([]string{"Module", "Description"}, rows)
+	cli.AdaptiveTable(tableStr)
+	logging.Printf("\n%s", tableStr)
 }
 
 func cmdSearchModule(cmd *cobra.Command, args []string) {
-	executeModuleOperation(transport.OperatorSearchModule, &args[0], nil, nil)
-	// TODO: handle response
+	resp, err := executeModuleOperation(transport.OperatorSearchModule, &args[0], nil, nil)
+	if err != nil {
+		logging.Errorf("Failed to search module: %v", err)
+		return
+	}
+	modules := []*def.ModuleConfig{}
+	err = json.Unmarshal(resp, &modules)
+	if err != nil {
+		logging.Errorf("Failed to unmarshal: %v", err)
+		return
+	}
+	row := [][]string{}
+	for _, mod := range modules {
+		row = append(row, []string{mod.Name, mod.Comment})
+	}
+	tableStr := cli.BuildTable([]string{"Module", "Description"}, row)
+	cli.AdaptiveTable(tableStr)
+	logging.Printf("\n%s", tableStr)
 }
 
 func cmdModuleListOptions(_ *cobra.Command, _ []string) {
-	executeModuleOperation(transport.OperatorModuleListOptions, nil, nil, nil)
-	// TODO: handle response
+	listModOptionsTable()
 }

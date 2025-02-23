@@ -22,7 +22,9 @@ func handleSetActiveModule(wrt http.ResponseWriter, req *http.Request) {
 
 	// Set active module
 	modules.SetActiveModule(*operation.ModuleName)
-	wrt.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(wrt).Encode(live.ActiveModule); err != nil {
+		http.Error(wrt, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func handleModuleRun(wrt http.ResponseWriter, req *http.Request) {
@@ -63,7 +65,12 @@ func handleModuleSetOption(wrt http.ResponseWriter, req *http.Request) {
 func handleListModules(wrt http.ResponseWriter, _ *http.Request) {
 	// Send response
 	wrt.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(wrt).Encode(def.Modules); err != nil {
+
+	modules := make([]*def.ModuleConfig, 0)
+	for _, mod := range def.Modules {
+		modules = append(modules, mod)
+	}
+	if err := json.NewEncoder(wrt).Encode(modules); err != nil {
 		http.Error(wrt, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -84,19 +91,6 @@ func handleSearchModule(wrt http.ResponseWriter, req *http.Request) {
 	results := modules.ModuleSearch(*operation.ModuleName)
 	wrt.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(wrt).Encode(results); err != nil {
-		http.Error(wrt, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func handleModuleListOptions(wrt http.ResponseWriter, _ *http.Request) {
-	if live.ActiveModule == nil {
-		http.Error(wrt, "No module selected", http.StatusBadRequest)
-		return
-	}
-
-	// Send response
-	wrt.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(wrt).Encode(live.ActiveModule); err != nil {
 		http.Error(wrt, err.Error(), http.StatusInternalServerError)
 	}
 }
