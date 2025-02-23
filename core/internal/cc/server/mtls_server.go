@@ -44,13 +44,13 @@ func StartMTLSServer(port int) {
 		TLSConfig: tlsConfig,
 	}
 	network.MTLSServerCtx, network.MTLSServerCancel = context.WithCancel(context.Background())
-	logging.Debugf("Starting C2 TLS service with mTLS at port %s", live.RuntimeConfig.CCPort)
+	logging.Printf("Starting C2 TLS service with mTLS at port %s", port)
 	err = network.MTLSServer.ListenAndServeTLS(live.ServerCrtFile, live.ServerKeyFile)
 	if err != nil {
 		if err == http.ErrServerClosed {
 			logging.Warningf("C2 TLS service is shutdown")
 			return
 		}
-		logging.Fatalf("Failed to start HTTPS server at *:%s: %v", live.RuntimeConfig.CCPort, err)
+		logging.Fatalf("Failed to start HTTPS server at *:%d: %v", port, err)
 	}
 }

@@ -32,7 +32,7 @@ func StartC2TLSServer() {
 		Handler: r,
 	}
 	network.EmpTLSServerCtx, network.EmpTLSServerCancel = context.WithCancel(context.Background())
-	logging.Debugf("Starting C2 TLS service at port %s", live.RuntimeConfig.CCPort)
+	logging.Printf("Starting C2 TLS service at port %s", live.RuntimeConfig.CCPort)
 	err := network.EmpTLSServer.ListenAndServeTLS(live.ServerCrtFile, live.ServerKeyFile)
 	if err != nil {
 		if err == http.ErrServerClosed {
