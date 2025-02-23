@@ -126,6 +126,10 @@ func InitCC() (err error) {
 	CAKeyFile = transport.CA_KEY_FILE
 	ServerCrtFile = transport.ServerCrtFile
 	ServerKeyFile = transport.ServerKeyFile
+	OperatorCACrtFile = transport.OperatorCACrtFile
+	OperatorCAKeyFile = transport.OperatorCAKeyFile
+	OperatorCrtFile = transport.OperatorCrtFile
+	OperatorKeyFile = transport.OperatorKeyFile
 
 	// certs
 	err = init_certs_config()
