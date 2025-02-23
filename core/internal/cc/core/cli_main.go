@@ -12,8 +12,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/tools"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/modules"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/server"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
@@ -30,15 +28,14 @@ var Emp3r0rConsole = console.New(AppName)
 // CliMain launches the commandline UI
 func CliMain(server_ip string, server_port int) {
 	var err error
-	// start all services
-	go server.StartTLSServer()
-	go server.KCPC2ListenAndServe()
-	go modules.InitModules()
 	OperatorHTTPClient, err = createMTLSHttpClient()
 	if err != nil {
 		logging.Fatalf("Failed to create HTTP client: %v", err)
 	}
 	OperatorRootURL = fmt.Sprintf("https://%s:%d/", server_ip, server_port)
+
+	// init modules by querying server for available modules
+	go initModules()
 
 	// unlock incomplete downloads
 	err = tools.UnlockDownloads()
