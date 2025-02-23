@@ -26,15 +26,15 @@ func createMTLSHttpClient() (*http.Client, error) {
 		return nil, err
 	}
 
-	// Load CA certificate
-	caCert, err := os.ReadFile(live.OperatorCACrtFile)
+	// Load CA certificate for server verification, same cert as C2 server
+	caCert, err := os.ReadFile(live.CACrtFile)
 	if err != nil {
 		return nil, err
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
 
-	// Configure TLS
+	// Configure mTLS
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{clientCert},
 		RootCAs:      caCertPool,
