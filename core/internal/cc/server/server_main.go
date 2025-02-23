@@ -15,9 +15,6 @@ var (
 )
 
 func init() {
-	// logging
-	logging.SetOutput(os.Stderr)
-
 	// paths
 	home, err := os.UserHomeDir()
 	if err != nil {
