@@ -8,7 +8,9 @@ import (
 	"net/http"
 
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
+	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
+	"github.com/jm33-m0/emp3r0r/core/lib/cli"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/spf13/cobra"
 )
@@ -69,4 +71,31 @@ func cmdSetActiveAgent(cmd *cobra.Command, args []string) {
 	if _, err := sendJSONRequest(url, operation); err != nil {
 		logging.Errorf("Failed to set active agent: %v", err)
 	}
+}
+
+func cmdListAgents(_ *cobra.Command, _ []string) {
+	err := getAgentListFromServer()
+	if err != nil {
+		logging.Errorf("Failed to list agents: %v", err)
+		return
+	}
+
+	RenderAgentTable(live.AgentList)
+	cli.TmuxSwitchWindow(cli.AgentListPane.WindowID)
+}
+
+func getAgentListFromServer() error {
+	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorListConnectedAgents)
+	body, err := sendJSONRequest(url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to list agents: %v", err)
+	}
+
+	var agents []*def.Emp3r0rAgent
+	if err := json.Unmarshal(body, &agents); err != nil {
+		return fmt.Errorf("failed to unmarshal agents: %v", err)
+	}
+	live.AgentList = agents
+
+	return nil
 }

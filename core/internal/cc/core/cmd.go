@@ -316,7 +316,9 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "util",
 			Short:   "Take a screenshot of selected agent",
 			Args:    cobra.NoArgs,
-			Run:     modules.TakeScreenshot,
+			Run: func(_ *cobra.Command, _ []string) {
+				logging.Errorf("Not implemented yet")
+			},
 		}
 		rootCmd.AddCommand(screenshotCmd)
 
@@ -342,7 +344,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "agent",
 			Short:   "List connected agents",
 			Args:    cobra.NoArgs,
-			Run:     agents.CmdLsTargets, // TODO: use operator API
+			Run:     cmdListAgents,
 		}
 		rootCmd.AddCommand(lsTargetCmd)
 
@@ -400,7 +402,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "util",
 			Short:   "Execute a command on selected agent",
 			Example: "exec --cmd 'ls -la'",
-			Run:     execCmd, // TODO: use operator API
+			Run:     execCmd,
 		}
 		execCmd.Flags().StringP("cmd", "c", "", "Command to execute on agent")
 		execCmd.MarkFlagRequired("cmd")

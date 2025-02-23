@@ -1,34 +1,22 @@
-package agents
+package core
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
-	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
-	"github.com/spf13/cobra"
 )
 
 // RenderAgentTable builds and returns a table string for the given agents.
-func RenderAgentTable(agents []*def.Emp3r0rAgent) string {
+func RenderAgentTable(agents []*def.Emp3r0rAgent) {
 	// build table data
 	tdata := [][]string{}
 	var tail []string
 
 	for _, target := range agents {
-		ctrl := live.AgentControlMap[target]
-		if ctrl == nil {
-			continue
-		}
-		if ctrl.Label == "" {
-			ctrl.Label = "nolabel"
-		}
-		index := fmt.Sprintf("%d", ctrl.Index)
-		label := ctrl.Label
 		agentProc := *target.Process
 		procInfo := fmt.Sprintf("%s (%d)\n<- %s (%d)",
 			agentProc.Cmdline, agentProc.PID, agentProc.Parent, agentProc.PPID)
@@ -41,13 +29,12 @@ func RenderAgentTable(agents []*def.Emp3r0rAgent) string {
 			"IPs":     ips,
 		}
 		row := []string{
-			index, label, util.SplitLongLine(target.Tag, 15),
+			util.SplitLongLine(target.Tag, 15),
 			infoMap["OS"], infoMap["Process"], infoMap["User"], infoMap["IPs"], infoMap["From"],
 		}
 		if live.ActiveAgent != nil && live.ActiveAgent.Tag == target.Tag {
-			index = color.New(color.FgHiGreen, color.Bold).Sprintf("%d", ctrl.Index)
 			row = []string{
-				index, label, util.SplitLongLine(target.Tag, 15),
+				util.SplitLongLine(target.Tag, 15),
 				infoMap["OS"], infoMap["Process"], infoMap["User"], infoMap["IPs"], infoMap["From"],
 			}
 			tail = row
@@ -59,23 +46,7 @@ func RenderAgentTable(agents []*def.Emp3r0rAgent) string {
 		tdata = append(tdata, tail)
 	}
 
-	header := []string{"Index", "Label", "Tag", "OS", "Process", "User", "IPs", "From"}
-	return cli.BuildTable(header, tdata)
-}
-
-// RefreshConnectedAgents renders and prints the table of connected agents.
-func RefreshConnectedAgents() {
-	agents := GetConnectedAgents()
-	tableOutput := RenderAgentTable(agents)
-	if cli.AgentListPane == nil {
-		logging.Errorf("AgentListPane doesn't exist")
-		return
-	}
-	cli.AgentListPane.Printf(true, "\n\033[0m%s\n\n", tableOutput)
-}
-
-// Update agent list, then switch to its tmux window
-func CmdLsTargets(cmd *cobra.Command, args []string) {
-	RefreshConnectedAgents()
-	cli.TmuxSwitchWindow(cli.AgentListPane.WindowID)
+	header := []string{"Tag", "OS", "Process", "User", "IPs", "From"}
+	tabStr := cli.BuildTable(header, tdata)
+	cli.AgentListPane.Printf(true, "%s", tabStr)
 }

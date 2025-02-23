@@ -22,6 +22,8 @@ const (
 	OperatorRoot = "operator"
 	// OperatorSetActiveAgent
 	OperatorSetActiveAgent = OperatorRoot + "/set_active_agent"
+	// OperatorListConnectedAgents
+	OperatorListConnectedAgents = OperatorRoot + "/list_connected_agents"
 	// OperatorSendCommand
 	OperatorSendCommand = OperatorRoot + "/send_command"
 	// OperatorSetActiveModule

@@ -109,6 +109,8 @@ func operationDispatcher(w http.ResponseWriter, r *http.Request) {
 		handleListModules(w, r)
 	case transport.OperatorSearchModule:
 		handleSearchModule(w, r)
+	case transport.OperatorListConnectedAgents:
+		handleListAgents(w, r)
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 	}

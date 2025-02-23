@@ -58,3 +58,11 @@ func handleSendCommand(wrt http.ResponseWriter, req *http.Request) {
 	}
 	wrt.WriteHeader(http.StatusOK)
 }
+
+func handleListAgents(wrt http.ResponseWriter, _ *http.Request) {
+	// Get all agents
+	agentsList := agents.GetConnectedAgents()
+	if err := json.NewEncoder(wrt).Encode(agentsList); err != nil {
+		http.Error(wrt, err.Error(), http.StatusInternalServerError)
+	}
+}

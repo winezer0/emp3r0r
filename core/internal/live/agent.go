@@ -31,4 +31,7 @@ var (
 	// AgentControlMap target list, with control (tun) interface
 	AgentControlMap      = make(map[*def.Emp3r0rAgent]*AgentControl)
 	AgentControlMapMutex = sync.RWMutex{}
+
+	// AgentList list of connected agents
+	AgentList = make([]*def.Emp3r0rAgent, 0)
 )
