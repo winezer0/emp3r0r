@@ -135,7 +135,7 @@ func handleInMemoryModule(config def.ModuleConfig, payload_type, envStr, downloa
 		return
 	}
 	cmd := fmt.Sprintf("%s --mod_name %s --type %s --file_to_download %s --checksum %s --in_mem --env \"%s\"",
-		def.C2CmdCustomModule, live.ActiveModule, payload_type, util.FileBaseName(hosted_file), crypto.SHA256SumFile(hosted_file), envStr)
+		def.C2CmdCustomModule, live.ActiveModule.Name, payload_type, util.FileBaseName(hosted_file), crypto.SHA256SumFile(hosted_file), envStr)
 	if download_addr != "" {
 		cmd += fmt.Sprintf(" --download_addr %s", strconv.Quote(download_addr))
 	}
@@ -167,7 +167,7 @@ func handleCompressedModule(config def.ModuleConfig, payload_type, exec_cmd, env
 	checksum := crypto.SHA256SumFile(tarball_path)
 	cmd := fmt.Sprintf("%s --mod_name %s --checksum %s --env \"%s\" --type %s --file_to_download %s --exec \"%s\"",
 		def.C2CmdCustomModule,
-		live.ActiveModule, checksum, envStr, payload_type, file_to_download, exec_cmd)
+		live.ActiveModule.Name, checksum, envStr, payload_type, file_to_download, exec_cmd)
 	if download_addr != "" {
 		cmd += fmt.Sprintf(" --download_addr %s", strconv.Quote(download_addr))
 	}
@@ -209,7 +209,7 @@ func handleInteractiveModule(config def.ModuleConfig, cmd_id string) {
 	}()
 
 	sshErr := SSHClient(fmt.Sprintf("%s/%s/%s",
-		live.RuntimeConfig.AgentRoot, live.ActiveModule, config.AgentConfig.Exec),
+		live.RuntimeConfig.AgentRoot, live.ActiveModule.Name, config.AgentConfig.Exec),
 		args, port, false)
 	if sshErr != nil {
 		logging.Errorf("module %s: %v", config.Name, sshErr)
