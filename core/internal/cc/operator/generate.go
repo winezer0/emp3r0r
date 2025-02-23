@@ -5,11 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/server"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
@@ -290,21 +287,23 @@ func MakeConfig(cmd *cobra.Command) (err error) {
 		if err != nil {
 			return fmt.Errorf("failed to generate certs: %v", err)
 		}
-		err = network.EmpTLSServer.Shutdown(network.EmpTLSServerCtx)
-		if err != nil {
-			return fmt.Errorf("%v. You will need to restart emp3r0r C2 server to apply name '%s'",
-				err, live.RuntimeConfig.CCAddress)
-		} else {
-			logging.Warningf("Restarting C2 TLS service at port %s to apply new server cert", live.RuntimeConfig.CCPort)
+		// TODO: restart C2 server via operator API
+		// // err = network.EmpTLSServer.Shutdown(network.EmpTLSServerCtx)
+		// if err != nil {
+		// 	return fmt.Errorf("%v. You will need to restart emp3r0r C2 server to apply name '%s'",
+		// 		err, live.RuntimeConfig.CCAddress)
+		// } else {
+		// 	logging.Warningf("Restarting C2 TLS service at port %s to apply new server cert", live.RuntimeConfig.CCPort)
 
-			c2_names := transport.NamesInCert(live.ServerCrtFile)
-			if len(c2_names) <= 0 {
-				return fmt.Errorf("no valid host names in server cert")
-			}
-			name_list := strings.Join(c2_names, ", ")
-			logging.Infof("Updated C2 server names: %s", name_list)
-			go server.StartTLSServer()
-		}
+		// 	c2_names := transport.NamesInCert(live.ServerCrtFile)
+		// 	if len(c2_names) <= 0 {
+		// 		return fmt.Errorf("no valid host names in server cert")
+		// 	}
+		// 	name_list := strings.Join(c2_names, ", ")
+		// 	logging.Infof("Updated C2 server names: %s", name_list)
+		// 	// go server.StartTLSServer()
+		// 	// TODO: restart C2 server via operator API
+		// }
 	}
 
 	// CC indicator

@@ -11,7 +11,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/modules"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
@@ -35,7 +34,7 @@ func listValChoices(ctx carapace.Context) carapace.Action {
 // autocomplete modules names
 func listMods(ctx carapace.Context) carapace.Action {
 	names := make([]string, 0)
-	for mod := range modules.ModuleRunners {
+	for mod := range def.Modules {
 		names = append(names, mod)
 	}
 	return carapace.ActionValues(names...)
