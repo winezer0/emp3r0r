@@ -32,7 +32,7 @@ func CliMain(server_ip string, server_port int) {
 	if err != nil {
 		logging.Fatalf("Failed to create HTTP client: %v", err)
 	}
-	OperatorRootURL = fmt.Sprintf("https://%s:%d/", server_ip, server_port)
+	OperatorRootURL = fmt.Sprintf("https://%s:%d", server_ip, server_port)
 
 	// init modules by querying server for available modules
 	go initModules()
