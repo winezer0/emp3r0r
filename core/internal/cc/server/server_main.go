@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/jm33-m0/arc"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/modules"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
-	"github.com/jm33-m0/emp3r0r/core/lib/util"
 )
 
 var (
@@ -35,22 +36,14 @@ func ServerMain(port int) {
 }
 
 func tarConfig() {
-	shm := "/dev/shm"
-	// copy working dir
-	dst := fmt.Sprintf("%s/%s", shm, filepath.Base(Emp3r0rWorkingDir))
-	if util.IsExist(dst) {
-		os.RemoveAll(dst)
+	// tar all config files
+	filter := func(path string) bool {
+		return strings.HasSuffix(path, ".log")
 	}
-	os.MkdirAll(dst, 0755)
-	err := util.Copy(Emp3r0rWorkingDir, dst)
-	if err != nil {
-		logging.Fatalf("Failed to copy working dir to %s: %v", shm, err)
-	}
-	os.Chdir(shm)
+	os.Chdir(filepath.Dir(Emp3r0rWorkingDir))
 	defer os.Chdir(Emp3r0rWorkingDir)
 
-	// tar all config files
-	err = util.TarXZ(filepath.Base(dst), ConfigTar)
+	err := arc.ArchiveWithFilter(filepath.Base(Emp3r0rWorkingDir), ConfigTar, arc.CompressionMap["xz"], arc.ArchivalMap["tar"], filter)
 	if err != nil {
 		logging.Errorf("Failed to tar config files: %v", err)
 	}
