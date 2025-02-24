@@ -127,7 +127,11 @@ func SetDynamicPrompt() string {
 		transport = getTransport(live.ActiveAgent.Transport)
 	}
 	agent_name := color.New(color.FgCyan, color.Underline).Sprint(shortName)
-	mod_name := color.New(color.FgHiBlue).Sprint(live.ActiveModule.Name)
+	mod := "none"
+	if live.ActiveModule != nil {
+		mod = live.ActiveModule.Name
+	}
+	mod_name := color.New(color.FgHiBlue).Sprint(mod)
 
 	dynamicPrompt := fmt.Sprintf("%s - %s @%s (%s) "+prompt_arrow,
 		prompt_name,
