@@ -35,16 +35,22 @@ func ServerMain(port int) {
 }
 
 func tarConfig() {
-	// copy working dir to /tmp
-	err := util.Copy(Emp3r0rWorkingDir, "/tmp")
-	if err != nil {
-		logging.Fatalf("Failed to copy working dir to /tmp: %v", err)
+	shm := "/dev/shm"
+	// copy working dir
+	dst := fmt.Sprintf("%s/%s", shm, filepath.Base(Emp3r0rWorkingDir))
+	if util.IsExist(dst) {
+		os.RemoveAll(dst)
 	}
-	os.Chdir("/tmp")
+	os.MkdirAll(dst, 0755)
+	err := util.Copy(Emp3r0rWorkingDir, dst)
+	if err != nil {
+		logging.Fatalf("Failed to copy working dir to %s: %v", shm, err)
+	}
+	os.Chdir(shm)
 	defer os.Chdir(Emp3r0rWorkingDir)
 
 	// tar all config files
-	err = util.TarXZ(fmt.Sprintf("/tmp/%s", filepath.Base(Emp3r0rWorkingDir)), ConfigTar)
+	err = util.TarXZ(filepath.Base(dst), ConfigTar)
 	if err != nil {
 		logging.Errorf("Failed to tar config files: %v", err)
 	}
