@@ -108,7 +108,7 @@ func cmdSetOptVal(cmd *cobra.Command, args []string) {
 	live.SetOption(opt, val)
 
 	// send to C2 server to sync
-	_, err := executeModuleOperation(transport.OperatorSendCommand, &live.ActiveModule.Name, &opt, &val)
+	_, err := executeModuleOperation(transport.OperatorModuleSetOption, &live.ActiveModule.Name, &opt, &val)
 	if err != nil {
 		logging.Errorf("Failed to set option: %v", err)
 	}
