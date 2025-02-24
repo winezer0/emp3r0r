@@ -17,7 +17,7 @@ import (
 // StartMTLSServer starts the operator TLS server with mTLS.
 func StartMTLSServer(port int) {
 	r := mux.NewRouter()
-	r.HandleFunc(fmt.Sprintf("/%s/{api}/{token}", transport.OperatorRoot), operationDispatcher)
+	r.HandleFunc(fmt.Sprintf("/%s/{api}", transport.OperatorRoot), operationDispatcher)
 	if network.MTLSServer != nil {
 		network.MTLSServer.Shutdown(network.MTLSServerCtx)
 	}
