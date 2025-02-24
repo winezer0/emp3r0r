@@ -13,6 +13,7 @@ func handleSetActiveModule(wrt http.ResponseWriter, req *http.Request) {
 	// Decode JSON request body
 	operation, err := DecodeJSONBody[def.Operation](wrt, req)
 	if err != nil {
+		http.Error(wrt, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if !operation.IsOptionSet("module_name") {

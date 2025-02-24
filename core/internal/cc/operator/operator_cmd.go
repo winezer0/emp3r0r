@@ -36,7 +36,7 @@ func sendJSONRequest(url string, data any) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("request failed, status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("request failed, status code: %d, url: %s, request body: %v", resp.StatusCode, url, data)
 	}
 
 	body, err := io.ReadAll(resp.Body)

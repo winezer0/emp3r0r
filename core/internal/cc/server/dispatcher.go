@@ -91,9 +91,9 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 func operationDispatcher(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	api := vars["api"]
-	token := vars["token"]
-	logging.Debugf("Operator request: API: %s, token: %s", api, token)
+	logging.Debugf("Operator request: API: %s", api)
 
+	api = fmt.Sprintf("%s/%s", transport.OperatorRoot, api)
 	switch api {
 	case transport.OperatorSetActiveAgent:
 		handleSetActiveAgent(w, r)
@@ -112,6 +112,6 @@ func operationDispatcher(w http.ResponseWriter, r *http.Request) {
 	case transport.OperatorListConnectedAgents:
 		handleListAgents(w, r)
 	default:
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("Invalid API: %s", api), http.StatusBadRequest)
 	}
 }
