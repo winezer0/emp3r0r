@@ -266,7 +266,7 @@ func MakeConfig(cmd *cobra.Command) (err error) {
 	// CC names and certs
 	live.RuntimeConfig.CCAddress = cc_host
 	logging.Printf("C2 server name: %s", live.RuntimeConfig.CCAddress)
-	existing_names := transport.NamesInCert(live.ServerCrtFile)
+	existing_names := transport.NamesInCert(transport.ServerCrtFile)
 	cc_hosts := existing_names
 	exists := false
 	for _, c2_name := range existing_names {
@@ -281,9 +281,9 @@ func MakeConfig(cmd *cobra.Command) (err error) {
 			live.RuntimeConfig.CCAddress)
 		cc_hosts = append(cc_hosts, live.RuntimeConfig.CCAddress) // append new name
 		// remove old certs
-		os.RemoveAll(live.ServerCrtFile)
-		os.RemoveAll(live.ServerKeyFile)
-		_, err = transport.GenCerts(cc_hosts, live.ServerCrtFile, live.ServerKeyFile, live.CAKeyFile, live.CACrtFile, false)
+		os.RemoveAll(transport.ServerCrtFile)
+		os.RemoveAll(transport.ServerKeyFile)
+		_, err = transport.GenCerts(cc_hosts, transport.ServerCrtFile, transport.ServerKeyFile, transport.CaKeyFile, transport.CaCrtFile, false)
 		if err != nil {
 			return fmt.Errorf("failed to generate certs: %v", err)
 		}
@@ -295,7 +295,7 @@ func MakeConfig(cmd *cobra.Command) (err error) {
 		// } else {
 		// 	logging.Warningf("Restarting C2 TLS service at port %s to apply new server cert", live.RuntimeConfig.CCPort)
 
-		// 	c2_names := transport.NamesInCert(live.ServerCrtFile)
+		// 	c2_names := transport.NamesInCert(transport.ServerCrtFile)
 		// 	if len(c2_names) <= 0 {
 		// 		return fmt.Errorf("no valid host names in server cert")
 		// 	}

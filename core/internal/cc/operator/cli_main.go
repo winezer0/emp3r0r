@@ -174,7 +174,7 @@ func CliBanner(console *console.Console) {
 	}
 
 	// C2 names
-	c2_names := transport.NamesInCert(live.ServerCrtFile)
+	c2_names := transport.NamesInCert(transport.ServerCrtFile)
 	if len(c2_names) <= 0 {
 		logging.Fatalf("C2 has no names?")
 	}

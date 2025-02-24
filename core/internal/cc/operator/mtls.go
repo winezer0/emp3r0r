@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/jm33-m0/emp3r0r/core/internal/live"
+	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"golang.org/x/net/http2"
 )
 
@@ -21,13 +21,13 @@ var (
 // createMTLSHttpClient connects to the mTLS server and returns an HTTP/2 client
 func createMTLSHttpClient() (*http.Client, error) {
 	// Load client certificate
-	clientCert, err := tls.LoadX509KeyPair(live.OperatorCrtFile, live.OperatorKeyFile)
+	clientCert, err := tls.LoadX509KeyPair(transport.OperatorClientCrtFile, transport.OperatorClientKeyFile)
 	if err != nil {
 		return nil, err
 	}
 
-	// Load CA certificate for server verification, same cert as C2 server
-	caCert, err := os.ReadFile(live.CACrtFile)
+	// Load CA certificate for server verification, different from C2 TLS cert
+	caCert, err := os.ReadFile(transport.OperatorCaCrtFile)
 	if err != nil {
 		return nil, err
 	}
@@ -36,8 +36,10 @@ func createMTLSHttpClient() (*http.Client, error) {
 
 	// Configure mTLS
 	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{clientCert},
-		RootCAs:      caCertPool,
+		GetClientCertificate: func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
+			return &clientCert, nil
+		},
+		RootCAs: caCertPool,
 	}
 
 	// Create HTTP/2 transport

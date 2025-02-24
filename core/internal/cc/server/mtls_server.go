@@ -10,7 +10,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
-	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 )
@@ -18,14 +17,13 @@ import (
 // StartMTLSServer starts the operator TLS server with mTLS.
 func StartMTLSServer(port int) {
 	r := mux.NewRouter()
-	transport.CACrtPEM = []byte(live.RuntimeConfig.CAPEM)
 	r.HandleFunc(fmt.Sprintf("/%s/{api}/{token}", transport.OperatorRoot), operationDispatcher)
 	if network.MTLSServer != nil {
 		network.MTLSServer.Shutdown(network.MTLSServerCtx)
 	}
 
 	// Load client CA certificate
-	clientCACert, err := os.ReadFile(live.OperatorCACrtFile)
+	clientCACert, err := os.ReadFile(transport.OperatorCaCrtFile)
 	if err != nil {
 		logging.Fatalf("Failed to read client CA certificate: %v", err)
 	}
@@ -44,13 +42,13 @@ func StartMTLSServer(port int) {
 		TLSConfig: tlsConfig,
 	}
 	network.MTLSServerCtx, network.MTLSServerCancel = context.WithCancel(context.Background())
-	logging.Printf("Starting C2 TLS service with mTLS at port %d", port)
-	err = network.MTLSServer.ListenAndServeTLS(live.ServerCrtFile, live.ServerKeyFile)
+	logging.Printf("Starting C2 operator service with mTLS at port %d", port)
+	err = network.MTLSServer.ListenAndServeTLS(transport.OperatorServerCrtFile, transport.OperatorServerKeyFile)
 	if err != nil {
 		if err == http.ErrServerClosed {
-			logging.Warningf("C2 TLS service is shutdown")
+			logging.Warningf("C2 operator service is shutdown")
 			return
 		}
-		logging.Fatalf("Failed to start HTTPS server at *:%d: %v", port, err)
+		logging.Fatalf("Failed to start HTTPS (mTLS) server at *:%d: %v", port, err)
 	}
 }

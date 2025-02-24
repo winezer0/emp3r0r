@@ -3,6 +3,7 @@ package netutil
 import (
 	"log"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -36,6 +37,12 @@ func IsPortOpen(host string, port string) bool {
 // ValidateIP is this IP legit?
 func ValidateIP(ip string) bool {
 	return net.ParseIP(ip) != nil
+}
+
+// ValidateDomain is this domain legit?
+func ValidateDomain(domain string) bool {
+	re := regexp.MustCompile(`^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$`)
+	return re.MatchString(domain)
 }
 
 // ValidateIPPort check if the host string looks like IP:Port

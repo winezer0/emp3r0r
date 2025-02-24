@@ -117,7 +117,7 @@ func GenCerts(
 		// ca cert file
 		ca_data, err = os.ReadFile(caCertFile)
 		if err != nil {
-			return nil, fmt.Errorf("read %s: %v", CA_CERT_FILE, err)
+			return nil, fmt.Errorf("read %s: %v", CaCrtFile, err)
 		}
 		block, _ = pem.Decode(ca_data)
 		cacrt, _ = x509.ParseCertificate(block.Bytes)
@@ -261,9 +261,9 @@ func SignECDSA(message []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
 // SignWithCAKey signs the given data using the CA's private key
 func SignWithCAKey(data []byte) ([]byte, error) {
 	// Read the CA private key from the file
-	caKeyData, err := os.ReadFile(CA_KEY_FILE)
+	caKeyData, err := os.ReadFile(CaKeyFile)
 	if err != nil {
-		return nil, fmt.Errorf("read %s: %v", CA_KEY_FILE, err)
+		return nil, fmt.Errorf("read %s: %v", CaKeyFile, err)
 	}
 
 	// Decode the PEM-encoded CA private key
@@ -300,9 +300,9 @@ func SignWithCAKey(data []byte) ([]byte, error) {
 // VerifySignatureWithCA verifies the given signature against the data using the CA's public key
 func VerifySignatureWithCA(data []byte, signature []byte) (bool, error) {
 	// Read the CA certificate from the file
-	caCertData, err := os.ReadFile(CA_CERT_FILE)
+	caCertData, err := os.ReadFile(CaCrtFile)
 	if err != nil {
-		return false, fmt.Errorf("read %s: %v", CA_CERT_FILE, err)
+		return false, fmt.Errorf("read %s: %v", CaCrtFile, err)
 	}
 
 	// Decode the PEM-encoded CA certificate

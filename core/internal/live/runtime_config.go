@@ -76,6 +76,6 @@ func LoadCACrt2RuntimeConfig() error {
 		return err
 	}
 	RuntimeConfig.CAPEM = string(transport.CACrtPEM)
-	RuntimeConfig.CAFingerprint = transport.GetFingerprint(CACrtFile)
+	RuntimeConfig.CAFingerprint = transport.GetFingerprint(transport.CaCrtFile)
 	return nil
 }

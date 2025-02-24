@@ -10,6 +10,7 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
+	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
 )
 
@@ -38,16 +39,6 @@ var (
 
 	// emp3r0r-cat
 	CAT = ""
-
-	// certs
-	CACrtFile         string // CA cert for C2 TLS
-	CAKeyFile         string // CA key for C2 TLS
-	ServerCrtFile     string // C2 TLS cert
-	ServerKeyFile     string // C2 TLS key
-	OperatorCACrtFile string // CA cert for operator mTLS
-	OperatorCAKeyFile string // CA key for operator mTLS
-	OperatorCrtFile   string // operator mTLS cert
-	OperatorKeyFile   string // operator mTLS key
 )
 
 const (
@@ -121,16 +112,6 @@ func InitCC() (err error) {
 	// Module directories
 	ModuleDirs = []string{EmpDataDir + "/modules", EmpWorkSpace + "/modules"}
 
-	// cert files
-	CACrtFile = transport.CA_CERT_FILE
-	CAKeyFile = transport.CA_KEY_FILE
-	ServerCrtFile = transport.ServerCrtFile
-	ServerKeyFile = transport.ServerKeyFile
-	OperatorCACrtFile = transport.OperatorCACrtFile
-	OperatorCAKeyFile = transport.OperatorCAKeyFile
-	OperatorCrtFile = transport.OperatorCrtFile
-	OperatorKeyFile = transport.OperatorKeyFile
-
 	// certs
 	err = init_certs_config()
 	if err != nil {
@@ -176,33 +157,40 @@ func InitMagicAgentOneTimeBytes() {
 
 // init_certs_config generate certs if not found
 func init_certs_config() error {
-	if _, err := os.Stat(CACrtFile); os.IsNotExist(err) {
+	if _, err := os.Stat(transport.CaCrtFile); os.IsNotExist(err) {
 		logging.Warningf("CA cert not found, generating a new one")
-		_, err := transport.GenCerts(nil, CACrtFile, CAKeyFile, "", "", true)
+		_, err := transport.GenCerts(nil, transport.CaCrtFile, transport.CaKeyFile, "", "", true)
 		if err != nil {
 			return fmt.Errorf("GenCerts: %v", err)
 		}
 	}
 
 	// generate mTLS cert for operator
-	if _, err := os.Stat(OperatorCACrtFile); os.IsNotExist(err) {
+	if _, err := os.Stat(transport.OperatorCaCrtFile); os.IsNotExist(err) {
 		logging.Warningf("mTLS cert not found, generating a new one")
 		// CA cert
-		_, err := transport.GenCerts(nil, OperatorCACrtFile, OperatorCAKeyFile, "", "", true)
+		_, err := transport.GenCerts(nil, transport.OperatorCaCrtFile, transport.OperatorCaKeyFile, "", "", true)
 		if err != nil {
 			return fmt.Errorf("generating operator CA: %v", err)
 		}
 
 		// client cert signed by CA
-		_, err = transport.GenCerts(nil, OperatorCrtFile, OperatorKeyFile, OperatorCAKeyFile, OperatorCACrtFile, false)
+		_, err = transport.GenCerts(nil, transport.OperatorClientCrtFile, transport.OperatorClientKeyFile, transport.OperatorCaKeyFile, transport.OperatorCaCrtFile, false)
 		if err != nil {
 			return fmt.Errorf("generating operator cert: %v", err)
 		}
 	}
 
+	isFileExist := func(file string) bool {
+		fi, err := os.Stat(file)
+		return !os.IsNotExist(err) && !fi.IsDir()
+	}
+
 	// generate C2 TLS cert for given host names
 	var hosts []string
-	if _, err := os.Stat(ServerKeyFile); os.IsNotExist(err) {
+	if !isFileExist(transport.ServerCrtFile) || !isFileExist(transport.ServerKeyFile) ||
+		!isFileExist(transport.OperatorServerKeyFile) || !isFileExist(transport.OperatorServerCrtFile) {
+		// if C2 server TLS cert not found, generate new ones
 		logging.Warningf("C2 TLS cert not found, generating a new one")
 		input := Prompt("Generate C2 TLS cert for host IPs or names (space separated)")
 		if strings.Contains(input, "/") || strings.Contains(input, "\\") {
@@ -211,12 +199,27 @@ func init_certs_config() error {
 		hosts = strings.Fields(input)
 		hosts = append(hosts, "127.0.0.1") // sometimes we need to connect to a relay that listens on localhost
 		hosts = append(hosts, "localhost") // sometimes we need to connect to a relay that listens on localhost
-		_, certErr := transport.GenCerts(hosts, ServerCrtFile, ServerKeyFile, CAKeyFile, CACrtFile, false)
+
+		// validate host names
+		for _, host := range hosts {
+			if !netutil.ValidateIP(host) && !netutil.ValidateDomain(host) {
+				return fmt.Errorf("invalid host name: %s", host)
+			}
+		}
+
+		// generate C2 TLS cert
+		_, certErr := transport.GenCerts(hosts, transport.ServerCrtFile, transport.ServerKeyFile, transport.CaKeyFile, transport.CaCrtFile, false)
 		if certErr != nil {
-			return certErr
+			return fmt.Errorf("generating C2 TLS cert: %v", certErr)
+		}
+		// generate operator mTLS cert
+		_, certErr = transport.GenCerts(hosts, transport.OperatorServerCrtFile, transport.OperatorServerKeyFile, transport.OperatorCaKeyFile, transport.OperatorCaCrtFile, false)
+		if certErr != nil {
+			return fmt.Errorf("generating operator cert: %v", certErr)
 		}
 	} else {
-		hosts = transport.NamesInCert(ServerCrtFile)
+		// get host names from C2 TLS cert
+		hosts = transport.NamesInCert(transport.ServerCrtFile)
 	}
 	if len(hosts) == 0 {
 		return fmt.Errorf("no host names found in C2 TLS cert")
