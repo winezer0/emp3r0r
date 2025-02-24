@@ -22,8 +22,13 @@ import (
 
 const AppName = "emp3r0r"
 
-// Emp3r0rConsole: the main console interface
-var Emp3r0rConsole = console.New(AppName)
+var (
+	// emp3r0rConsole: the main console interface
+	emp3r0rConsole = console.New(AppName)
+
+	// operatorAddr: operator server address
+	operatorAddr string
+)
 
 // CliMain launches the commandline UI
 func CliMain(server_ip string, server_port int) {
@@ -33,6 +38,7 @@ func CliMain(server_ip string, server_port int) {
 		logging.Fatalf("Failed to create HTTP client: %v", err)
 	}
 	OperatorRootURL = fmt.Sprintf("https://%s:%d", server_ip, server_port)
+	operatorAddr = fmt.Sprintf("%s:%d", server_ip, server_port)
 
 	// init modules by querying server for available modules
 	go initModules()
@@ -42,15 +48,15 @@ func CliMain(server_ip string, server_port int) {
 	if err != nil {
 		logging.Debugf("UnlockDownloads: %v", err)
 	}
-	mainMenu := Emp3r0rConsole.NewMenu("")
-	Emp3r0rConsole.SetPrintLogo(CliBanner)
+	mainMenu := emp3r0rConsole.NewMenu("")
+	emp3r0rConsole.SetPrintLogo(CliBanner)
 
 	// History
 	histFile := fmt.Sprintf("%s/%s.history", live.EmpWorkSpace, AppName)
 	mainMenu.AddHistorySourceFile(AppName, histFile)
 
 	// Commands
-	mainMenu.SetCommands(Emp3r0rCommands(Emp3r0rConsole))
+	mainMenu.SetCommands(Emp3r0rCommands(emp3r0rConsole))
 
 	// Interrupts
 	mainMenu.AddInterrupt(io.EOF, exitEmp3r0r)
@@ -61,18 +67,18 @@ func CliMain(server_ip string, server_port int) {
 	prompt.Secondary = func() string { return ">" }
 	prompt.Right = func() string { return color.CyanString(time.Now().Format("03:04:05")) }
 	prompt.Transient = func() string { return ">>>" }
-	Emp3r0rConsole.NewlineBefore = true
-	Emp3r0rConsole.NewlineAfter = true
-	Emp3r0rConsole.NewlineWhenEmpty = true
+	emp3r0rConsole.NewlineBefore = true
+	emp3r0rConsole.NewlineAfter = true
+	emp3r0rConsole.NewlineWhenEmpty = true
 
 	// Shell features
-	Emp3r0rConsole.Shell().SyntaxHighlighter = highLighter
-	Emp3r0rConsole.Shell().Config.Set("history-autosuggest", true)
-	Emp3r0rConsole.Shell().Config.Set("autopairs", true)
-	Emp3r0rConsole.Shell().Config.Set("colored-completion-prefix", true)
-	Emp3r0rConsole.Shell().Config.Set("colored-stats", true)
-	Emp3r0rConsole.Shell().Config.Set("completion-ignore-case", true)
-	Emp3r0rConsole.Shell().Config.Set("usage-hint-always", true)
+	emp3r0rConsole.Shell().SyntaxHighlighter = highLighter
+	emp3r0rConsole.Shell().Config.Set("history-autosuggest", true)
+	emp3r0rConsole.Shell().Config.Set("autopairs", true)
+	emp3r0rConsole.Shell().Config.Set("colored-completion-prefix", true)
+	emp3r0rConsole.Shell().Config.Set("colored-stats", true)
+	emp3r0rConsole.Shell().Config.Set("completion-ignore-case", true)
+	emp3r0rConsole.Shell().Config.Set("usage-hint-always", true)
 
 	// Tmux setup, we will need to log to tmux window
 	cli.CAT = live.CAT // emp3r0r-cat is set up in internal/live/config.go
@@ -92,7 +98,7 @@ func CliMain(server_ip string, server_port int) {
 	defer cli.TmuxDeinitWindows()
 
 	// Run the console
-	Emp3r0rConsole.Start()
+	emp3r0rConsole.Start()
 }
 
 func highLighter(line []rune) string {
@@ -183,11 +189,13 @@ func CliBanner(console *console.Console) {
 	say, encodingErr := cow.Say(fmt.Sprintf("Welcome! You are using emp3r0r %s,\n"+
 		"C2 listening on: *:%s,\n"+
 		"KCP: *:%s,\n"+
+		"C2 Server: %s\n"+
 		"C2 names: %s\n"+
 		"CA Fingerprint: %s",
 		def.Version,
 		live.RuntimeConfig.CCPort,
 		live.RuntimeConfig.KCPServerPort,
+		operatorAddr,
 		name_list,
 		live.RuntimeConfig.CAFingerprint,
 	))
