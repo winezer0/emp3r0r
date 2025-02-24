@@ -39,8 +39,24 @@ func ValidateIP(ip string) bool {
 	return net.ParseIP(ip) != nil
 }
 
-// ValidateDomain is this domain legit?
+// ValidateHostName is this domain legit?
+func ValidateHostName(name string) bool {
+	// if it's an IP
+	if ValidateIP(name) {
+		return true
+	}
+
+	return ValidateDomain(name) || IsValidWindowsComputerName(name)
+}
+
+func IsValidWindowsComputerName(name string) bool {
+	validNamePattern := `^[a-zA-Z0-9\-]{1,15}$`
+	matched, _ := regexp.MatchString(validNamePattern, name)
+	return matched
+}
+
 func ValidateDomain(domain string) bool {
+	// regex to match domain name
 	re := regexp.MustCompile(`^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$`)
 	return re.MatchString(domain)
 }

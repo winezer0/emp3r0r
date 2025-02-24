@@ -202,7 +202,7 @@ func init_certs_config() error {
 
 		// validate host names
 		for _, host := range hosts {
-			if !netutil.ValidateIP(host) && !netutil.ValidateDomain(host) {
+			if !netutil.ValidateHostName(host) {
 				return fmt.Errorf("invalid host name: %s", host)
 			}
 		}
