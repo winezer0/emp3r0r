@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/modules"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
@@ -34,8 +35,16 @@ func ServerMain(port int) {
 }
 
 func tarConfig() {
+	// copy working dir to /tmp
+	err := util.Copy(Emp3r0rWorkingDir, "/tmp")
+	if err != nil {
+		logging.Fatalf("Failed to copy working dir to /tmp: %v", err)
+	}
+	os.Chdir("/tmp")
+	defer os.Chdir(Emp3r0rWorkingDir)
+
 	// tar all config files
-	err := util.TarXZ(Emp3r0rWorkingDir, ConfigTar)
+	err = util.TarXZ(fmt.Sprintf("/tmp/%s", filepath.Base(Emp3r0rWorkingDir)), ConfigTar)
 	if err != nil {
 		logging.Errorf("Failed to tar config files: %v", err)
 	}
