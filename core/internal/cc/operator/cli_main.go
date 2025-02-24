@@ -187,15 +187,15 @@ func CliBanner(console *console.Console) {
 	name_list := strings.Join(c2_names, ", ")
 
 	say, encodingErr := cow.Say(fmt.Sprintf("Welcome! You are using emp3r0r %s,\n"+
+		"Operating: %s\n"+
 		"C2 listening on: *:%s,\n"+
 		"KCP: *:%s,\n"+
-		"C2 Server: %s\n"+
 		"C2 names: %s\n"+
-		"CA Fingerprint: %s",
+		"CA fingerprint: %s",
 		def.Version,
+		operatorAddr,
 		live.RuntimeConfig.CCPort,
 		live.RuntimeConfig.KCPServerPort,
-		operatorAddr,
 		name_list,
 		live.RuntimeConfig.CAFingerprint,
 	))
