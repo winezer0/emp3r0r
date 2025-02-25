@@ -47,10 +47,29 @@ func parseFlags() *Options {
 }
 
 func init() {
+	// logging
+	home, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("Failed to get user home dir: %v", err)
+	}
+	live.EmpWorkSpace = fmt.Sprintf("%s/.emp3r0r", home)
+	if !util.IsDirExist(live.EmpWorkSpace) {
+		err = os.Mkdir(live.EmpWorkSpace, 0o700)
+		if err != nil {
+			log.Fatalf("Failed to create workspace: %v", err)
+		}
+	}
+	live.EmpLogFile = fmt.Sprintf("%s/.emp3r0r/emp3r0r.log", home)
+	logf, err := os.OpenFile(live.EmpLogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
+	if err != nil {
+		log.Fatalf("Failed to open log file: %v", err)
+	}
+	logging.SetOutput(logf)
+
 	// set up dirs and default varaibles
 	// including config file location
 	live.Prompt = cli.Prompt // implement prompt_func
-	err := live.InitCC()
+	err = live.InitCC()
 	if err != nil {
 		log.Fatalf("C2 file paths setup: %v", err)
 	}
