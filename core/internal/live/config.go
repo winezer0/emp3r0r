@@ -237,9 +237,8 @@ func init_certs_config() error {
 	}
 
 	// init config file using the first host name
-	certErr := InitConfigFile(hosts[0])
-	if certErr != nil {
-		return fmt.Errorf("%s: %v", EmpConfigFile, certErr)
+	if util.IsFileExist(EmpConfigFile) {
+		return nil
 	}
-	return nil
+	return InitConfigFile(hosts[0])
 }
