@@ -6,6 +6,7 @@ import (
 
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
+	"github.com/jm33-m0/emp3r0r/core/internal/live"
 )
 
 // DecodeJSONBody decodes JSON HTTP request body
@@ -27,7 +28,11 @@ func handleSetActiveAgent(wrt http.ResponseWriter, req *http.Request) {
 
 	// Set active agent
 	agents.SetActiveAgent(operation.AgentTag)
-	wrt.WriteHeader(http.StatusOK)
+
+	// Return active agent
+	if err := json.NewEncoder(wrt).Encode(live.ActiveAgent); err != nil {
+		http.Error(wrt, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func handleSendCommand(wrt http.ResponseWriter, req *http.Request) {

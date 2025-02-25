@@ -43,6 +43,9 @@ func CliMain(server_ip string, server_port int) {
 	// init modules by querying server for available modules
 	go initModules()
 
+	// refresh agent list every 10 seconds
+	go agentListRefresher()
+
 	// unlock incomplete downloads
 	err = tools.UnlockDownloads()
 	if err != nil {

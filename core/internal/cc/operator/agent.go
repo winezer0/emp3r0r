@@ -3,6 +3,7 @@ package operator
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
@@ -48,5 +49,26 @@ func RenderAgentTable(agents []*def.Emp3r0rAgent) {
 
 	header := []string{"Tag", "OS", "Process", "User", "IPs", "From"}
 	tabStr := cli.BuildTable(header, tdata)
-	cli.AgentListPane.Printf(true, "%s", tabStr)
+	if cli.AgentListPane != nil {
+		cli.AgentListPane.Printf(true, "%s", tabStr)
+	}
+}
+
+// AgentListRefresher refreshes agent list every 10 seconds
+func agentListRefresher() {
+	for {
+		refreshAgentList()
+		time.Sleep(10 * time.Second)
+	}
+}
+
+// refreshAgentList refreshes agent list from server
+func refreshAgentList() error {
+	err := getAgentListFromServer()
+	if err != nil {
+		return err
+	}
+
+	RenderAgentTable(live.AgentList)
+	return nil
 }

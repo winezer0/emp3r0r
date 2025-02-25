@@ -68,19 +68,23 @@ func cmdSetActiveAgent(cmd *cobra.Command, args []string) {
 	}
 
 	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorSetActiveAgent)
-	if _, err := sendJSONRequest(url, operation); err != nil {
+	resp, err := sendJSONRequest(url, operation)
+	if err != nil {
 		logging.Errorf("Failed to set active agent: %v", err)
+	}
+
+	err = json.Unmarshal(resp, live.ActiveAgent)
+	if err != nil {
+		logging.Errorf("Failed to unmarshal active agent: %v", err)
 	}
 }
 
 func cmdListAgents(_ *cobra.Command, _ []string) {
-	err := getAgentListFromServer()
+	err := refreshAgentList()
 	if err != nil {
 		logging.Errorf("Failed to list agents: %v", err)
 		return
 	}
-
-	RenderAgentTable(live.AgentList)
 	cli.TmuxSwitchWindow(cli.AgentListPane.WindowID)
 }
 
