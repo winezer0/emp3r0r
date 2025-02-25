@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -33,8 +34,8 @@ func handleMessageTunnel(wrt http.ResponseWriter, req *http.Request) {
 				live.AgentControlMapMutex.RLock()
 				delete(live.AgentControlMap, t)
 				live.AgentControlMapMutex.RUnlock()
-				logging.Errorf("[%d] Agent dies", c.Index)
-				logging.Printf("[%d] agent %s disconnected", c.Index, strconv.Quote(t.Tag))
+				operatorBroadcastPrintf(logging.ERROR, "[%d] Agent dies", c.Index)
+				operatorBroadcastPrintf(logging.ERROR, "[%d] agent %s disconnected", c.Index, strconv.Quote(t.Tag))
 				break
 			}
 		}
@@ -68,7 +69,12 @@ func handleMessageTunnel(wrt http.ResponseWriter, req *http.Request) {
 				}
 				lastHandshake = time.Now()
 			} else {
-				processAgentData(&msg)
+				// forward message to operators
+				err = fwdMsg2Operators(msg)
+				if err != nil {
+					logging.Errorf("Failed to forward message to operator: %v", err)
+					return
+				}
 			}
 			agent := agents.GetAgentByTag(msg.Tag)
 			if agent == nil {
@@ -77,8 +83,8 @@ func handleMessageTunnel(wrt http.ResponseWriter, req *http.Request) {
 			}
 			shortname := agent.Name
 			if live.AgentControlMap[agent].Conn == nil {
-				logging.Successf("[%d] Knock.. Knock...", live.AgentControlMap[agent].Index)
-				logging.Successf("agent %s connected", strconv.Quote(shortname))
+				operatorBroadcastPrintf(logging.SUCCESS, "[%d] Knock.. Knock...", live.AgentControlMap[agent].Index)
+				operatorBroadcastPrintf(logging.SUCCESS, "agent %s connected", strconv.Quote(shortname))
 			}
 			live.AgentControlMap[agent].Conn = conn
 			live.AgentControlMap[agent].Ctx = ctx
@@ -87,9 +93,33 @@ func handleMessageTunnel(wrt http.ResponseWriter, req *http.Request) {
 	}()
 	for ctx.Err() == nil {
 		if time.Since(lastHandshake) > 2*time.Minute {
-			logging.Debugf("handleMessageTunnel: timeout for agent (%s)", msg.Tag)
+			operatorBroadcastPrintf(logging.WARN, "handleMessageTunnel: timeout for agent (%s)", msg.Tag)
 			return
 		}
 		util.TakeABlink()
 	}
+}
+
+func operatorBroadcastPrintf(msg_type, format string, a ...any) (err error) {
+	msgTunData := def.MsgTunData{
+		Tag:      msg_type,
+		CmdSlice: []string{},
+		Response: fmt.Sprintf(format, a...),
+	}
+	return fwdMsg2Operators(msgTunData)
+}
+
+func fwdMsg2Operators(msg def.MsgTunData) (err error) {
+	for operator_session_id, operatorConn := range operators {
+		if operatorConn == nil {
+			continue
+		}
+		err = json.NewEncoder(operatorConn).Encode(msg)
+		if err != nil {
+			logging.Errorf("Failed to forward message to operator: %v", err)
+			return
+		}
+		logging.Debugf("Forwarded message %v to operator %s", msg, operator_session_id)
+	}
+	return
 }

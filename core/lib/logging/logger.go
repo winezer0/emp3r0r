@@ -12,6 +12,15 @@ import (
 	"github.com/fatih/color"
 )
 
+const (
+	SUCCESS = "SUCCESS"
+	INFO    = "INFO"
+	DEBUG   = "DEBUG"
+	WARN    = "WARN"
+	ERROR   = "ERROR"
+	FATAL   = "FATAL"
+)
+
 type Logger struct {
 	Level   int
 	logChan chan string
@@ -114,40 +123,40 @@ func (l *Logger) helper(format string, a []interface{}, msgColor *color.Color, _
 
 func (l *Logger) Debug(format string, a ...interface{}) {
 	if l.Level >= 3 {
-		l.helper(format, a, nil, "DEBUG", false)
+		l.helper(format, a, nil, DEBUG, false)
 	}
 }
 
 func (l *Logger) Info(format string, a ...interface{}) {
 	if l.Level >= 2 {
-		l.helper(format, a, nil, "INFO", false)
+		l.helper(format, a, nil, INFO, false)
 	}
 }
 
 func (l *Logger) Warning(format string, a ...interface{}) {
 	if l.Level >= 1 {
-		l.helper(format, a, color.New(color.FgHiYellow), "WARN", false)
+		l.helper(format, a, color.New(color.FgHiYellow), WARN, false)
 	}
 }
 
 // Msg prints a message to console and log file, regardless of log level
 func (logger *Logger) Msg(format string, a ...interface{}) {
-	logger.helper(format, a, nil, "MSG", false)
+	logger.helper(format, a, nil, INFO, false)
 }
 
 // Alert prints an alert message with custom color in bold font to console and log file, regardless of log level
 func (l *Logger) Alert(textColor color.Attribute, format string, a ...interface{}) {
-	l.helper(format, a, color.New(textColor, color.Bold), "ALERT", false)
+	l.helper(format, a, color.New(textColor, color.Bold), WARN, false)
 }
 
 // Success prints a success message in green and bold font to console and log file, regardless of log level
 func (l *Logger) Success(format string, a ...interface{}) {
-	l.helper(format, a, color.New(color.FgHiGreen, color.Bold), "SUCCESS", true)
+	l.helper(format, a, color.New(color.FgHiGreen, color.Bold), SUCCESS, true)
 }
 
 // Fatal prints a fatal error message in red, bold and italic font to console and log file, then exits the program
 func (l *Logger) Fatal(format string, a ...interface{}) {
-	l.helper(format, a, color.New(color.FgHiRed, color.Bold, color.Italic), "FATAL", true)
+	l.helper(format, a, color.New(color.FgHiRed, color.Bold, color.Italic), FATAL, true)
 	l.Msg("Run 'tmux kill-session -t emp3r0r' to clean up dead emp3r0r windows")
 	time.Sleep(2 * time.Second) // give user some time to read the error message
 	log.Fatal(color.New(color.Bold, color.FgHiRed).Sprintf(format, a...))
@@ -155,7 +164,7 @@ func (l *Logger) Fatal(format string, a ...interface{}) {
 
 // Error prints an error message in red and bold font to console and log file, regardless of log level
 func (l *Logger) Error(format string, a ...interface{}) {
-	l.helper(format, a, color.New(color.FgHiRed, color.Bold), "ERROR", true)
+	l.helper(format, a, color.New(color.FgHiRed, color.Bold), ERROR, true)
 }
 
 func (l *Logger) SetDebugLevel(level int) {
