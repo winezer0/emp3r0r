@@ -136,8 +136,11 @@ func ModuleSearch(keyword string) []*def.ModuleConfig {
 	// render results
 	search_results := make([]*def.ModuleConfig, 0)
 	for _, r := range result {
-		mod := def.Modules[r]
-		search_results = append(search_results, mod)
+		mod_name := strings.Split(r, ":")[0]
+		mod, ok := def.Modules[mod_name]
+		if ok {
+			search_results = append(search_results, mod)
+		}
 	}
 	return search_results
 }
