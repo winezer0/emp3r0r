@@ -7,7 +7,12 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
+	"github.com/jm33-m0/emp3r0r/core/lib/logging"
+	"github.com/posener/h2conn"
 )
+
+// operators holds all operator connections
+var operators = make(map[string]*h2conn.Conn)
 
 // DecodeJSONBody decodes JSON HTTP request body
 func DecodeJSONBody[T any](wrt http.ResponseWriter, req *http.Request) (*T, error) {
@@ -70,4 +75,16 @@ func handleListAgents(wrt http.ResponseWriter, _ *http.Request) {
 	if err := json.NewEncoder(wrt).Encode(agentsList); err != nil {
 		http.Error(wrt, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// handleOperatorConn handles operator connections, this connection will be used to relay the message tunnel
+func handleOperatorConn(wrt http.ResponseWriter, req *http.Request) {
+	conn, err := h2conn.Accept(wrt, req)
+	if err != nil {
+		http.Error(wrt, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	operator_session := req.Header.Get("operator_session")
+	logging.Infof("Operator connected: %s", operator_session)
+	operators[operator_session] = conn
 }
