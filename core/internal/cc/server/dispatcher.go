@@ -27,29 +27,32 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 
 	if vars["api"] == "" || vars["token"] == "" {
 		logging.Debugf("Invalid request: %v, missing api/token", req)
-		wrt.WriteHeader(http.StatusBadRequest)
+		wrt.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	agent_uuid := req.Header.Get("AgentUUID")
-	agent_sig, err := base64.URLEncoding.DecodeString(req.Header.Get("AgentUUIDSig"))
+	sig := req.Header.Get("AgentUUIDSig")
+	agent_sig, err := base64.URLEncoding.DecodeString(sig)
 	if err != nil {
 		logging.Debugf("Failed to decode agent sig: %v", err)
-		wrt.WriteHeader(http.StatusBadRequest)
+		wrt.WriteHeader(http.StatusNotFound)
 		return
 	}
 	isValid, err := transport.VerifySignatureWithCA([]byte(agent_uuid), agent_sig)
 	if err != nil {
 		logging.Debugf("Failed to verify agent uuid: %v", err)
+		wrt.WriteHeader(http.StatusNotFound)
+		return
 	}
 	if !isValid {
 		logging.Debugf("Invalid agent uuid, refusing request")
-		wrt.WriteHeader(http.StatusBadRequest)
+		wrt.WriteHeader(http.StatusNotFound)
 		return
 	}
 	logging.Debugf("Header: %v", req.Header)
-	logging.Debugf("Got a request: api=%s, token=%s, agent_uuid=%s, sig=%x",
-		vars["api"], vars["token"], agent_uuid, agent_sig)
+	logging.Debugf("Got a request: api=%s, token=%s, agent_uuid=%s, sig=%s",
+		vars["api"], vars["token"], agent_uuid, sig)
 
 	token := vars["token"]
 	api := transport.WebRoot + "/" + vars["api"]
@@ -65,10 +68,10 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 				return
 			}
 		}
-		wrt.WriteHeader(http.StatusBadRequest)
+		wrt.WriteHeader(http.StatusNotFound)
 	case transport.FileAPI:
 		if !agents.IsAgentExistByTag(token) {
-			wrt.WriteHeader(http.StatusBadRequest)
+			wrt.WriteHeader(http.StatusNotFound)
 			return
 		}
 		path := filepath.Clean(req.URL.Query().Get("file_to_download"))
@@ -83,6 +86,6 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 	case transport.ProxyAPI:
 		handlePortForwarding(network.ProxyStream, wrt, req)
 	default:
-		wrt.WriteHeader(http.StatusBadRequest)
+		wrt.WriteHeader(http.StatusNotFound)
 	}
 }
