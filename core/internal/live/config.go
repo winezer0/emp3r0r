@@ -87,6 +87,12 @@ func InitCC() (err error) {
 		}
 	}
 
+	// cd to workspace
+	err = os.Chdir(EmpWorkSpace)
+	if err != nil {
+		return fmt.Errorf("cd to workspace %s: %v", EmpWorkSpace, err)
+	}
+
 	// prefixes for stubs
 	def.Stub_Linux = EmpWorkSpace + "/stub"
 	def.Stub_Windows = EmpWorkSpace + "/stub-win"
