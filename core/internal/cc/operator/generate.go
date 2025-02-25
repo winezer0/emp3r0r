@@ -199,6 +199,8 @@ func generateFilePaths(payload_type, arch_choice string, now time.Time) (stubFil
 	default:
 		logging.Errorf("Unsupported: '%s'", payload_type)
 	}
+	// set full path
+	stubFile = fmt.Sprintf("%s/%s", live.EmpWorkSpace, stubFile)
 	return
 }
 
