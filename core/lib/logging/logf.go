@@ -1,9 +1,7 @@
 package logging
 
 import (
-	"fmt"
 	"io"
-	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -63,11 +61,10 @@ func AddWriter(w io.Writer) {
 	logger.Start()
 }
 
-// initialize logger, write log to ~/.emp3r0r/emp3r0r.log
+// initialize logger
 func init() {
 	var err error
-	log_file := fmt.Sprintf("%s/.emp3r0r/emp3r0r.log", os.Getenv("HOME"))
-	logger, err = NewLogger(log_file, 2)
+	logger, err = NewLogger("", 2)
 	if err != nil {
 		panic(err)
 	}
