@@ -77,8 +77,11 @@ func GetRandomWritablePath() (string, error) {
 			root_path, _ = os.Getwd()
 		}
 	}
-	if hasRoot() && runtime.GOOS != "windows" {
+	if hasRoot() {
 		root_path = "/var"
+		if runtime.GOOS == "windows" {
+			root_path = "C:\\"
+		}
 	}
 
 	// Helper function to append writable paths

