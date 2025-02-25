@@ -95,6 +95,8 @@ func operationDispatcher(w http.ResponseWriter, r *http.Request) {
 
 	api = fmt.Sprintf("%s/%s", transport.OperatorRoot, api)
 	switch api {
+	case transport.OperatorMsgTunnel:
+		handleOperatorConn(w, r)
 	case transport.OperatorSetActiveAgent:
 		handleSetActiveAgent(w, r)
 	case transport.OperatorSendCommand:

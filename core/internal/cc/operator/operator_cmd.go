@@ -2,16 +2,19 @@ package operator
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
+	"github.com/posener/h2conn"
 	"github.com/spf13/cobra"
 )
 
@@ -102,4 +105,29 @@ func getAgentListFromServer() error {
 	live.AgentList = agents
 
 	return nil
+}
+
+// connectMsgTun connects to the operator message tunnel
+func connectMsgTun() (conn *h2conn.Conn, ctx context.Context, cancel context.CancelFunc, err error) {
+	session_id := uuid.NewString()
+	h2 := h2conn.Client{
+		Client: def.HTTPClient,
+		Header: http.Header{
+			"operator_session": {session_id},
+		},
+	}
+	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorMsgTunnel)
+	ctx, cancel = context.WithCancel(context.Background())
+	conn, resp, err := h2.Connect(ctx, url)
+	if err != nil {
+		err = fmt.Errorf("connect to message tunnel: %v", err)
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		err = fmt.Errorf("bad status code: %d", resp.StatusCode)
+		return
+	}
+	logging.Successf("Connected to operator message tunnel: %s", session_id)
+
+	return
 }

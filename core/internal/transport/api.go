@@ -20,6 +20,8 @@ const (
 
 	// OperatorRoot root path of control APIs
 	OperatorRoot = "operator"
+	// OperatorMsgTunnel
+	OperatorMsgTunnel = OperatorRoot + "/msg_tunnel"
 	// OperatorSetActiveAgent
 	OperatorSetActiveAgent = OperatorRoot + "/set_active_agent"
 	// OperatorListConnectedAgents
