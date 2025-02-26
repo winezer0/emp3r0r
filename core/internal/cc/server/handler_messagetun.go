@@ -26,7 +26,7 @@ func handleMessageTunnel(wrt http.ResponseWriter, req *http.Request) {
 		http.Error(wrt, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(req.Context())
 	defer func() {
 		logging.Debugf("handleMessageTunnel exiting")
 		for t, c := range live.AgentControlMap {
