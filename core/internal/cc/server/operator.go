@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -90,12 +89,11 @@ func handleOperatorConn(wrt http.ResponseWriter, req *http.Request) {
 	logging.Infof("Operator connected: %s", operator_session)
 	operators[operator_session] = conn
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx := req.Context()
 	defer func() {
 		logging.Debugf("handleOperatorConn exiting")
 		delete(operators, operator_session)
 		_ = conn.Close()
-		cancel()
 	}()
 
 	// Create a ticker to send heartbeat messages
