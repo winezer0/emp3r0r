@@ -34,8 +34,7 @@ func handleMessageTunnel(wrt http.ResponseWriter, req *http.Request) {
 				live.AgentControlMapMutex.RLock()
 				delete(live.AgentControlMap, t)
 				live.AgentControlMapMutex.RUnlock()
-				operatorBroadcastPrintf(logging.ERROR, "[%d] Agent dies", c.Index)
-				operatorBroadcastPrintf(logging.ERROR, "[%d] agent %s disconnected", c.Index, strconv.Quote(t.Tag))
+				operatorBroadcastPrintf(logging.ERROR, "Agent dies... %s is disconnected", strconv.Quote(t.Name))
 				break
 			}
 		}
@@ -83,8 +82,9 @@ func handleMessageTunnel(wrt http.ResponseWriter, req *http.Request) {
 			}
 			shortname := agent.Name
 			if live.AgentControlMap[agent].Conn == nil {
-				operatorBroadcastPrintf(logging.SUCCESS, "[%d] Knock.. Knock...", live.AgentControlMap[agent].Index)
-				operatorBroadcastPrintf(logging.SUCCESS, "agent %s connected", strconv.Quote(shortname))
+				operatorBroadcastPrintf(logging.SUCCESS,
+					"Knock.. Knock... Agent %s is connected",
+					strconv.Quote(shortname))
 			}
 			live.AgentControlMap[agent].Conn = conn
 			live.AgentControlMap[agent].Ctx = ctx

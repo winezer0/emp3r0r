@@ -1,9 +1,11 @@
 package operator
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -144,15 +146,58 @@ func msgTunHandler() {
 		return
 	}
 	defer cancel()
+
+	decoder := json.NewDecoder(bufio.NewReader(conn)) // Buffered reader to prevent partial reads
+
+	// Create a ticker to simulate heartbeat checks every second
+	heartbeatTicker := time.NewTicker(1 * time.Second)
+	defer heartbeatTicker.Stop()
+
+	// Create a timeout timer for 1 minute (60 seconds)
+	timeoutTimer := time.NewTimer(1 * time.Minute)
+	defer timeoutTimer.Stop()
+
+	// Channel to track the latest heartbeat
+	heartbeatCh := make(chan struct{})
+
+	// Goroutine to monitor the heartbeat and handle the timeout
+	go func() {
+		for {
+			select {
+			case <-heartbeatTicker.C:
+				// If no heartbeat received in the last minute, close the connection
+				if !timeoutTimer.Stop() {
+					<-timeoutTimer.C
+					logging.Warningf("Message tunnel heartbeat timeout, closing connection")
+					conn.Close()
+					cancel()
+					return
+				}
+				// Reset the timeout timer after receiving a heartbeat
+				timeoutTimer.Reset(1 * time.Minute)
+			case <-heartbeatCh:
+				// Heartbeat received, reset the timeout
+				timeoutTimer.Reset(1 * time.Minute)
+			}
+		}
+	}()
+
+	// Keep reading messages from the tunnel
 	for ctx.Err() == nil {
-		decoder := json.NewDecoder(conn)
 		msg := new(def.MsgTunData)
 		if err := decoder.Decode(msg); err != nil {
-			logging.Debugf("Failed to decode message: %v", err)
-			time.Sleep(time.Second)
+			if errors.Is(err, io.EOF) {
+				logging.Warningf("Message tunnel closed")
+				return
+			}
+			logging.Errorf("Failed to decode message: %v", err)
 			continue
 		}
 		logging.Debugf("Message from operator: %v", *msg)
+
+		// Reset the heartbeat timer after receiving a valid message
+		heartbeatCh <- struct{}{}
+
 		processAgentData(msg)
 	}
 }

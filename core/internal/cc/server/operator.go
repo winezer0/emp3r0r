@@ -98,8 +98,35 @@ func handleOperatorConn(wrt http.ResponseWriter, req *http.Request) {
 		cancel()
 	}()
 
-	// keep the connection alive
-	for ctx.Err() == nil {
-		time.Sleep(1 * time.Second)
+	// Create a ticker to send heartbeat messages
+	heartbeatTicker := time.NewTicker(1 * time.Second)
+	defer heartbeatTicker.Stop()
+
+	// Create a timeout timer for 1 minute (60 seconds)
+	timeoutTimer := time.NewTimer(1 * time.Minute)
+	defer timeoutTimer.Stop()
+
+	// Channel to track the latest heartbeat
+	heartbeatCh := make(chan struct{})
+
+	// receiving heartbeats from the operator
+	for {
+		select {
+		case <-heartbeatTicker.C:
+			// If no heartbeat received in the last minute, close the connection
+			if !timeoutTimer.Stop() {
+				<-timeoutTimer.C
+				logging.Warningf("Operator %s heartbeat timeout, closing connection", operator_session)
+				conn.Close()
+				return
+			}
+			// Reset the timeout timer after receiving a heartbeat
+			timeoutTimer.Reset(1 * time.Minute)
+		case <-heartbeatCh:
+			// Heartbeat received, reset the timeout
+			timeoutTimer.Reset(1 * time.Minute)
+		case <-ctx.Done():
+			logging.Warningf("handleOperatorConn exited")
+		}
 	}
 }

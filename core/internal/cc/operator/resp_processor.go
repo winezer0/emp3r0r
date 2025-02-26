@@ -20,6 +20,23 @@ import (
 // processAgentData deal with data from agent side
 func processAgentData(data *def.MsgTunData) {
 	var err error
+
+	// what if this message is a broadcast from C2
+	switch data.Tag {
+	case logging.SUCCESS:
+		logging.Successf("%s", data.Response)
+		return
+	case logging.ERROR:
+		logging.Errorf("%s", data.Response)
+		return
+	case logging.WARN:
+		logging.Warningf("%s", data.Response)
+		return
+	case logging.INFO:
+		logging.Infof("%s", data.Response)
+		return
+	}
+
 	live.AgentControlMapMutex.RLock()
 	defer live.AgentControlMapMutex.RUnlock()
 
