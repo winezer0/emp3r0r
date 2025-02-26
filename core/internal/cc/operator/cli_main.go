@@ -46,6 +46,9 @@ func CliMain(server_ip string, server_port int) {
 	// refresh agent list every 10 seconds
 	go agentListRefresher()
 
+	// handle messages from operator
+	go msgTunHandler()
+
 	// unlock incomplete downloads
 	err = tools.UnlockDownloads()
 	if err != nil {

@@ -1,8 +1,10 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
@@ -87,4 +89,17 @@ func handleOperatorConn(wrt http.ResponseWriter, req *http.Request) {
 	operator_session := req.Header.Get("operator_session")
 	logging.Infof("Operator connected: %s", operator_session)
 	operators[operator_session] = conn
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		logging.Debugf("handleOperatorConn exiting")
+		delete(operators, operator_session)
+		_ = conn.Close()
+		cancel()
+	}()
+
+	// keep the connection alive
+	for ctx.Err() == nil {
+		time.Sleep(1 * time.Second)
+	}
 }

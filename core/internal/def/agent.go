@@ -45,12 +45,13 @@ type AgentProcess struct {
 	Parent  string `json:"Parent"`  // parent process name and cmd line args
 }
 
-// MsgTunData data to send in the tunnel
+// MsgTunData data to send in the tunnel, between C&C and agent
+// this can also be used for operator to CC communication
 type MsgTunData struct {
-	CmdID    string   `json:"cmd_id"`    // command ID, to retrieve the response
-	CmdSlice []string `json:"cmd_slice"` // command args, [0] is the command
-	Response string   `json:"response"`  // response from the agent
-	Tag      string   `json:"tag"`       // tag of the agent
+	CmdID    string   `json:"cmd_id"`    // command ID, to retrieve the response, or empty if not a command
+	CmdSlice []string `json:"cmd_slice"` // command args, [0] is the command, or empty if not a command
+	Response string   `json:"response"`  // response from the agent, or message to operator
+	Tag      string   `json:"tag"`       // tag of the agent, or message type if sent to operator
 	Time     string   `json:"time"`      // timestamp
 }
 

@@ -102,9 +102,10 @@ func handleMessageTunnel(wrt http.ResponseWriter, req *http.Request) {
 
 func operatorBroadcastPrintf(msg_type, format string, a ...any) (err error) {
 	msgTunData := def.MsgTunData{
-		Tag:      msg_type,
+		Tag:      msg_type,                  // tell operator about the message type: INFO, WARN, ERROR, SUCCESS
+		Response: fmt.Sprintf(format, a...), // message content
+		CmdID:    "",
 		CmdSlice: []string{},
-		Response: fmt.Sprintf(format, a...),
 	}
 	return fwdMsg2Operators(msgTunData)
 }
@@ -114,7 +115,8 @@ func fwdMsg2Operators(msg def.MsgTunData) (err error) {
 		if operatorConn == nil {
 			continue
 		}
-		err = json.NewEncoder(operatorConn).Encode(msg)
+		encoder := json.NewEncoder(operatorConn)
+		err = encoder.Encode(msg)
 		if err != nil {
 			logging.Errorf("Failed to forward message to operator: %v", err)
 			return

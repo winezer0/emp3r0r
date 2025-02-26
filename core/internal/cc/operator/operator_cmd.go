@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
@@ -110,8 +111,12 @@ func getAgentListFromServer() error {
 // connectMsgTun connects to the operator message tunnel
 func connectMsgTun() (conn *h2conn.Conn, ctx context.Context, cancel context.CancelFunc, err error) {
 	session_id := uuid.NewString()
+	httpClient, err := createMTLSHttpClient()
+	if err != nil {
+		return
+	}
 	h2 := h2conn.Client{
-		Client: def.HTTPClient,
+		Client: httpClient,
 		Header: http.Header{
 			"operator_session": {session_id},
 		},
@@ -127,7 +132,27 @@ func connectMsgTun() (conn *h2conn.Conn, ctx context.Context, cancel context.Can
 		err = fmt.Errorf("bad status code: %d", resp.StatusCode)
 		return
 	}
-	logging.Successf("Connected to operator message tunnel: %s", session_id)
+	logging.Successf("Connected to %s, session ID is %s", url, session_id)
 
 	return
+}
+
+func msgTunHandler() {
+	conn, ctx, cancel, err := connectMsgTun()
+	if err != nil {
+		logging.Errorf("Failed to connect to message tunnel: %v", err)
+		return
+	}
+	defer cancel()
+	for ctx.Err() == nil {
+		decoder := json.NewDecoder(conn)
+		msg := new(def.MsgTunData)
+		if err := decoder.Decode(msg); err != nil {
+			logging.Debugf("Failed to decode message: %v", err)
+			time.Sleep(time.Second)
+			continue
+		}
+		logging.Debugf("Message from operator: %v", *msg)
+		processAgentData(msg)
+	}
 }
