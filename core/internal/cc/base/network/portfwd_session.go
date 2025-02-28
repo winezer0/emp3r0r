@@ -108,13 +108,11 @@ func (pf *PortFwdSession) RunReversedPortFwd(sh *StreamHandler) (err error) {
 
 // RunPortFwd forwards from ccPort to dstPort on agent via h2conn.
 func (pf *PortFwdSession) RunPortFwd() (err error) {
-	// ...existing code...
 	if pf.Protocol == "" {
 		pf.Protocol = "tcp"
 	}
 
 	handleTCPConn := func(conn net.Conn, fwdID string) {
-		// ...existing code...
 		var (
 			err   error
 			sh    *StreamHandler
