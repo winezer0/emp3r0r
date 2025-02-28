@@ -226,6 +226,16 @@ install() {
   cp -avfR cc.exe "$data_dir/emp3r0r-cc" || error "emp3r0r-cc"
   cp -avfR cat.exe "$data_dir/emp3r0r-cat" || error "emp3r0r-cat"
 
+  # set capabilities for cc
+  current_user=$(USER)
+  current_group=$(id -gn "$current_user")
+  if [[ -z "$current_user" ]] || [[ -z "$current_group" ]]; then
+    error "Failed to get current user and group"
+  fi
+  setcap cap_net_admin=eip "$data_dir/emp3r0r-cc" || error "setcap"
+  # wireguard socket directory needs to be accessible by the user
+  sudo mkdir -p /var/run/wireguard && sudo chown -R "$current_user:$current_group" /var/run/wireguard
+
   success "Installed emp3r0r, please check"
   if tmux has-session -t emp3r0r 2>/dev/null; then
     warn "emp3r0r is still running, stopping it in 3 seconds"
