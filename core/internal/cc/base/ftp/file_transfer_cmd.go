@@ -72,7 +72,7 @@ func downloadFromAgent(cmd *cobra.Command, args []string) {
 		cmd_id := uuid.NewString()
 		err = agents.SendCmdToCurrentAgent(fmt.Sprintf("get --file_path %s --filter %s --offset 0 --token %s", file_path, strconv.Quote(filter), uuid.NewString()), cmd_id)
 		if err != nil {
-			logging.Errorf("Cannot get %v+: %v", args, err)
+			logging.Errorf("Cannot get %+v: %v", args, err)
 			return
 		}
 		logging.Infof("Waiting for response from agent %s", target.Tag)

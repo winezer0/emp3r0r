@@ -51,18 +51,17 @@ func CliMain(server_ip string, server_port int) {
 	err = wireguardHandshake()
 	if err != nil {
 		logging.Fatalf("Failed to setup wireguard operator: %v", err)
-	}
-	// Update operator's IP to Wireguard IP
-	OperatorRootURL = fmt.Sprintf("https://%s:%d", netutil.WgServerIP, server_port)
-	if err != nil {
-		logging.Fatalf("Failed to create HTTP client: %v", err)
 	} else {
+		// Update operator's IP to Wireguard IP
+		OperatorRootURL = fmt.Sprintf("https://%s:%d", netutil.WgServerIP, server_port)
 		// init modules by querying server for available modules
 		go initModules()
 		// refresh agent list every 10 seconds
 		go agentListRefresher()
 		// handle messages from operator
 		go msgTunHandler()
+		// relayed HTTP server
+		go RelayHTTPServer()
 	}
 
 	// unlock incomplete downloads

