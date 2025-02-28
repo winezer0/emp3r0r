@@ -119,7 +119,7 @@ func moduleProxy() {
 		cmd_id := uuid.NewString()
 		err := agents.SendCmdToCurrentAgent("!proxy --mode on --addr 0.0.0.0:"+live.RuntimeConfig.AgentSocksServerPort, cmd_id)
 		if err != nil {
-			logging.Errorf("Starting SOCKS4 proxy on target failed: %v", err)
+			logging.Errorf("Starting SOCKS5 proxy on target failed: %v", err)
 			return
 		}
 		var ok bool

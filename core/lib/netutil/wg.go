@@ -40,7 +40,7 @@ const (
 // WireGuardHandshake represents a WireGuard handshake message, peers exchange this information to establish a connection
 type WireGuardHandshake struct {
 	PublicKey  string // Public key of the peer
-	IPAddress  string // IP address of the peer
+	IPAddress  string // IP address of the peer, no CIDR
 	ListenPort int    // UDP listen port for WireGuard
 	Endpoint   string // Endpoint address of the peer
 }
@@ -401,7 +401,6 @@ func WireGuardMain(config WireGuardConfig) error {
 
 // GenWgConfig generates a WireGuard configuration based on a handshake message
 func GenWgConfig(handshake *WireGuardHandshake, iface, ip, privKey string) (config *WireGuardConfig) {
-	peer_ip := strings.Split(handshake.IPAddress, "/")[0]
 	config = &WireGuardConfig{
 		InterfaceName: iface,
 		PrivateKey:    privKey,
@@ -410,7 +409,7 @@ func GenWgConfig(handshake *WireGuardHandshake, iface, ip, privKey string) (conf
 		Peers: []PeerConfig{
 			{
 				PublicKey:  handshake.PublicKey,
-				AllowedIPs: peer_ip + "/32",
+				AllowedIPs: handshake.IPAddress + "/32",
 				Endpoint:   handshake.Endpoint,
 			},
 		},
