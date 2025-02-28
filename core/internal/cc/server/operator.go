@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
@@ -101,10 +102,15 @@ func handleOperatorConn(wrt http.ResponseWriter, req *http.Request) {
 		return
 	}
 	operator_session := req.Header.Get("operator_session")
-	logging.Infof("Operator connected: %s", operator_session)
-	OPERATORS[operator_session] = &operator_t{
-		sessionID: operator_session,
-		conn:      conn,
+	logging.Infof("Operator %s connected to message tunnel from %s", operator_session, req.RemoteAddr)
+	operator, ok := OPERATORS[operator_session]
+	if !ok {
+		OPERATORS[operator_session] = &operator_t{
+			sessionID: operator_session,
+			conn:      conn,
+		}
+	} else {
+		operator.conn = conn
 	}
 
 	ctx, cancel := context.WithCancel(req.Context())
@@ -158,6 +164,19 @@ func handleWireguardHandshake(wrt http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// session ID for this operator
+	operator_session := req.Header.Get("operator_session")
+	logging.Infof("Operator %s is trying to exchange wireguard config", operator_session)
+	operator, ok := OPERATORS[operator_session]
+	if !ok {
+		OPERATORS[operator_session] = &operator_t{
+			sessionID: operator_session,
+			wgip:      wgHandshake.IPAddress,
+		}
+	} else {
+		operator.wgip = wgHandshake.IPAddress
+	}
+
 	// generate our wireguard config if needed
 	if SERVER_WG == nil {
 		privateKey, err := netutil.GeneratePrivateKey()
@@ -173,8 +192,9 @@ func handleWireguardHandshake(wrt http.ResponseWriter, req *http.Request) {
 		http.Error(wrt, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	serverIP := strings.Split(SERVER_WG.IPAddress, "/")[0]
 	serverWgHandshake := &netutil.WireGuardHandshake{
-		IPAddress: SERVER_WG.IPAddress,
+		IPAddress: serverIP,
 		PublicKey: publickey,
 		Endpoint:  fmt.Sprintf("%s:%d", live.RuntimeConfig.CCHost, SERVER_WG.ListenPort),
 	}

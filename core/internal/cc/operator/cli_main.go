@@ -10,6 +10,7 @@ import (
 	cowsay "github.com/Code-Hex/Neo-cowsay/v2"
 	"github.com/alecthomas/chroma/quick"
 	"github.com/fatih/color"
+	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/tools"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
@@ -30,6 +31,9 @@ var (
 	// OPERATOR_ADDR: operator server address
 	OPERATOR_ADDR string
 	OPERATOR_PORT int
+
+	// OPERATOR_SESSION is the session ID for this operator
+	OPERATOR_SESSION = uuid.NewString()
 )
 
 // CliMain launches the commandline UI
@@ -41,7 +45,7 @@ func CliMain(server_ip string, server_port int) {
 		logging.Fatalf("Failed to create HTTP client: %v", err)
 	}
 	OperatorRootURL = fmt.Sprintf("https://%s:%d", server_ip, server_port)
-	OPERATOR_ADDR = fmt.Sprintf("%s:%d", server_ip, server_port)
+	OPERATOR_ADDR = fmt.Sprintf("%s:%d (WireGuard IP: %s)", server_ip, server_port, netutil.WgServerIP)
 
 	// Wireguard setup
 	err = wireguardHandshake()
@@ -50,8 +54,6 @@ func CliMain(server_ip string, server_port int) {
 	}
 	// Update operator's IP to Wireguard IP
 	OperatorRootURL = fmt.Sprintf("https://%s:%d", netutil.WgServerIP, server_port)
-	OPERATOR_ADDR = fmt.Sprintf("%s:%d", server_ip, server_port)
-	OperatorHTTPClient, err = createMTLSHttpClient()
 	if err != nil {
 		logging.Fatalf("Failed to create HTTP client: %v", err)
 	} else {

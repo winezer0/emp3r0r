@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
@@ -35,6 +34,7 @@ func sendJSONRequest(url string, data any) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("operator_session", OPERATOR_SESSION)
 
 	resp, err := OperatorHTTPClient.Do(req)
 	if err != nil {
@@ -113,15 +113,10 @@ func getAgentListFromServer() error {
 
 // connectMsgTun connects to the operator message tunnel
 func connectMsgTun() (conn *h2conn.Conn, ctx context.Context, cancel context.CancelFunc, err error) {
-	session_id := uuid.NewString()
-	httpClient, err := createMTLSHttpClient()
-	if err != nil {
-		return
-	}
 	h2 := h2conn.Client{
-		Client: httpClient,
+		Client: OperatorHTTPClient,
 		Header: http.Header{
-			"operator_session": {session_id},
+			"operator_session": {OPERATOR_SESSION},
 		},
 	}
 	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorMsgTunnel)
@@ -135,7 +130,7 @@ func connectMsgTun() (conn *h2conn.Conn, ctx context.Context, cancel context.Can
 		err = fmt.Errorf("bad status code: %d", resp.StatusCode)
 		return
 	}
-	logging.Successf("Connected to %s, session ID is %s", url, session_id)
+	logging.Successf("Connected to %s, session ID is %s", url, OPERATOR_SESSION)
 
 	return
 }
@@ -215,7 +210,7 @@ func wireguardHandshake() (err error) {
 	}
 	wgHandshake := &netutil.WireGuardHandshake{
 		PublicKey: publicKey,
-		IPAddress: netutil.WgOperatorIP + "/24",
+		IPAddress: netutil.WgOperatorIP,
 	}
 
 	// send handshake request
@@ -233,7 +228,6 @@ func wireguardHandshake() (err error) {
 
 	// generate our wireguard config
 	wgConfig := netutil.GenWgConfig(wgHandshake, "emp_operator", netutil.WgOperatorIP, privKey)
-	logging.Infof("WireGuard operator config: %+v", wgConfig)
 	go func() {
 		err = netutil.WireGuardMain(*wgConfig)
 		if err != nil {
