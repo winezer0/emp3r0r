@@ -227,7 +227,7 @@ install() {
   cp -avfR cat.exe "$data_dir/emp3r0r-cat" || error "emp3r0r-cat"
 
   # set capabilities for cc
-  current_user=$(USER)
+  current_user=$(who am i | awk '{print $1}')
   current_group=$(id -gn "$current_user")
   if [[ -z "$current_user" ]] || [[ -z "$current_group" ]]; then
     error "Failed to get current user and group"
