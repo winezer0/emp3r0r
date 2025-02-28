@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -10,11 +11,24 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
+	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 	"github.com/posener/h2conn"
 )
 
-// operators holds all operator connections
-var operators = make(map[string]*h2conn.Conn)
+// represents an operator_t
+type operator_t struct {
+	sessionID string       // marks the operator session
+	conn      *h2conn.Conn // message tunnel, used to relay messages
+	wgip      string       // operator's wireguard IP address, used for port mapping and stuff
+}
+
+var (
+	// OPERATORS holds all operator connections
+	OPERATORS = make(map[string]*operator_t)
+
+	// SERVER_WG is the wireguard config for the server
+	SERVER_WG *netutil.WireGuardConfig
+)
 
 // DecodeJSONBody decodes JSON HTTP request body
 func DecodeJSONBody[T any](wrt http.ResponseWriter, req *http.Request) (*T, error) {
@@ -88,12 +102,15 @@ func handleOperatorConn(wrt http.ResponseWriter, req *http.Request) {
 	}
 	operator_session := req.Header.Get("operator_session")
 	logging.Infof("Operator connected: %s", operator_session)
-	operators[operator_session] = conn
+	OPERATORS[operator_session] = &operator_t{
+		sessionID: operator_session,
+		conn:      conn,
+	}
 
 	ctx, cancel := context.WithCancel(req.Context())
 	defer func() {
 		logging.Debugf("handleOperatorConn exiting")
-		delete(operators, operator_session)
+		delete(OPERATORS, operator_session)
 		_ = conn.Close()
 		cancel()
 	}()
@@ -130,4 +147,48 @@ func handleOperatorConn(wrt http.ResponseWriter, req *http.Request) {
 			logging.Warningf("handleOperatorConn exited")
 		}
 	}
+}
+
+func handleWireguardHandshake(wrt http.ResponseWriter, req *http.Request) {
+	// decode wireguard config
+	wgHandshake := new(netutil.WireGuardHandshake)
+	err := json.NewDecoder(req.Body).Decode(wgHandshake)
+	if err != nil {
+		http.Error(wrt, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// generate our wireguard config if needed
+	if SERVER_WG == nil {
+		privateKey, err := netutil.GeneratePrivateKey()
+		if err != nil {
+			return
+		}
+		SERVER_WG = netutil.GenWgConfig(wgHandshake, "emp_server", netutil.WgServerIP, privateKey)
+	}
+
+	// send our wireguard config to the operator
+	publickey, err := netutil.PublicKeyFromPrivate(SERVER_WG.PrivateKey)
+	if err != nil {
+		http.Error(wrt, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	serverWgHandshake := &netutil.WireGuardHandshake{
+		IPAddress: SERVER_WG.IPAddress,
+		PublicKey: publickey,
+		Endpoint:  fmt.Sprintf("%s:%d", live.RuntimeConfig.CCHost, SERVER_WG.ListenPort),
+	}
+
+	if err := json.NewEncoder(wrt).Encode(serverWgHandshake); err != nil {
+		http.Error(wrt, err.Error(), http.StatusInternalServerError)
+	}
+
+	// start wireguard
+	go func() {
+		err = netutil.WireGuardMain(*SERVER_WG)
+		if err != nil {
+			logging.Errorf("Failed to start wireguard: %v", err)
+			http.Error(wrt, err.Error(), http.StatusInternalServerError)
+		}
+	}()
 }

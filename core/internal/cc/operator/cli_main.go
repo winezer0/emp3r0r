@@ -17,52 +17,66 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
+	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 	"github.com/reeflective/console"
 )
 
 const AppName = "emp3r0r"
 
 var (
-	// emp3r0rConsole: the main console interface
-	emp3r0rConsole = console.New(AppName)
+	// EMP3R0R_CONSOLE: the main console interface
+	EMP3R0R_CONSOLE = console.New(AppName)
 
-	// operatorAddr: operator server address
-	operatorAddr string
+	// OPERATOR_ADDR: operator server address
+	OPERATOR_ADDR string
+	OPERATOR_PORT int
 )
 
 // CliMain launches the commandline UI
 func CliMain(server_ip string, server_port int) {
 	var err error
+	OPERATOR_PORT = server_port
 	OperatorHTTPClient, err = createMTLSHttpClient()
 	if err != nil {
 		logging.Fatalf("Failed to create HTTP client: %v", err)
 	}
 	OperatorRootURL = fmt.Sprintf("https://%s:%d", server_ip, server_port)
-	operatorAddr = fmt.Sprintf("%s:%d", server_ip, server_port)
+	OPERATOR_ADDR = fmt.Sprintf("%s:%d", server_ip, server_port)
 
-	// init modules by querying server for available modules
-	go initModules()
-
-	// refresh agent list every 10 seconds
-	go agentListRefresher()
-
-	// handle messages from operator
-	go msgTunHandler()
+	// Wireguard setup
+	err = wireguardHandshake()
+	if err != nil {
+		logging.Fatalf("Failed to setup wireguard operator: %v", err)
+	}
+	// Update operator's IP to Wireguard IP
+	OperatorRootURL = fmt.Sprintf("https://%s:%d", netutil.WgServerIP, server_port)
+	OPERATOR_ADDR = fmt.Sprintf("%s:%d", server_ip, server_port)
+	OperatorHTTPClient, err = createMTLSHttpClient()
+	if err != nil {
+		logging.Fatalf("Failed to create HTTP client: %v", err)
+	} else {
+		// init modules by querying server for available modules
+		go initModules()
+		// refresh agent list every 10 seconds
+		go agentListRefresher()
+		// handle messages from operator
+		go msgTunHandler()
+	}
 
 	// unlock incomplete downloads
 	err = tools.UnlockDownloads()
 	if err != nil {
 		logging.Debugf("UnlockDownloads: %v", err)
 	}
-	mainMenu := emp3r0rConsole.NewMenu("")
-	emp3r0rConsole.SetPrintLogo(CliBanner)
+	mainMenu := EMP3R0R_CONSOLE.NewMenu("")
+	EMP3R0R_CONSOLE.SetPrintLogo(CliBanner)
 
 	// History
 	histFile := fmt.Sprintf("%s/%s.history", live.EmpWorkSpace, AppName)
 	mainMenu.AddHistorySourceFile(AppName, histFile)
 
 	// Commands
-	mainMenu.SetCommands(Emp3r0rCommands(emp3r0rConsole))
+	mainMenu.SetCommands(Emp3r0rCommands(EMP3R0R_CONSOLE))
 
 	// Interrupts
 	mainMenu.AddInterrupt(io.EOF, exitEmp3r0r)
@@ -73,18 +87,18 @@ func CliMain(server_ip string, server_port int) {
 	prompt.Secondary = func() string { return ">" }
 	prompt.Right = func() string { return color.CyanString(time.Now().Format("03:04:05")) }
 	prompt.Transient = func() string { return ">>>" }
-	emp3r0rConsole.NewlineBefore = true
-	emp3r0rConsole.NewlineAfter = true
-	emp3r0rConsole.NewlineWhenEmpty = true
+	EMP3R0R_CONSOLE.NewlineBefore = true
+	EMP3R0R_CONSOLE.NewlineAfter = true
+	EMP3R0R_CONSOLE.NewlineWhenEmpty = true
 
 	// Shell features
-	emp3r0rConsole.Shell().SyntaxHighlighter = highLighter
-	emp3r0rConsole.Shell().Config.Set("history-autosuggest", true)
-	emp3r0rConsole.Shell().Config.Set("autopairs", true)
-	emp3r0rConsole.Shell().Config.Set("colored-completion-prefix", true)
-	emp3r0rConsole.Shell().Config.Set("colored-stats", true)
-	emp3r0rConsole.Shell().Config.Set("completion-ignore-case", true)
-	emp3r0rConsole.Shell().Config.Set("usage-hint-always", true)
+	EMP3R0R_CONSOLE.Shell().SyntaxHighlighter = highLighter
+	EMP3R0R_CONSOLE.Shell().Config.Set("history-autosuggest", true)
+	EMP3R0R_CONSOLE.Shell().Config.Set("autopairs", true)
+	EMP3R0R_CONSOLE.Shell().Config.Set("colored-completion-prefix", true)
+	EMP3R0R_CONSOLE.Shell().Config.Set("colored-stats", true)
+	EMP3R0R_CONSOLE.Shell().Config.Set("completion-ignore-case", true)
+	EMP3R0R_CONSOLE.Shell().Config.Set("usage-hint-always", true)
 
 	// Tmux setup, we will need to log to tmux window
 	cli.CAT = live.CAT // emp3r0r-cat is set up in internal/live/config.go
@@ -104,7 +118,7 @@ func CliMain(server_ip string, server_port int) {
 	defer cli.TmuxDeinitWindows()
 
 	// Run the console
-	emp3r0rConsole.Start()
+	EMP3R0R_CONSOLE.Start()
 }
 
 func highLighter(line []rune) string {
@@ -203,7 +217,7 @@ func CliBanner(console *console.Console) {
 		"C2 names: %s\n"+
 		"CA fingerprint: %s",
 		def.Version,
-		operatorAddr,
+		OPERATOR_ADDR,
 		live.RuntimeConfig.CCPort,
 		live.RuntimeConfig.KCPServerPort,
 		name_list,

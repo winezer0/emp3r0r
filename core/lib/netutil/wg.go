@@ -1,5 +1,6 @@
-// Package netutil provides utilities for network interface management,
-// with a focus on WireGuard virtual private network interfaces.
+//go:build linux
+// +build linux
+
 package netutil
 
 import (
@@ -11,6 +12,7 @@ import (
 	"os/signal"
 	"strings"
 
+	"github.com/jm33-m0/emp3r0r/core/lib/util"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 	"golang.zx2c4.com/wireguard/conn"
@@ -21,9 +23,6 @@ import (
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
-// Version is the library version
-const Version = "1.0.0"
-
 // LogLevel specifies the verbosity of logging
 type LogLevel int
 
@@ -33,7 +32,18 @@ const (
 	LogLevelError  LogLevel = device.LogLevelError
 
 	LogLevelVerbose LogLevel = device.LogLevelVerbose
+
+	WgServerIP   = "172.16.254.1"
+	WgOperatorIP = "172.16.254.2"
 )
+
+// WireGuardHandshake represents a WireGuard handshake message, peers exchange this information to establish a connection
+type WireGuardHandshake struct {
+	PublicKey  string // Public key of the peer
+	IPAddress  string // IP address of the peer
+	ListenPort int    // UDP listen port for WireGuard
+	Endpoint   string // Endpoint address of the peer
+}
 
 // WireGuardDevice represents a WireGuard virtual network interface
 type WireGuardDevice struct {
@@ -387,4 +397,24 @@ func WireGuardMain(config WireGuardConfig) error {
 	// Wait for termination
 	wg.WaitShutdown()
 	return nil
+}
+
+// GenWgConfig generates a WireGuard configuration based on a handshake message
+func GenWgConfig(handshake *WireGuardHandshake, iface, ip, privKey string) (config *WireGuardConfig) {
+	peer_ip := strings.Split(handshake.IPAddress, "/")[0]
+	config = &WireGuardConfig{
+		InterfaceName: iface,
+		PrivateKey:    privKey,
+		IPAddress:     ip + "/24",
+		ListenPort:    util.RandInt(1024, 65535),
+		Peers: []PeerConfig{
+			{
+				PublicKey:  handshake.PublicKey,
+				AllowedIPs: peer_ip + "/32",
+				Endpoint:   handshake.Endpoint,
+			},
+		},
+	}
+
+	return
 }

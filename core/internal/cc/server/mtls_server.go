@@ -52,7 +52,3 @@ func StartMTLSServer(port int) {
 		logging.Fatalf("Failed to start HTTPS (mTLS) server at *:%d: %v", port, err)
 	}
 }
-
-func StartWireguard() (err error) {
-	return
-}

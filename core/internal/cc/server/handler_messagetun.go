@@ -111,11 +111,11 @@ func operatorBroadcastPrintf(msg_type, format string, a ...any) (err error) {
 }
 
 func fwdMsg2Operators(msg def.MsgTunData) (err error) {
-	for operator_session_id, operatorConn := range operators {
-		if operatorConn == nil {
+	for operator_session_id, operator := range OPERATORS {
+		if operator == nil {
 			continue
 		}
-		encoder := json.NewEncoder(operatorConn)
+		encoder := json.NewEncoder(operator.conn)
 		err = encoder.Encode(msg)
 		if err != nil {
 			logging.Errorf("Failed to forward message to operator: %v", err)

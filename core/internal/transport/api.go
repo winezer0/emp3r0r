@@ -20,6 +20,8 @@ const (
 
 	// OperatorRoot root path of control APIs
 	OperatorRoot = "operator"
+	// OperatorWireGuard
+	OperatorWireGuard = OperatorRoot + "/wireguard"
 	// OperatorMsgTunnel
 	OperatorMsgTunnel = OperatorRoot + "/msg_tunnel"
 	// OperatorSetActiveAgent

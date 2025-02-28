@@ -14,6 +14,8 @@ import (
 var (
 	Emp3r0rWorkingDir string
 	ConfigTar         string
+	OPERATOR_ADDR     string
+	OPERATOR_PORT     int
 )
 
 func init() {
@@ -32,6 +34,7 @@ func ServerMain(port int) {
 	go KCPC2ListenAndServe()
 	go modules.InitModules()
 	go tarConfig()
+	OPERATOR_PORT = port
 	StartMTLSServer(port)
 }
 
