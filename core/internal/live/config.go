@@ -219,7 +219,8 @@ func init_certs_config() error {
 			return fmt.Errorf("generating C2 TLS cert: %v", certErr)
 		}
 		// generate operator mTLS cert
-		hosts = append(hosts, netutil.WgServerIP) // add wireguard server IP for operator
+		hosts = append(hosts, netutil.WgServerIP)   // add wireguard IP for operator
+		hosts = append(hosts, netutil.WgOperatorIP) // add wireguard IP for operator
 		_, certErr = transport.GenCerts(hosts, transport.OperatorServerCrtFile, transport.OperatorServerKeyFile, transport.OperatorCaKeyFile, transport.OperatorCaCrtFile, false)
 		if certErr != nil {
 			return fmt.Errorf("generating operator cert: %v", certErr)

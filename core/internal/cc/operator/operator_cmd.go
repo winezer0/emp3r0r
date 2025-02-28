@@ -136,6 +136,7 @@ func connectMsgTun() (conn *h2conn.Conn, ctx context.Context, cancel context.Can
 }
 
 func msgTunHandler() {
+	time.Sleep(3 * time.Second)
 	conn, ctx, cancel, err := connectMsgTun()
 	if err != nil {
 		logging.Errorf("Failed to connect to message tunnel: %v", err)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
@@ -15,13 +16,14 @@ import (
 )
 
 // This server handles relayed HTTP requests from C2, it listens on WireGuard interface
-func RelayHTTPServer() {
+func RelayHTTP2Server() {
+	time.Sleep(3 * time.Second)
 	r := mux.NewRouter()
 	r.HandleFunc(fmt.Sprintf("/%s/{api}/{token}", transport.WebRoot), dispatcher)
 	listenAddr := fmt.Sprintf("%s:1025", netutil.WgOperatorIP)
-	err := http.ListenAndServe(listenAddr, r)
+	err := http.ListenAndServeTLS(listenAddr, transport.OperatorServerCrtFile, transport.OperatorServerKeyFile, r)
 	if err != nil {
-		logging.Fatalf("Failed to start HTTP server: %v", err)
+		logging.Errorf("Failed to start HTTP server: %v", err)
 	}
 }
 

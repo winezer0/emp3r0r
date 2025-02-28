@@ -61,7 +61,7 @@ func CliMain(server_ip string, server_port int) {
 		// handle messages from operator
 		go msgTunHandler()
 		// relayed HTTP server
-		go RelayHTTPServer()
+		go RelayHTTP2Server()
 	}
 
 	// unlock incomplete downloads

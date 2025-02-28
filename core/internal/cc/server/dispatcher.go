@@ -1,11 +1,14 @@
 package server
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
@@ -54,7 +57,7 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 
 	// forward to operator
 	api := transport.WebRoot + "/" + vars["api"]
-	req_url := fmt.Sprintf("http://%s:1025/%s", netutil.WgOperatorIP, req.URL.Path)
+	req_url := fmt.Sprintf("https://%s:1025/%s", netutil.WgOperatorIP, req.URL.Path)
 	parsedURL, err := url.Parse(req_url)
 	if err != nil {
 		logging.Errorf("handleFTPTransfer: %v", err)
@@ -62,6 +65,24 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 		return
 	}
 	proxy := httputil.NewSingleHostReverseProxy(parsedURL)
+	rootCAs := x509.NewCertPool()
+	capem, err := os.ReadFile(transport.OperatorCaCrtFile)
+	if err != nil {
+		logging.Errorf("Failed to parse CA cert: %v", err)
+		http.Error(wrt, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	rootCAs.AppendCertsFromPEM([]byte(transport.CACrtPEM))
+	rootCAs.AppendCertsFromPEM(capem)
+	tlsConfig := &tls.Config{
+		ServerName:         parsedURL.Hostname(),
+		InsecureSkipVerify: false,
+		RootCAs:            rootCAs,
+	}
+	proxy.Transport = &http.Transport{
+		TLSClientConfig:   tlsConfig,
+		ForceAttemptHTTP2: true,
+	}
 
 	// handlers
 	switch api {

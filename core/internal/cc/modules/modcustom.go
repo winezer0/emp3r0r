@@ -110,7 +110,7 @@ func getDownloadAddr() string {
 
 func handleInMemoryModule(config def.ModuleConfig, payload_type, envStr, download_addr string) {
 	hosted_file := live.WWWRoot + live.ActiveModule.Name + ".xz"
-	logging.Infof("Compressing %s with xz...", live.ActiveModule)
+	logging.Infof("Compressing %s with xz...", live.ActiveModule.Name)
 
 	// only one file is allowed
 	if len(config.AgentConfig.Files) == 0 {
@@ -151,15 +151,15 @@ func handleCompressedModule(config def.ModuleConfig, payload_type, exec_cmd, env
 	tarball_path := live.WWWRoot + live.ActiveModule.Name + ".tar.xz"
 	file_to_download := filepath.Base(tarball_path)
 	if !util.IsFileExist(tarball_path) {
-		logging.Infof("Compressing %s with tar.xz...", live.ActiveModule)
+		logging.Infof("Compressing %s with tar.xz...", live.ActiveModule.Name)
 		path := config.Path
 		err := util.TarXZ(path, tarball_path)
 		if err != nil {
-			logging.Errorf("Compressing %s: %v", live.ActiveModule, err)
+			logging.Errorf("Compressing %s: %v", live.ActiveModule.Name, err)
 			return
 		}
 		logging.Infof("Created %.4fMB archive (%s) for module '%s'",
-			float64(util.FileSize(tarball_path))/1024/1024, tarball_path, live.ActiveModule)
+			float64(util.FileSize(tarball_path))/1024/1024, tarball_path, live.ActiveModule.Name)
 	} else {
 		logging.Infof("Using cached %s", tarball_path)
 	}
