@@ -12,6 +12,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/tools"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
@@ -61,7 +62,7 @@ func CliMain(server_ip string, server_port int) {
 		// handle messages from operator
 		go msgTunHandler()
 		// relayed HTTP server
-		go RelayHTTP2Server()
+		go ftp.RelayHTTP2Server()
 	}
 
 	// unlock incomplete downloads

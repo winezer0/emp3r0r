@@ -1,4 +1,4 @@
-package operator
+package ftp
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
@@ -98,7 +97,7 @@ func handleFTPTransfer(sh *network.StreamHandler, wrt http.ResponseWriter, req *
 		return
 	}
 	mapKey := filename
-	writeDir, targetFile, filewrite, lock := ftp.GenerateGetFilePaths(filename)
+	writeDir, targetFile, filewrite, lock := GenerateGetFilePaths(filename)
 	filename = filepath.Clean(filename)
 	filename = util.FileBaseName(filename)
 	logging.Debugf("Downloading to %s, saving to %s, using lock file %s", filewrite, targetFile, lock)

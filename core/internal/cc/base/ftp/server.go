@@ -1,4 +1,4 @@
-package operator
+package ftp
 
 import (
 	"fmt"
