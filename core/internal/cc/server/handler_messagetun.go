@@ -115,6 +115,9 @@ func fwdMsg2Operators(msg def.MsgTunData) (err error) {
 		if operator == nil {
 			continue
 		}
+		if operator.conn == nil {
+			continue
+		}
 		encoder := json.NewEncoder(operator.conn)
 		err = encoder.Encode(msg)
 		if err != nil {
