@@ -32,7 +32,7 @@ func dispatcher(w http.ResponseWriter, r *http.Request) {
 	token := mux.Vars(r)["token"]
 
 	switch api {
-	case transport.FTPAPI:
+	case transport.GetAPI:
 		for _, sh := range network.FTPStreams {
 			if token == sh.Token {
 				handleFTPTransfer(sh, w, r)
@@ -40,7 +40,7 @@ func dispatcher(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		w.WriteHeader(http.StatusNotFound)
-	case transport.FileAPI:
+	case transport.PutAPI:
 		path := filepath.Clean(r.URL.Query().Get("file_to_download"))
 		path = filepath.Base(path)
 		logging.Debugf("FileAPI request for file: %s, URL: %s", path, r.URL)

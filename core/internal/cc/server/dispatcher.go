@@ -90,9 +90,9 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 		handleAgentCheckIn(wrt, req)
 	case transport.MsgAPI:
 		handleMessageTunnel(wrt, req)
-	case transport.FTPAPI:
+	case transport.GetAPI:
 		proxy.ServeHTTP(wrt, req)
-	case transport.FileAPI:
+	case transport.PutAPI:
 		proxy.ServeHTTP(wrt, req)
 	case transport.ProxyAPI:
 		handlePortForwarding(network.ProxyStream, wrt, req)
