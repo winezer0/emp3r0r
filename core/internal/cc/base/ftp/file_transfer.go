@@ -69,7 +69,7 @@ func PutFile(lpath, rpath string, a *def.Emp3r0rAgent) error {
 	)
 
 	// move file to wwwroot, then move it back when we are done with it
-	logging.Infof("Copy %s to %s", lpath, live.WWWRoot+util.FileBaseName(lpath))
+	logging.Infof("Copying %s to %s", lpath, live.WWWRoot+util.FileBaseName(lpath))
 	err := util.Copy(lpath, live.WWWRoot+util.FileBaseName(lpath))
 	if err != nil {
 		return fmt.Errorf("copy %s to %s: %v", lpath, live.WWWRoot+util.FileBaseName(lpath), err)

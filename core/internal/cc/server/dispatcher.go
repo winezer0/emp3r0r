@@ -57,14 +57,25 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 
 	// forward to operator
 	api := transport.WebRoot + "/" + vars["api"]
-	req_url := fmt.Sprintf("https://%s:1025/%s", netutil.WgOperatorIP, req.URL.Path)
-	parsedURL, err := url.Parse(req_url)
+
+	// Create base target URL
+	targetURL := fmt.Sprintf("https://%s:1025", netutil.WgOperatorIP)
+	parsedURL, err := url.Parse(targetURL)
 	if err != nil {
 		logging.Errorf("handleFTPTransfer: %v", err)
 		http.Error(wrt, "Internal server error", http.StatusInternalServerError)
 		return
 	}
+
 	proxy := httputil.NewSingleHostReverseProxy(parsedURL)
+
+	// Set up a proper director function to preserve query parameters and other request properties
+	originalDirector := proxy.Director
+	proxy.Director = func(req *http.Request) {
+		originalDirector(req)
+		logging.Debugf("Proxying to: %s%s?%s", req.URL.Host, req.URL.Path, req.URL.RawQuery)
+	}
+
 	rootCAs := x509.NewCertPool()
 	capem, err := os.ReadFile(transport.OperatorCaCrtFile)
 	if err != nil {
@@ -83,6 +94,13 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 		TLSClientConfig:   tlsConfig,
 		ForceAttemptHTTP2: true,
 	}
+	// Add error handling for debugging
+	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+		logging.Errorf("Proxy error: %v", err)
+		http.Error(w, "Proxy error", http.StatusBadGateway)
+	}
+	// Use the original request's context
+	req = req.WithContext(req.Context())
 
 	// handlers
 	switch api {
@@ -91,8 +109,13 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 	case transport.MsgAPI:
 		handleMessageTunnel(wrt, req)
 	case transport.GetAPI:
+		logging.Debugf("About to proxy request: %s %s", req.Method, req.URL.Path)
+		logging.Debugf("Request headers: %v", req.Header)
 		proxy.ServeHTTP(wrt, req)
 	case transport.PutAPI:
+		logging.Debugf("About to proxy request: %s %s", req.Method, req.URL.Path)
+		logging.Debugf("Request headers: %v", req.Header)
+		logging.Debugf("Forwarding PUT request to operator at %s", targetURL)
 		proxy.ServeHTTP(wrt, req)
 	case transport.ProxyAPI:
 		handlePortForwarding(network.ProxyStream, wrt, req)
