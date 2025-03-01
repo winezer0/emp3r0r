@@ -41,7 +41,7 @@ func ServerMain(port int) {
 func tarConfig() {
 	// tar all config files
 	filter := func(path string) bool {
-		return strings.HasSuffix(path, ".log")
+		return strings.HasSuffix(path, ".log") || strings.HasPrefix(path, "stub") || strings.HasSuffix(path, ".history")
 	}
 	os.Chdir(filepath.Dir(Emp3r0rWorkingDir))
 	defer os.Chdir(Emp3r0rWorkingDir)
