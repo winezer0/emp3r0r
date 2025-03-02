@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/spf13/cobra"
@@ -112,7 +113,7 @@ func executeCmd(cmd string) {
 		logging.Errorf("%s: no active target", cmd)
 		return
 	}
-	err := operatorSendCommand2Agent(cmd, "", activeAgent.Tag)
+	err := operatorSendCommand2Agent(cmd, uuid.NewString(), activeAgent.Tag)
 	if err != nil {
 		logging.Errorf("Failed to send command %s to %s", strconv.Quote(cmd), activeAgent.Tag)
 	}

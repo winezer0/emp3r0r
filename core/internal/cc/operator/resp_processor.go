@@ -175,7 +175,12 @@ func processAgentData(data *def.MsgTunData) {
 	logging.Printf(agent_output)
 
 	// time spent on this cmd
-	start_time, err := time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", live.CmdTime[cmd_id])
+	cmdtime, ok := live.CmdTime[cmd_id]
+	if !ok {
+		logging.Warningf("No start time found for command %s", cmd)
+		return
+	}
+	start_time, err := time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", cmdtime)
 	if err != nil {
 		logging.Warningf("Parsing timestamp '%s': %v", live.CmdTime[cmd_id], err)
 	} else {

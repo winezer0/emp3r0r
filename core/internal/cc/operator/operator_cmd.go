@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
@@ -55,6 +56,9 @@ func sendJSONRequest(url string, data any) ([]byte, error) {
 
 // operatorSendCommand2Agent sends a command to an agent through the mTLS C2 operator server
 func operatorSendCommand2Agent(cmd, cmdID, agentTag string) error {
+	if cmdID == "" {
+		cmdID = uuid.NewString()
+	}
 	operation := def.Operation{
 		AgentTag:  agentTag,
 		Action:    "command",

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/tools"
@@ -439,7 +440,7 @@ func execCmd(cmd *cobra.Command, args []string) {
 	}
 
 	// execute command
-	err = operatorSendCommand2Agent(fmt.Sprintf("exec --cmd %s", strconv.Quote(cmdStr)), "", agent.Tag)
+	err = operatorSendCommand2Agent(fmt.Sprintf("exec --cmd %s", strconv.Quote(cmdStr)), uuid.NewString(), agent.Tag)
 	if err != nil {
 		logging.Errorf("Error executing command: %v", err)
 	}
