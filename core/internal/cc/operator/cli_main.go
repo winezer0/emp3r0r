@@ -19,6 +19,7 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
+	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 	"github.com/reeflective/console"
 )
 
@@ -37,6 +38,18 @@ var (
 )
 
 func backgroundJobs() {
+	var err error
+	OperatorHTTPClient, err = createMTLSHttpClient()
+	if err != nil {
+		logging.Fatalf("Failed to create HTTP client: %v", err)
+	}
+	OPERATOR_ADDR = fmt.Sprintf("%s:%d", netutil.WgServerIP, OPERATOR_PORT)
+	logging.Infof("Operator's address: %s", OPERATOR_ADDR)
+
+	// Update operator's IP to Wireguard IP
+	OperatorRootURL = fmt.Sprintf("https://%s", OPERATOR_ADDR)
+	logging.Infof("Operator's WireGuard address: %s", OperatorRootURL)
+
 	// init modules by querying server for available modules
 	go initModules()
 	// refresh agent list every 10 seconds
@@ -49,6 +62,8 @@ func backgroundJobs() {
 
 // CliMain launches the commandline UI
 func CliMain(wg_server_ip string, wg_server_port int) {
+	OPERATOR_PORT = wg_server_port + 1
+
 	// unlock incomplete downloads
 	err := tools.UnlockDownloads()
 	if err != nil {
