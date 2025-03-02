@@ -52,11 +52,9 @@ func listPortMappings(ctx carapace.Context) carapace.Action {
 // autocomplete target index and tags
 func listTargetIndexTags(ctx carapace.Context) carapace.Action {
 	names := make([]string, 0)
-	for t, c := range live.AgentControlMap {
-		idx := c.Index
+	for _, t := range live.AgentList {
 		tag := t.Tag
 		tag = strconv.Quote(tag) // escape special characters
-		names = append(names, strconv.Itoa(idx))
 		names = append(names, tag)
 	}
 	return carapace.ActionValues(names...)
