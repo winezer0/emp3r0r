@@ -12,13 +12,14 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
+	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 )
 
 // StartMTLSServer starts the operator TLS server with mTLS.
 func StartMTLSServer(port int) {
 	r := mux.NewRouter()
 	r.HandleFunc(fmt.Sprintf("/%s/{api}", transport.OperatorRoot), operationDispatcher)
-	if network.MTLSServer != nil {
+	if network.MTLSServer != nil && network.MTLSServerCtx != nil {
 		network.MTLSServer.Shutdown(network.MTLSServerCtx)
 	}
 
@@ -28,7 +29,9 @@ func StartMTLSServer(port int) {
 		logging.Fatalf("Failed to read client CA certificate: %v", err)
 	}
 	clientCAs := x509.NewCertPool()
-	clientCAs.AppendCertsFromPEM(clientCACert)
+	if !clientCAs.AppendCertsFromPEM(clientCACert) {
+		logging.Fatalf("Failed to append client CA certificate")
+	}
 
 	// Configure TLS with mTLS
 	tlsConfig := &tls.Config{
@@ -37,7 +40,7 @@ func StartMTLSServer(port int) {
 	}
 
 	network.MTLSServer = &http.Server{
-		Addr:      fmt.Sprintf(":%d", port),
+		Addr:      fmt.Sprintf("%s:%d", netutil.WgServerIP, port),
 		Handler:   r,
 		TLSConfig: tlsConfig,
 	}

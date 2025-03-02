@@ -107,7 +107,7 @@ func BroadcastServer(ctx context.Context, cancel context.CancelFunc, port string
 		}
 
 		// decrypt broadcast message
-		decBytes, err := crypto.AES_GCM_Decrypt(def.AESKey, buf[:n])
+		decBytes, err := crypto.AES_GCM_Decrypt(def.AESPassword, buf[:n])
 		if err != nil {
 			log.Printf("BroadcastServer: %v", err)
 		}
@@ -205,7 +205,7 @@ func BroadcastMsg(msg, dst string) (err error) {
 	}
 
 	// encrypt message
-	encMsg, err := crypto.AES_GCM_Encrypt(def.AESKey, []byte(msg))
+	encMsg, err := crypto.AES_GCM_Encrypt(def.AESPassword, []byte(msg))
 	if err != nil {
 		return fmt.Errorf("failed to encrypt %s", msg)
 	}

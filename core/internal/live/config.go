@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jm33-m0/arc"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
@@ -15,6 +16,12 @@ import (
 )
 
 var (
+	// IsServer is true if we are running as server
+	IsServer = false
+
+	// HOME is the user's home directory
+	HOME = ""
+
 	// ActiveAgent selected target
 	ActiveAgent *def.Emp3r0rAgent
 
@@ -37,6 +44,9 @@ var (
 	// EmpLogFile ~/.emp3r0r/emp3r0r.log, initialized in logging package
 	EmpLogFile = ""
 
+	// EmpConfigTar emp3r0r_operator_config.tar.xz
+	EmpConfigTar = ""
+
 	// emp3r0r-cat
 	CAT = ""
 )
@@ -52,8 +62,19 @@ const (
 	UtilsArchive = WWWRoot + "utils.tar.xz"
 )
 
-// InitCC set workspace, module directories, certs etc
-func InitCC() (err error) {
+func ExtractConfig() (err error) {
+	if !util.IsFileExist(EmpConfigTar) {
+		return fmt.Errorf("%s not found", EmpConfigTar)
+	}
+	return arc.Unarchive(EmpConfigTar, HOME)
+}
+
+func SetupFilePaths() (err error) {
+	HOME, err = os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	EmpConfigTar = HOME + "/emp3r0r_operator_config.tar.xz"
 	// prefix
 	Prefix = os.Getenv("EMP3R0R_PREFIX")
 	if Prefix == "" {
@@ -87,12 +108,6 @@ func InitCC() (err error) {
 		}
 	}
 
-	// cd to workspace
-	err = os.Chdir(EmpWorkSpace)
-	if err != nil {
-		return fmt.Errorf("cd to workspace %s: %v", EmpWorkSpace, err)
-	}
-
 	// prefixes for stubs
 	def.Stub_Linux = EmpWorkSpace + "/stub"
 	def.Stub_Windows = EmpWorkSpace + "/stub-win"
@@ -118,13 +133,7 @@ func InitCC() (err error) {
 	// Module directories
 	ModuleDirs = []string{EmpDataDir + "/modules", EmpWorkSpace + "/modules"}
 
-	// certs
-	err = init_certs_config()
-	if err != nil {
-		return fmt.Errorf("init_certs_config: %v", err)
-	}
-
-	return
+	return nil
 }
 
 func ReadJSONConfig() (err error) {
@@ -161,8 +170,13 @@ func InitMagicAgentOneTimeBytes() {
 	}
 }
 
-// init_certs_config generate certs if not found
-func init_certs_config() error {
+// InitCertsAndConfig generate certs if not found, then generate config file
+func InitCertsAndConfig() error {
+	// if we are not running as server, return, the certs are already generated
+	if !IsServer {
+		return nil
+	}
+
 	if _, err := os.Stat(transport.CaCrtFile); os.IsNotExist(err) {
 		logging.Warningf("CA cert not found, generating a new one")
 		_, err := transport.GenCerts(nil, transport.CaCrtFile, transport.CaKeyFile, "", "", true)
@@ -225,10 +239,14 @@ func init_certs_config() error {
 		if certErr != nil {
 			return fmt.Errorf("generating operator cert: %v", certErr)
 		}
-	} else {
-		// get host names from C2 TLS cert
-		hosts = transport.NamesInCert(transport.ServerCrtFile)
 	}
+	return nil
+}
+
+// LoadConfig load config JSON file
+func LoadConfig() error {
+	// get host names from C2 TLS cert
+	hosts := transport.NamesInCert(transport.ServerCrtFile)
 	if len(hosts) == 0 {
 		return fmt.Errorf("no host names found in C2 TLS cert")
 	}
@@ -238,9 +256,9 @@ func init_certs_config() error {
 		return fmt.Errorf("failed to load CA to RuntimeConfig: %v", err)
 	}
 
-	// init config file using the first host name
 	if util.IsFileExist(EmpConfigFile) {
-		return nil
+		return ReadJSONConfig()
 	}
+	// init config file using the first host name
 	return InitConfigFile(hosts[0])
 }

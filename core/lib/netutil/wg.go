@@ -4,6 +4,7 @@
 package netutil
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -12,7 +13,6 @@ import (
 	"os/signal"
 	"strings"
 
-	"github.com/jm33-m0/emp3r0r/core/lib/util"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 	"golang.zx2c4.com/wireguard/conn"
@@ -28,22 +28,18 @@ type LogLevel int
 
 // Log level constants
 const (
-	LogLevelSilent LogLevel = device.LogLevelSilent
-	LogLevelError  LogLevel = device.LogLevelError
-
+	LogLevelSilent  LogLevel = device.LogLevelSilent
+	LogLevelError   LogLevel = device.LogLevelError
 	LogLevelVerbose LogLevel = device.LogLevelVerbose
-
-	WgServerIP   = "172.16.254.1"
-	WgOperatorIP = "172.16.254.2"
 )
 
-// WireGuardHandshake represents a WireGuard handshake message, peers exchange this information to establish a connection
-type WireGuardHandshake struct {
-	PublicKey  string // Public key of the peer
-	IPAddress  string // IP address of the peer, no CIDR
-	ListenPort int    // UDP listen port for WireGuard
-	Endpoint   string // Endpoint address of the peer
-}
+var (
+	WgSubnet     = "172.16.254.0/24" // WireGuard subnet
+	WgServerIP   = "172.16.254.1"    // server's static WireGuard IP
+	WgOperatorIP = "172.16.254.2"    // operator's static WireGuard IP
+	WgServer     *WireGuardDevice    // server's WireGuard device
+	WgOperator   *WireGuardDevice    // operator's WireGuard device
+)
 
 // WireGuardDevice represents a WireGuard virtual network interface
 type WireGuardDevice struct {
@@ -59,6 +55,10 @@ type WireGuardDevice struct {
 	ListenPort int
 	// Log verbosity level
 	LogLevel LogLevel
+	// Context of the WireGuard device
+	Context context.Context
+	// Cancel function for the context
+	Cancel context.CancelFunc
 
 	// Underlying device objects
 	device   *device.Device
@@ -134,6 +134,9 @@ func (w *WireGuardDevice) Close() {
 		w.uapiFile.Close()
 		w.uapiFile = nil
 	}
+	if w.Cancel != nil {
+		w.Cancel()
+	}
 }
 
 // WaitShutdown blocks until the device is shut down or a termination signal is received
@@ -156,6 +159,8 @@ func (w *WireGuardDevice) WaitShutdown() {
 		w.logger.Errorf("Error occurred")
 	case <-w.device.Wait():
 		w.logger.Verbosef("Device closed")
+	case <-w.Context.Done():
+		w.logger.Verbosef("Context done")
 	}
 
 	// Clean up
@@ -178,6 +183,9 @@ func CreateWireGuardDevice(config WireGuardConfig) (*WireGuardDevice, error) {
 		ListenPort: config.ListenPort,
 		LogLevel:   config.LogLevel,
 	}
+
+	// Create context
+	wg.Context, wg.Cancel = context.WithCancel(context.Background())
 
 	// Validate IP address format
 	_, _, err = net.ParseCIDR(config.IPAddress)
@@ -381,39 +389,20 @@ func (w *WireGuardDevice) WireGuardDeviceInfo() string {
 
 // WireGuardMain provides the main entry point for using this library programmatically
 // It sets up a WireGuard interface based on the provided configuration and blocks until termination.
-func WireGuardMain(config WireGuardConfig) error {
+func WireGuardMain(config WireGuardConfig) (wg *WireGuardDevice, err error) {
 	// Validate required parameters
 	if config.IPAddress == "" {
-		return fmt.Errorf("IP address is required in configuration")
+		return nil, fmt.Errorf("IP address is required in configuration")
 	}
 
 	// Create and configure the WireGuard device
-	wg, err := CreateWireGuardDevice(config)
+	wg, err = CreateWireGuardDevice(config)
 	if err != nil {
-		return fmt.Errorf("failed to create WireGuard device: %w", err)
+		return nil, fmt.Errorf("failed to create WireGuard device: %w", err)
 	}
 	defer wg.Close()
 
 	// Wait for termination
 	wg.WaitShutdown()
-	return nil
-}
-
-// GenWgConfig generates a WireGuard configuration based on a handshake message
-func GenWgConfig(handshake *WireGuardHandshake, iface, ip, privKey string) (config *WireGuardConfig) {
-	config = &WireGuardConfig{
-		InterfaceName: iface,
-		PrivateKey:    privKey,
-		IPAddress:     ip + "/24",
-		ListenPort:    util.RandInt(1024, 65535),
-		Peers: []PeerConfig{
-			{
-				PublicKey:  handshake.PublicKey,
-				AllowedIPs: handshake.IPAddress + "/32",
-				Endpoint:   handshake.Endpoint,
-			},
-		},
-	}
-
-	return
+	return wg, nil
 }

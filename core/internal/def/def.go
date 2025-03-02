@@ -47,8 +47,8 @@ var (
 	// DefaultShell is the default shell to use, will use custom bash if vaccine is installed
 	DefaultShell = ""
 
-	// AESKey generated from Tag -> md5sum, type: []byte
-	AESKey []byte
+	// AESPassword generated from Tag -> md5sum, type: []byte
+	AESPassword []byte
 )
 
 // Build

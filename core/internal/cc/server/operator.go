@@ -3,9 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
@@ -27,8 +25,8 @@ var (
 	// OPERATORS holds all operator connections
 	OPERATORS = make(map[string]*operator_t)
 
-	// SERVER_WG is the wireguard config for the server
-	SERVER_WG *netutil.WireGuardConfig
+	// SERVER_WG_CONFIG is the wireguard config for the server
+	SERVER_WG_CONFIG *netutil.WireGuardConfig
 )
 
 // DecodeJSONBody decodes JSON HTTP request body
@@ -153,62 +151,4 @@ func handleOperatorConn(wrt http.ResponseWriter, req *http.Request) {
 			logging.Warningf("handleOperatorConn exited")
 		}
 	}
-}
-
-func handleWireguardHandshake(wrt http.ResponseWriter, req *http.Request) {
-	// decode wireguard config
-	wgHandshake := new(netutil.WireGuardHandshake)
-	err := json.NewDecoder(req.Body).Decode(wgHandshake)
-	if err != nil {
-		http.Error(wrt, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// session ID for this operator
-	operator_session := req.Header.Get("operator_session")
-	logging.Infof("Operator %s is trying to exchange wireguard config", operator_session)
-	operator, ok := OPERATORS[operator_session]
-	if !ok {
-		OPERATORS[operator_session] = &operator_t{
-			sessionID: operator_session,
-			wgip:      wgHandshake.IPAddress,
-		}
-	} else {
-		operator.wgip = wgHandshake.IPAddress
-	}
-
-	// generate our wireguard config if needed
-	if SERVER_WG == nil {
-		privateKey, err := netutil.GeneratePrivateKey()
-		if err != nil {
-			return
-		}
-		SERVER_WG = netutil.GenWgConfig(wgHandshake, "emp_server", netutil.WgServerIP, privateKey)
-	}
-
-	// send our wireguard config to the operator
-	publickey, err := netutil.PublicKeyFromPrivate(SERVER_WG.PrivateKey)
-	if err != nil {
-		http.Error(wrt, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	serverIP := strings.Split(SERVER_WG.IPAddress, "/")[0]
-	serverWgHandshake := &netutil.WireGuardHandshake{
-		IPAddress: serverIP,
-		PublicKey: publickey,
-		Endpoint:  fmt.Sprintf("%s:%d", live.RuntimeConfig.CCHost, SERVER_WG.ListenPort),
-	}
-
-	if err := json.NewEncoder(wrt).Encode(serverWgHandshake); err != nil {
-		http.Error(wrt, err.Error(), http.StatusInternalServerError)
-	}
-
-	// start wireguard
-	go func() {
-		err = netutil.WireGuardMain(*SERVER_WG)
-		if err != nil {
-			logging.Errorf("Failed to start wireguard: %v", err)
-			http.Error(wrt, err.Error(), http.StatusInternalServerError)
-		}
-	}()
 }

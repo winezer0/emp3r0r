@@ -16,7 +16,6 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
-	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 	"github.com/posener/h2conn"
 	"github.com/spf13/cobra"
 )
@@ -197,43 +196,4 @@ func msgTunHandler() {
 
 		processAgentData(msg)
 	}
-}
-
-func wireguardHandshake() (err error) {
-	// make our handshake
-	privKey, err := netutil.GeneratePrivateKey()
-	if err != nil {
-		return
-	}
-	publicKey, err := netutil.PublicKeyFromPrivate(privKey)
-	if err != nil {
-		return
-	}
-	wgHandshake := &netutil.WireGuardHandshake{
-		PublicKey: publicKey,
-		IPAddress: netutil.WgOperatorIP,
-	}
-
-	// send handshake request
-	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorWireGuard)
-	resp, err := sendJSONRequest(url, wgHandshake)
-	if err != nil {
-		return fmt.Errorf("failed to send handshake request: %v", err)
-	}
-
-	// wireguard handshake response
-	wgHandshake = new(netutil.WireGuardHandshake)
-	if err := json.Unmarshal(resp, wgHandshake); err != nil {
-		return fmt.Errorf("failed to unmarshal handshake response: %v", err)
-	}
-
-	// generate our wireguard config
-	wgConfig := netutil.GenWgConfig(wgHandshake, "emp_operator", netutil.WgOperatorIP, privKey)
-	go func() {
-		err = netutil.WireGuardMain(*wgConfig)
-		if err != nil {
-			logging.Errorf("Failed to start WireGuard operator: %v", err)
-		}
-	}()
-	return
 }

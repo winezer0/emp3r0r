@@ -1,12 +1,15 @@
 package netutil
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/exp/rand"
 )
 
 const (
@@ -193,4 +196,65 @@ func FindIPToUse(target string) string {
 		}
 	}
 	return ""
+}
+
+// GenerateRandomSubnet24 generates a random /24 subnet
+func GenerateRandomSubnet24() string {
+	first := rand.Intn(256)
+	second := rand.Intn(256)
+	third := rand.Intn(256)
+
+	return fmt.Sprintf("%d.%d.%d.0/24", first, second, third)
+}
+
+// GenerateRandomPrivateSubnet24 generates a random private /24 subnet from RFC 1918 address space
+func GenerateRandomPrivateSubnet24() string {
+	// Choose which private address range to use
+
+	rangeType := rand.Intn(3)
+
+	var first, second, third int
+
+	switch rangeType {
+	case 0:
+		// 10.0.0.0/8 range
+		first = 10
+		second = rand.Intn(256)
+		third = rand.Intn(256)
+	case 1:
+		// 172.16.0.0/12 range
+		first = 172
+		second = rand.Intn(16) + 16 // 16-31
+		third = rand.Intn(256)
+	case 2:
+		// 192.168.0.0/16 range
+		first = 192
+		second = 168
+		third = rand.Intn(256)
+	}
+
+	return fmt.Sprintf("%d.%d.%d.0/24", first, second, third)
+}
+
+// GenerateRandomIPInSubnet24 generates a random IP within the given /24 subnet
+func GenerateRandomIPInSubnet24(subnet string) (string, error) {
+	// Parse the subnet
+	_, ipNet, err := net.ParseCIDR(subnet)
+	if err != nil {
+		return "", fmt.Errorf("invalid subnet: %v", err)
+	}
+
+	// Get the first three octets from the subnet IP
+	ip := ipNet.IP.To4()
+	if ip == nil {
+		return "", fmt.Errorf("not an IPv4 address")
+	}
+
+	// Generate random last octet (1-254, avoiding 0 and 255)
+	lastOctet := rand.Intn(254) + 1
+
+	// Create a new IP
+	randomIP := net.IPv4(ip[0], ip[1], ip[2], byte(lastOctet))
+
+	return randomIP.String(), nil
 }

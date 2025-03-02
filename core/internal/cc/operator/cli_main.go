@@ -19,7 +19,6 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
-	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 	"github.com/reeflective/console"
 )
 
@@ -37,36 +36,21 @@ var (
 	OPERATOR_SESSION = uuid.NewString()
 )
 
+func backgroundJobs() {
+	// init modules by querying server for available modules
+	go initModules()
+	// refresh agent list every 10 seconds
+	go agentListRefresher()
+	// handle messages from operator
+	go msgTunHandler()
+	// relayed HTTP server
+	go ftp.RelayHTTP2Server()
+}
+
 // CliMain launches the commandline UI
-func CliMain(server_ip string, server_port int) {
-	var err error
-	OPERATOR_PORT = server_port
-	OperatorHTTPClient, err = createMTLSHttpClient()
-	if err != nil {
-		logging.Fatalf("Failed to create HTTP client: %v", err)
-	}
-	OperatorRootURL = fmt.Sprintf("https://%s:%d", server_ip, server_port)
-	OPERATOR_ADDR = fmt.Sprintf("%s:%d (WireGuard IP: %s)", server_ip, server_port, netutil.WgServerIP)
-
-	// Wireguard setup
-	err = wireguardHandshake()
-	if err != nil {
-		logging.Fatalf("Failed to setup wireguard operator: %v", err)
-	} else {
-		// Update operator's IP to Wireguard IP
-		OperatorRootURL = fmt.Sprintf("https://%s:%d", netutil.WgServerIP, server_port)
-		// init modules by querying server for available modules
-		go initModules()
-		// refresh agent list every 10 seconds
-		go agentListRefresher()
-		// handle messages from operator
-		go msgTunHandler()
-		// relayed HTTP server
-		go ftp.RelayHTTP2Server()
-	}
-
+func CliMain(wg_server_ip string, wg_server_port int) {
 	// unlock incomplete downloads
-	err = tools.UnlockDownloads()
+	err := tools.UnlockDownloads()
 	if err != nil {
 		logging.Debugf("UnlockDownloads: %v", err)
 	}
@@ -118,6 +102,9 @@ func CliMain(server_ip string, server_port int) {
 
 	// when the console is closed, deinit tmux windows
 	defer cli.TmuxDeinitWindows()
+
+	// Background jobs
+	backgroundJobs()
 
 	// Run the console
 	EMP3R0R_CONSOLE.Start()

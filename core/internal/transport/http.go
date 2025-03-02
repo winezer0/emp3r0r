@@ -25,7 +25,7 @@ func ServeFileHTTP(file_path, port string, ctx context.Context, cancel context.C
 	go func() {
 		err = Stager_HTTP_Server.ListenAndServe()
 		if err == http.ErrServerClosed {
-			err = fmt.Errorf("Stager HTTP server is shutdown")
+			err = fmt.Errorf("stager HTTP server is shutdown")
 			errChan <- err
 		}
 	}()
@@ -34,7 +34,7 @@ func ServeFileHTTP(file_path, port string, ctx context.Context, cancel context.C
 	case <-ctx.Done():
 		err = Stager_HTTP_Server.Shutdown(context.Background())
 		if err != nil {
-			err = fmt.Errorf("Shutdown Stager HTTP server: %v", err)
+			err = fmt.Errorf("shutdown Stager HTTP server: %v", err)
 		}
 		return
 	case err = <-errChan:
