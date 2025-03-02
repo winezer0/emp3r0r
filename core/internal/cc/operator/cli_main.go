@@ -11,7 +11,6 @@ import (
 	"github.com/alecthomas/chroma/quick"
 	"github.com/fatih/color"
 	"github.com/google/uuid"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/tools"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
@@ -142,7 +141,7 @@ func SetDynamicPrompt() string {
 	prompt_name := color.New(color.Bold, color.FgBlack, color.BgHiWhite).Sprint(AppName)
 	transport := color.New(color.FgRed).Sprint("local")
 
-	if live.ActiveAgent != nil && agents.IsAgentExist(live.ActiveAgent) {
+	if live.ActiveAgent != nil {
 		shortName = strings.Split(live.ActiveAgent.Tag, "-agent")[0]
 		if live.ActiveAgent.HasRoot {
 			prompt_arrow = color.New(color.Bold, color.FgHiGreen).Sprint("\n# ")

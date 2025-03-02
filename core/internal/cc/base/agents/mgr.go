@@ -97,7 +97,6 @@ func SetActiveAgent(identifier string) {
 
 	select_agent := func(a *def.Emp3r0rAgent) {
 		live.ActiveAgent = a
-		logging.Successf("Now targeting %s", live.ActiveAgent.Tag)
 	}
 
 	if target_to_set == nil {

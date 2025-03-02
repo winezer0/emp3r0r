@@ -95,18 +95,5 @@ func MustGetActiveAgent() (target *def.Emp3r0rAgent) {
 		return nil
 	}
 
-	// write to given target's connection
-	live.AgentControlMapMutex.RLock()
-	defer live.AgentControlMapMutex.RUnlock()
-	tControl := live.AgentControlMap[target]
-	if tControl == nil {
-		logging.Debugf("Validate active target: agent control interface not found")
-		return nil
-	}
-	if tControl.Conn == nil {
-		logging.Debugf("Validate active target: agent is not connected")
-		return nil
-	}
-
 	return
 }

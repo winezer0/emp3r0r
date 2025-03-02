@@ -84,6 +84,7 @@ func cmdSetActiveAgent(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logging.Errorf("Failed to unmarshal active agent: %v", err)
 	}
+	logging.Successf("Now targeting %s", live.ActiveAgent.Tag)
 }
 
 func cmdListAgents(_ *cobra.Command, _ []string) {
