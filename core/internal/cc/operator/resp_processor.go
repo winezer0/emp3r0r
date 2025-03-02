@@ -37,12 +37,8 @@ func processAgentData(data *def.MsgTunData) {
 		return
 	}
 
-	live.AgentControlMapMutex.RLock()
-	defer live.AgentControlMapMutex.RUnlock()
-
 	target := agents.GetAgentByTag(data.Tag)
-	contrlIf := live.AgentControlMap[target]
-	if target == nil || contrlIf == nil {
+	if target == nil {
 		logging.Errorf("Target %s cannot be found, however, it left a message saying:\n%v",
 			data.Tag, data.CmdSlice)
 		return
@@ -173,7 +169,7 @@ func processAgentData(data *def.MsgTunData) {
 		}
 	}
 	agent_output := fmt.Sprintf("\n[%s] %s:\n%s\n\n",
-		color.CyanString("%d", contrlIf.Index),
+		color.CyanString("%s", target.Name),
 		color.HiMagentaString("%s", cmd),
 		color.HiWhiteString(out))
 	logging.Printf(agent_output)
