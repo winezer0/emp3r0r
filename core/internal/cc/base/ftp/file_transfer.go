@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
@@ -20,11 +19,16 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
 )
 
+type ExecCmdFunc func(string, string, string) error
+
+// Inject this function to send command to agent
+var ExecCmd ExecCmdFunc
+
 // StatFile Get stat info of a file on agent
 func StatFile(filepath string, a *def.Emp3r0rAgent) (fi *util.FileStat, err error) {
 	cmd_id := uuid.NewString()
 	cmd := fmt.Sprintf("%s --path '%s'", def.C2CmdStat, filepath)
-	err = agents.SendCmd(cmd, cmd_id, a)
+	err = ExecCmd(cmd, cmd_id, a.Tag)
 	if err != nil {
 		return
 	}
@@ -65,7 +69,7 @@ func PutFile(lpath, rpath string, a *def.Emp3r0rAgent) error {
 		"size: %d bytes (%.2fMB)\n"+
 		"sha256sum: %s",
 		lpath, rpath,
-		a.From, live.AgentControlMap[a].Index,
+		a.From, a.Name,
 		size, sizemB,
 		sum,
 	)
@@ -79,7 +83,7 @@ func PutFile(lpath, rpath string, a *def.Emp3r0rAgent) error {
 
 	// send cmd
 	cmd := fmt.Sprintf("put --file '%s' --path '%s' --checksum %s --size %d", lpath, rpath, sum, size)
-	err = agents.SendCmd(cmd, "", a)
+	err = ExecCmd(cmd, "", a.Tag)
 	if err != nil {
 		return fmt.Errorf("PutFile send command: %v", err)
 	}
@@ -168,7 +172,7 @@ func GetFile(file_path string, agent *def.Emp3r0rAgent) (ftpSh *network.StreamHa
 
 	// cmd
 	cmd := fmt.Sprintf("get --file_path '%s' --offset %d --token '%s'", file_path, offset, ftpSh.Token)
-	err = agents.SendCmd(cmd, "", agent)
+	err = ExecCmd(cmd, "", agent.Tag)
 	if err != nil {
 		logging.Errorf("GetFile send command: %v", err)
 		return nil, err

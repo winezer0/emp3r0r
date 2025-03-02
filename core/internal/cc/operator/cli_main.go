@@ -49,6 +49,9 @@ func backgroundJobs() {
 	OperatorRootURL = fmt.Sprintf("https://%s", OPERATOR_ADDR)
 	logging.Infof("Operator's WireGuard address: %s", OperatorRootURL)
 
+	// set up command sender of ftp package
+	ftp.ExecCmd = operatorSendCommand2Agent
+
 	// init modules by querying server for available modules
 	go initModules()
 	// refresh agent list every 10 seconds

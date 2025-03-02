@@ -70,7 +70,8 @@ func downloadFromAgent(cmd *cobra.Command, args []string) {
 
 	if isRecursive {
 		cmd_id := uuid.NewString()
-		err = agents.SendCmdToCurrentAgent(fmt.Sprintf("get --file_path %s --filter %s --offset 0 --token %s", file_path, strconv.Quote(filter), uuid.NewString()), cmd_id)
+		cmd_str := fmt.Sprintf("get --file_path %s --filter %s --offset 0 --token %s", file_path, strconv.Quote(filter), uuid.NewString())
+		err = ExecCmd(cmd_str, cmd_id, target.Tag)
 		if err != nil {
 			logging.Errorf("Cannot get %+v: %v", args, err)
 			return
