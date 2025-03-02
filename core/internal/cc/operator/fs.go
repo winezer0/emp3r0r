@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
-	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/spf13/cobra"
 )
@@ -35,24 +32,7 @@ func CmdCd(_ *cobra.Command, args []string) {
 
 	dst := args[0]
 	activeAgent.CWD = dst
-	cmd_id := uuid.NewString()
-	err := agents.SendCmdToCurrentAgent(fmt.Sprintf("cd --dst %s", dst), cmd_id)
-	if err != nil {
-		logging.Errorf("Cannot cd to %s: %v", dst, err)
-		return
-	}
-	// wait for response, max 10s
-	for i := 0; i < 100; i++ {
-		time.Sleep(100 * time.Millisecond)
-		res, exists := live.CmdResults[cmd_id]
-		if exists {
-			if !strings.Contains(res, "error") {
-				logging.Infof("cd: %s", res)
-				activeAgent.CWD = res // update CWD to absolute path
-			}
-			break
-		}
-	}
+	executeCmd(fmt.Sprintf("cd --dst %s", dst))
 }
 
 func CmdCat(_ *cobra.Command, args []string) {
