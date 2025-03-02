@@ -64,7 +64,13 @@ func operatorSendCommand2Agent(cmd, cmdID, agentTag string) error {
 
 	url := fmt.Sprintf("%s/%s", OperatorRootURL, transport.OperatorSendCommand)
 	_, err := sendJSONRequest(url, operation)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to send command to agent: %v", err)
+	}
+	live.CmdTimeMutex.Lock()
+	defer live.CmdTimeMutex.Unlock()
+	live.CmdTime[cmdID] = time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST")
+	return nil
 }
 
 func cmdSetActiveAgent(cmd *cobra.Command, args []string) {
