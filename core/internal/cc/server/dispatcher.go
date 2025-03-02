@@ -59,7 +59,7 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 	api := transport.WebRoot + "/" + vars["api"]
 
 	// Create base target URL
-	targetURL := fmt.Sprintf("https://%s:1025", netutil.WgOperatorIP)
+	targetURL := fmt.Sprintf("https://%s:%d", netutil.WgOperatorIP, netutil.WgRelayedHTTPPort)
 	parsedURL, err := url.Parse(targetURL)
 	if err != nil {
 		logging.Errorf("handleFTPTransfer: %v", err)
@@ -108,11 +108,11 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 		handleAgentCheckIn(wrt, req)
 	case transport.MsgAPI:
 		handleMessageTunnel(wrt, req)
-	case transport.GetAPI:
+	case transport.Upload2AgentAPI:
 		logging.Debugf("About to proxy request: %s %s", req.Method, req.URL.Path)
 		logging.Debugf("Request headers: %v", req.Header)
 		proxy.ServeHTTP(wrt, req)
-	case transport.PutAPI:
+	case transport.DownloadFile2AgentAPI:
 		logging.Debugf("About to proxy request: %s %s", req.Method, req.URL.Path)
 		logging.Debugf("Request headers: %v", req.Header)
 		logging.Debugf("Forwarding PUT request to operator at %s", targetURL)

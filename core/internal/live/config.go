@@ -62,10 +62,24 @@ const (
 	UtilsArchive = WWWRoot + "utils.tar.xz"
 )
 
-func ExtractConfig() (err error) {
-	if !util.IsFileExist(EmpConfigTar) {
-		return fmt.Errorf("%s not found", EmpConfigTar)
+func DownloadExtractConfig(url string, downloader func(string, string) error) (err error) {
+	if util.IsFileExist(transport.OperatorCaCrtFile) &&
+		util.IsFileExist(transport.OperatorCaKeyFile) &&
+		util.IsFileExist(transport.OperatorClientCrtFile) &&
+		util.IsFileExist(transport.OperatorClientKeyFile) &&
+		util.IsFileExist(transport.OperatorServerCrtFile) &&
+		util.IsFileExist(transport.OperatorServerKeyFile) &&
+		util.IsFileExist(EmpConfigFile) {
+		return nil
 	}
+
+	logging.Infof("Downloading and extracting config from %s to %s", url, EmpConfigTar)
+	// download config tarball from server
+	err = downloader(url, EmpConfigTar)
+	if err != nil {
+		return
+	}
+
 	return arc.Unarchive(EmpConfigTar, HOME)
 }
 

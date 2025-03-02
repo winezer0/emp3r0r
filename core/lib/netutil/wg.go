@@ -31,6 +31,12 @@ const (
 	LogLevelSilent  LogLevel = device.LogLevelSilent
 	LogLevelError   LogLevel = device.LogLevelError
 	LogLevelVerbose LogLevel = device.LogLevelVerbose
+
+	// WgFileServerPort port for file server
+	WgFileServerPort = 7000
+
+	// WgRelayedHTTPPort port for relayed HTTP server
+	WgRelayedHTTPPort = 1025
 )
 
 var (

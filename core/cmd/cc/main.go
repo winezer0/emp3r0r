@@ -5,9 +5,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
+	"time"
 
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/tools"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/operator"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/server"
@@ -25,6 +28,8 @@ type Options struct {
 	wg_server_ip       string // C2 operator server IP, default: 127.0.0.1
 	wg_server_port     int    // C2 operator server port (WireGuard), default: 13377
 	wg_server_peer_key string // C2 operator server wireguard public key
+	wg_server_peer_ip  string // C2 operator server wireguard IP
+	wg_operator_ip     string // Operator's wireguard IP
 	cdnProxy           string // Start cdn2proxy server on this port
 	debug              bool   // Do not kill tmux session when crashing
 }
@@ -40,6 +45,8 @@ func parseFlags() *Options {
 	flag.IntVar(&opts.wg_server_port, "port", operatorDefaultPort, "C2 server port")
 	flag.StringVar(&opts.wg_server_ip, "ip", operatorDefaultIP, "Connect to this C2 server to start operations")
 	flag.StringVar(&opts.wg_server_peer_key, "peer", "", "WireGuard public key provided by the C2 server")
+	flag.StringVar(&opts.wg_server_peer_ip, "peer_ip", "", "WireGuard server IP provided by the C2 server")
+	flag.StringVar(&opts.wg_operator_ip, "operator_ip", "", "Operator's wireguard IP")
 	flag.BoolVar(&opts.debug, "debug", false, "Do not kill tmux session when crashing, so you can see the crash log")
 	flag.BoolVar(&opts.isServer, "server", false, "Run as C2 operator server (default: false, run as operator client)")
 	flag.Parse()
@@ -108,7 +115,14 @@ func main() {
 			go server.ServerMain(opts.wg_server_port)
 		}
 		connectWg(opts)
-		err := live.LoadConfig()
+
+		// download and extract config files
+		url := fmt.Sprintf("http://%s:%d/%s", netutil.WgServerIP, netutil.WgFileServerPort, "emp3r0r_operator_config.tar.xz")
+		err := live.DownloadExtractConfig(url, ftp.DownloadFile)
+		if err != nil {
+			logging.Fatalf("Failed to extract config: %v", err)
+		}
+		err = live.LoadConfig()
 		if err != nil {
 			logging.Fatalf("Failed to load config: %v", err)
 		}
@@ -120,8 +134,16 @@ func connectWg(opts *Options) {
 	if opts.wg_server_peer_key == "" {
 		logging.Fatalf("Please provide the server's WireGuard public key")
 	}
+	if opts.wg_server_peer_ip == "" {
+		logging.Fatalf("Please provide the server's WireGuard IP")
+	}
+	if opts.wg_operator_ip == "" {
+		logging.Fatalf("Please provide the operator's WireGuard IP")
+	}
+	netutil.WgServerIP = opts.wg_server_peer_ip
+	netutil.WgOperatorIP = opts.wg_operator_ip
 	// Connect to C2 wireguard server with given wireguard keypair
-	wg_key := live.Prompt("Enter operator's WireGuard private key provided by the server: ")
+	wg_key := live.Prompt("Enter operator's WireGuard private key provided by the server")
 	_, err := netutil.PublicKeyFromPrivate(wg_key)
 	if err != nil {
 		log.Fatalf("Invalid key: %v", err)
@@ -134,6 +156,7 @@ func connectWg(opts *Options) {
 			{
 				PublicKey:  opts.wg_server_peer_key,
 				AllowedIPs: netutil.WgServerIP + "/32",
+				Endpoint:   fmt.Sprintf("%s:%d", opts.wg_server_ip, opts.wg_server_port),
 			},
 		},
 	}
@@ -144,6 +167,7 @@ func connectWg(opts *Options) {
 		}
 		logging.Successf("Connected to C2 WireGuard server at %s:%d", opts.wg_server_ip, opts.wg_server_port)
 	}()
+	time.Sleep(2 * time.Second)
 }
 
 // helper function to start the cdn2proxy server

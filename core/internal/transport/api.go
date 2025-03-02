@@ -11,10 +11,10 @@ const (
 	ReverseShellAPI = WebRoot + "/rshell"
 	// ProxyAPI proxy interface
 	ProxyAPI = WebRoot + "/proxy"
-	// GetAPI file transfer
-	GetAPI = WebRoot + "/ftp"
-	// PutAPI host some files
-	PutAPI = WebRoot + "/www"
+	// Upload2AgentAPI file transfer
+	Upload2AgentAPI = WebRoot + "/ftp"
+	// DownloadFile2AgentAPI host some files
+	DownloadFile2AgentAPI = WebRoot + "/www"
 	// Static hosting
 	WWW = "/www/"
 

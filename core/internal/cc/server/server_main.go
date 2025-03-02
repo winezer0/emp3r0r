@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jm33-m0/arc"
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/modules"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
@@ -95,6 +96,8 @@ func tarConfig() {
 	if err != nil {
 		logging.Errorf("Failed to tar config files: %v", err)
 	}
-	logging.Successf("Config tarball saved to %s, save it on your operator machine and run emp3r0r with:\n%s",
-		live.EmpConfigTar, "emp3r0r -server -ip <your operator IP> -port <your operator port>")
+	err = ftp.WgFileServer(live.EmpConfigTar)
+	if err != nil {
+		logging.Errorf("Failed to start file server to serve config tarball: %v", err)
+	}
 }

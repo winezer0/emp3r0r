@@ -20,7 +20,7 @@ func RelayHTTP2Server() {
 	time.Sleep(3 * time.Second)
 	r := mux.NewRouter()
 	r.HandleFunc(fmt.Sprintf("/%s/{api}/{token}", transport.WebRoot), dispatcher)
-	listenAddr := fmt.Sprintf("%s:1025", netutil.WgOperatorIP)
+	listenAddr := fmt.Sprintf("%s:%d", netutil.WgOperatorIP, netutil.WgRelayedHTTPPort)
 	err := http.ListenAndServeTLS(listenAddr, transport.OperatorServerCrtFile, transport.OperatorServerKeyFile, r)
 	if err != nil {
 		logging.Errorf("Failed to start HTTP server: %v", err)
@@ -37,7 +37,7 @@ func dispatcher(wrt http.ResponseWriter, req *http.Request) {
 	// match API names
 	api = transport.WebRoot + "/" + api
 	switch api {
-	case transport.GetAPI:
+	case transport.Upload2AgentAPI:
 		for _, sh := range network.FTPStreams {
 			if token == sh.Token {
 				handleFTPTransfer(sh, wrt, req)
@@ -46,7 +46,7 @@ func dispatcher(wrt http.ResponseWriter, req *http.Request) {
 		}
 		logging.Debugf("FTP stream not found: %s", token)
 		wrt.WriteHeader(http.StatusNotFound)
-	case transport.PutAPI:
+	case transport.DownloadFile2AgentAPI:
 		path := filepath.Clean(req.URL.Query().Get("file_to_download"))
 		path = filepath.Base(path)
 		logging.Infof("PUT: got request for file: %s, URL: %s", path, req.URL)
@@ -61,4 +61,12 @@ func dispatcher(wrt http.ResponseWriter, req *http.Request) {
 		logging.Debugf("API not found: %s", api)
 		wrt.WriteHeader(http.StatusNotFound)
 	}
+}
+
+// WgFileServer serves a file over HTTP on WireGuard interface
+func WgFileServer(path_to_file string) (err error) {
+	http.HandleFunc("/", func(wrt http.ResponseWriter, req *http.Request) {
+		http.ServeFile(wrt, req, path_to_file)
+	})
+	return http.ListenAndServe(fmt.Sprintf("%s:%d", netutil.WgServerIP, netutil.WgFileServerPort), nil)
 }
