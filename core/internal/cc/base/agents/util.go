@@ -87,13 +87,19 @@ func SendCmdToCurrentAgent(cmd, cmd_id string) error {
 }
 
 // MustGetActiveAgent check if current target is set and alive
-func MustGetActiveAgent() (target *def.Emp3r0rAgent) {
+func MustGetActiveAgent() *def.Emp3r0rAgent {
 	// find target
-	target = live.ActiveAgent
-	if target == nil {
+	if live.ActiveAgent == nil {
 		logging.Debugf("Validate active target: target does not exist")
 		return nil
 	}
 
-	return
+	// find target in live.AgentList
+	for _, agent := range live.AgentList {
+		if live.ActiveAgent.Tag == agent.Tag {
+			return agent
+		}
+	}
+
+	return nil
 }
