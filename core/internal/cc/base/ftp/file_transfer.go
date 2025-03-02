@@ -65,7 +65,7 @@ func PutFile(lpath, rpath string, a *def.Emp3r0rAgent) error {
 	size := util.FileSize(lpath)
 	sizemB := float32(size) / 1024 / 1024
 	logging.Printf("\nPutFile:\nUploading '%s' to\n'%s' "+
-		"on %s, agent [%d]\n"+
+		"on %s, agent [%s]\n"+
 		"size: %d bytes (%.2fMB)\n"+
 		"sha256sum: %s",
 		lpath, rpath,
