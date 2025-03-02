@@ -111,8 +111,6 @@ func listRemoteDir(ctx carapace.Context) carapace.Action {
 		return carapace.ActionValues()
 	}
 
-	// TODO: implement cache
-
 	// what dir to list
 	dir_to_list := strings.Join(ctx.Parts, "/")
 	if dir_to_list == "" {
@@ -120,7 +118,7 @@ func listRemoteDir(ctx carapace.Context) carapace.Action {
 		dir_to_list = "/"
 	}
 
-	cwd, listing := listRemoteDirWorker(dir_to_list)
+	cwd, listing := listRemoteDirWorker(dir_to_list, activeAgent.Tag)
 	cache := &RemoteDirListingCache{
 		CWD:     cwd,
 		Listing: listing,
@@ -131,11 +129,11 @@ func listRemoteDir(ctx carapace.Context) carapace.Action {
 	return carapace.ActionValues(listing...)
 }
 
-func listRemoteDirWorker(path_to_list string) (cwd string, names []string) {
+func listRemoteDirWorker(path_to_list, agent_tag string) (cwd string, names []string) {
 	names = make([]string, 0) // listing to return
 	cmd := fmt.Sprintf("%s --path %s", def.C2CmdListDir, path_to_list)
 	cmd_id := uuid.NewString()
-	err := agents.SendCmdToCurrentAgent(cmd, cmd_id)
+	err := operatorSendCommand2Agent(cmd, cmd_id, agent_tag)
 	if err != nil {
 		logging.Debugf("Cannot list remote directory: %v", err)
 		return
