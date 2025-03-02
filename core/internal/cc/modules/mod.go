@@ -152,7 +152,6 @@ func SetActiveModule(modName string) {
 			live.ActiveModule = def.Modules[modName]
 			UpdateOptions(modName)
 			logging.Infof("Using module %s", strconv.Quote(modName))
-			ModuleDetails(modName)
 			mod, exists := def.Modules[modName]
 			if exists {
 				logging.Successf("%s: %s", modName, mod.Comment)
