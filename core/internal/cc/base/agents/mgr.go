@@ -47,6 +47,14 @@ func GetAgentByTag(tag string) (target *def.Emp3r0rAgent) {
 			break
 		}
 	}
+	if target == nil {
+		for _, t := range live.AgentList {
+			if t.Tag == tag {
+				target = t
+				break
+			}
+		}
+	}
 	return
 }
 
