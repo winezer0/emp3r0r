@@ -14,14 +14,14 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 )
 
-func ServerMain(wg_port int) {
+func ServerMain(wg_port int, hosts string) {
 	// start all services
-	go StartC2TLSServer()
 	go KCPC2ListenAndServe()
 	go modules.InitModules()
-	go tarConfig()
+	go tarConfig(hosts)
 	wg(wg_port)
 	time.Sleep(3 * time.Second)
+	go StartC2TLSServer()
 	StartMTLSServer(wg_port + 1)
 }
 
@@ -80,8 +80,12 @@ Operator Priv Key : %-60s
 		netutil.WgServerIP, server_pubkey, netutil.WgOperatorIP, operator_privkey)
 }
 
-func tarConfig() {
-	err := os.Chdir(live.EmpWorkSpace)
+func tarConfig(hosts string) {
+	err := live.GenC2Certs(hosts)
+	if err != nil {
+		logging.Fatalf("Failed to generate C2 certs: %v", err)
+	}
+	err = os.Chdir(live.EmpWorkSpace)
 	if err != nil {
 		logging.Fatalf("Failed to change directory: %v", err)
 	}

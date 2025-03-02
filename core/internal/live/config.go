@@ -215,56 +215,43 @@ func InitCertsAndConfig() error {
 		}
 	}
 
-	isFileExist := func(file string) bool {
-		fi, err := os.Stat(file)
-		return !os.IsNotExist(err) && !fi.IsDir()
-	}
+	return nil
+}
 
+func GenC2Certs(hosts_str string) error {
 	// generate C2 TLS cert for given host names
 	var hosts []string
-	if !isFileExist(transport.ServerCrtFile) || !isFileExist(transport.ServerKeyFile) ||
-		!isFileExist(transport.OperatorServerKeyFile) || !isFileExist(transport.OperatorServerCrtFile) {
-		// if C2 server TLS cert not found, generate new ones
-		logging.Warningf("C2 TLS cert not found, generating a new one")
-		input := Prompt("Generate C2 TLS cert for host IPs or names (space separated)")
-		if strings.Contains(input, "/") || strings.Contains(input, "\\") {
-			return fmt.Errorf("invalid host names")
-		}
-		hosts = strings.Fields(input)
-		hosts = append(hosts, "127.0.0.1") // sometimes we need to connect to a relay that listens on localhost
-		hosts = append(hosts, "localhost") // sometimes we need to connect to a relay that listens on localhost
+	hosts = strings.Fields(hosts_str)
+	// if C2 server TLS cert not found, generate new ones
+	logging.Warningf("C2 TLS cert not found, generating a new one")
+	hosts = append(hosts, "127.0.0.1") // sometimes we need to connect to a relay that listens on localhost
+	hosts = append(hosts, "localhost") // sometimes we need to connect to a relay that listens on localhost
 
-		// validate host names
-		for _, host := range hosts {
-			if !netutil.ValidateHostName(host) {
-				return fmt.Errorf("invalid host name: %s", host)
-			}
-		}
-
-		// generate C2 TLS cert
-		_, certErr := transport.GenCerts(hosts, transport.ServerCrtFile, transport.ServerKeyFile, transport.CaKeyFile, transport.CaCrtFile, false)
-		if certErr != nil {
-			return fmt.Errorf("generating C2 TLS cert: %v", certErr)
-		}
-		// generate operator mTLS cert
-		hosts = append(hosts, netutil.WgServerIP)   // add wireguard IP for operator
-		hosts = append(hosts, netutil.WgOperatorIP) // add wireguard IP for operator
-		_, certErr = transport.GenCerts(hosts, transport.OperatorServerCrtFile, transport.OperatorServerKeyFile, transport.OperatorCaKeyFile, transport.OperatorCaCrtFile, false)
-		if certErr != nil {
-			return fmt.Errorf("generating operator cert: %v", certErr)
+	// validate host names
+	for _, host := range hosts {
+		if !netutil.ValidateHostName(host) {
+			return fmt.Errorf("invalid host name: %s", host)
 		}
 	}
+
+	// generate C2 TLS cert
+	_, certErr := transport.GenCerts(hosts, transport.ServerCrtFile, transport.ServerKeyFile, transport.CaKeyFile, transport.CaCrtFile, false)
+	if certErr != nil {
+		return fmt.Errorf("generating C2 TLS cert: %v", certErr)
+	}
+	// generate operator mTLS cert
+	hosts = append(hosts, netutil.WgServerIP)   // add wireguard IP for operator
+	hosts = append(hosts, netutil.WgOperatorIP) // add wireguard IP for operator
+	_, certErr = transport.GenCerts(hosts, transport.OperatorServerCrtFile, transport.OperatorServerKeyFile, transport.OperatorCaKeyFile, transport.OperatorCaCrtFile, false)
+	if certErr != nil {
+		return fmt.Errorf("generating operator cert: %v", certErr)
+	}
+
 	return nil
 }
 
 // LoadConfig load config JSON file
 func LoadConfig() error {
-	// get host names from C2 TLS cert
-	hosts := transport.NamesInCert(transport.ServerCrtFile)
-	if len(hosts) == 0 {
-		return fmt.Errorf("no host names found in C2 TLS cert")
-	}
-
 	err := LoadCACrt2RuntimeConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load CA to RuntimeConfig: %v", err)
@@ -274,5 +261,5 @@ func LoadConfig() error {
 		return ReadJSONConfig()
 	}
 	// init config file using the first host name
-	return InitConfigFile(hosts[0])
+	return InitConfigFile("127.0.0.1")
 }

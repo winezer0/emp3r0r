@@ -25,6 +25,7 @@ import (
 // Options struct to hold flag values
 type Options struct {
 	isServer           bool   // Run as C2 operator server
+	c2_hosts           string // C2 hosts to generate cert for
 	wg_server_ip       string // C2 operator server IP, default: 127.0.0.1
 	wg_server_port     int    // C2 operator server port (WireGuard), default: 13377
 	wg_server_peer_key string // C2 operator server wireguard public key
@@ -47,6 +48,7 @@ func parseFlags() *Options {
 	flag.StringVar(&opts.wg_server_peer_key, "peer", "", "WireGuard public key provided by the C2 server")
 	flag.StringVar(&opts.wg_server_peer_ip, "peer_ip", "", "WireGuard server IP provided by the C2 server")
 	flag.StringVar(&opts.wg_operator_ip, "operator_ip", "", "Operator's wireguard IP")
+	flag.StringVar(&opts.c2_hosts, "c2_hosts", "", "C2 hosts to generate cert for")
 	flag.BoolVar(&opts.debug, "debug", false, "Do not kill tmux session when crashing, so you can see the crash log")
 	flag.BoolVar(&opts.isServer, "server", false, "Run as C2 operator server (default: false, run as operator client)")
 	flag.Parse()
@@ -108,11 +110,11 @@ func main() {
 		if err != nil {
 			logging.Fatalf("Failed to load config: %v", err)
 		}
-		server.ServerMain(opts.wg_server_port)
+		server.ServerMain(opts.wg_server_port, opts.c2_hosts)
 	} else {
 		if opts.wg_server_ip == operatorDefaultIP {
 			logging.Warningf("Operator server IP is %s, C2 server will run along with CLI", operatorDefaultIP)
-			go server.ServerMain(opts.wg_server_port)
+			go server.ServerMain(opts.wg_server_port, opts.c2_hosts)
 		}
 		connectWg(opts)
 

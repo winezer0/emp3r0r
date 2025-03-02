@@ -79,6 +79,7 @@ func cmdSetActiveAgent(cmd *cobra.Command, args []string) {
 		logging.Errorf("Failed to set active agent: %v", err)
 	}
 
+	live.ActiveAgent = new(def.Emp3r0rAgent)
 	err = json.Unmarshal(resp, live.ActiveAgent)
 	if err != nil {
 		logging.Errorf("Failed to unmarshal active agent: %v", err)

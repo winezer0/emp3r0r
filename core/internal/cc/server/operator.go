@@ -149,6 +149,7 @@ func handleOperatorConn(wrt http.ResponseWriter, req *http.Request) {
 			timeoutTimer.Reset(1 * time.Minute)
 		case <-ctx.Done():
 			logging.Warningf("handleOperatorConn exited")
+			return
 		}
 	}
 }
