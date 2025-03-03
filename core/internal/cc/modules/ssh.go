@@ -183,7 +183,7 @@ wait:
 		if port_mapping_exists {
 			break
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 		for _, p := range network.PortFwds {
 			if p.Agent == target && p.To == to {
 				port_mapping_exists = true
