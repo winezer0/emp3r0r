@@ -11,8 +11,6 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
-	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
@@ -21,11 +19,6 @@ import (
 // apiDispatcher routes requests to the correct handler.
 func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
-	// Setup H2Conn for reverse shell and proxy.
-	rshellConn := new(def.H2Conn)
-	proxyConn := new(def.H2Conn)
-	network.RShellStream.H2x = rshellConn
-	network.ProxyStream.H2x = proxyConn
 
 	if vars["api"] == "" || vars["token"] == "" {
 		logging.Debugf("Invalid request: %v, missing api/token", req)
@@ -117,8 +110,11 @@ func apiDispatcher(wrt http.ResponseWriter, req *http.Request) {
 		logging.Debugf("Request headers: %v", req.Header)
 		logging.Debugf("Forwarding PUT request to operator at %s", targetURL)
 		proxy.ServeHTTP(wrt, req)
-	case transport.ProxyAPI:
-		handlePortForwarding(network.ProxyStream, wrt, req)
+	case transport.PortMappingAPI:
+		logging.Debugf("About to proxy request: %s %s", req.Method, req.URL.Path)
+		logging.Debugf("Request headers: %v", req.Header)
+		logging.Debugf("Forwarding port mapping request to operator at %s", targetURL)
+		proxy.ServeHTTP(wrt, req)
 	default:
 		wrt.WriteHeader(http.StatusNotFound)
 	}

@@ -1,4 +1,4 @@
-package server
+package network
 
 import (
 	"context"
@@ -8,15 +8,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
 	"github.com/posener/h2conn"
 )
 
-// handlePortForwarding handles proxy/port forwarding.
-func handlePortForwarding(sh *network.StreamHandler, wrt http.ResponseWriter, req *http.Request) {
+// HandlePortMapping handles proxy/port forwarding.
+func HandlePortMapping(sh *StreamHandler, wrt http.ResponseWriter, req *http.Request) {
 	var err error
 	h2x := new(def.H2Conn)
 	sh.H2x = h2x
@@ -66,12 +65,12 @@ func handlePortForwarding(sh *network.StreamHandler, wrt http.ResponseWriter, re
 		logging.Errorf("Parse UUID failed from %s: %v", req.RemoteAddr, err)
 		return
 	}
-	pf, exist := network.PortFwds[sessionID.String()]
+	pf, exist := PortFwds[sessionID.String()]
 	if !exist {
 		logging.Errorf("Port mapping session %s unknown", sessionID.String())
 		return
 	}
-	pf.Sh = make(map[string]*network.StreamHandler)
+	pf.Sh = make(map[string]*StreamHandler)
 	if !isSubSession {
 		pf.Sh[sessionID.String()] = sh
 		logging.Debugf("Port forwarding connection (%s) from %s", sessionID.String(), req.RemoteAddr)
@@ -100,7 +99,7 @@ func handlePortForwarding(sh *network.StreamHandler, wrt http.ResponseWriter, re
 			logging.Debugf("Closed sub-connection %s", origToken)
 			return
 		}
-		if pf, exist = network.PortFwds[sessionID.String()]; exist {
+		if pf, exist = PortFwds[sessionID.String()]; exist {
 			pf.Cancel()
 		} else {
 			logging.Warningf("Port mapping %s not found", sessionID.String())
@@ -109,7 +108,7 @@ func handlePortForwarding(sh *network.StreamHandler, wrt http.ResponseWriter, re
 		logging.Warningf("Closed port forwarding connection from %s", req.RemoteAddr)
 	}()
 	for pf.Ctx.Err() == nil {
-		if _, exist := network.PortFwds[sessionID.String()]; !exist {
+		if _, exist := PortFwds[sessionID.String()]; !exist {
 			logging.Warningf("Port mapping %s disconnected", sessionID.String())
 			return
 		}

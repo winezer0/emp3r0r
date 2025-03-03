@@ -9,8 +9,8 @@ const (
 	MsgAPI = WebRoot + "/msg"
 	// ReverseShellAPI duplex tunnel between agent and cc
 	ReverseShellAPI = WebRoot + "/rshell"
-	// ProxyAPI proxy interface
-	ProxyAPI = WebRoot + "/proxy"
+	// PortMappingAPI proxy interface
+	PortMappingAPI = WebRoot + "/proxy"
 	// Upload2AgentAPI file transfer
 	Upload2AgentAPI = WebRoot + "/ftp"
 	// DownloadFile2AgentAPI host some files
