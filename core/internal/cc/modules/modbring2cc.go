@@ -3,7 +3,6 @@ package modules
 import (
 	"fmt"
 
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
@@ -25,7 +24,7 @@ func moduleBring2CC() {
 	use_kcp := kcpOpt.Val
 
 	cmd := fmt.Sprintf("%s --addr %s --kcp %s", def.C2CmdBring2CC, addr, use_kcp)
-	err := agents.SendCmd(cmd, "", live.ActiveAgent)
+	err := CmdSender(cmd, "", live.ActiveAgent.Tag)
 	if err != nil {
 		logging.Errorf("SendCmd: %v", err)
 		return

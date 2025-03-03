@@ -8,7 +8,6 @@ import (
 
 	"github.com/jm33-m0/arc"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/modules"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
@@ -17,7 +16,6 @@ import (
 func ServerMain(wg_port int, hosts string) {
 	// start all services
 	go KCPC2ListenAndServe()
-	go modules.InitModules()
 	go tarConfig(hosts)
 	wg(wg_port)
 	time.Sleep(3 * time.Second)

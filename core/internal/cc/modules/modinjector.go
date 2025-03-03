@@ -3,7 +3,6 @@ package modules
 import (
 	"fmt"
 
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/crypto"
@@ -47,7 +46,7 @@ func moduleInjector() {
 	cmd := fmt.Sprintf("%s --method %s --pid %s --checksum %s", def.C2CmdInject, method, pid, checksum)
 
 	// tell agent to inject
-	err := agents.SendCmd(cmd, "", target)
+	err := CmdSender(cmd, "", target.Tag)
 	if err != nil {
 		logging.Errorf("Could not send command (%s) to agent: %v", cmd, err)
 		return

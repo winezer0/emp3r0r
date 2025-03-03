@@ -106,12 +106,6 @@ func ModuleRun() {
 		return
 	}
 
-	// check if target exists
-	if live.AgentControlMap[live.ActiveAgent] == nil && live.ActiveAgent != nil {
-		logging.Errorf("Target (%s) does not exist", live.ActiveAgent.Tag)
-		return
-	}
-
 	// run module
 	mod := ModuleRunners[live.ActiveModule.Name]
 	if mod != nil {

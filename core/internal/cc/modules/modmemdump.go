@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
@@ -21,7 +20,7 @@ func moduleMemDump() {
 	}
 	cmd := fmt.Sprintf("%s --pid %s", def.C2CmdMemDump, pidOpt.Val)
 	cmd_id := uuid.NewString()
-	err := agents.SendCmd(cmd, cmd_id, live.ActiveAgent)
+	err := CmdSender(cmd, cmd_id, live.ActiveAgent.Tag)
 	if err != nil {
 		logging.Errorf("SendCmd: %v", err)
 		return

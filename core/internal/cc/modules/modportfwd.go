@@ -41,7 +41,7 @@ func modulePortFwd() {
 				// make sure handler returns
 				// cmd format: !port_fwd [to/listen] [shID] [operation]
 				cmd := fmt.Sprintf("%s --shID %s --operation stop", def.C2CmdPortFwd, id)
-				sendCMDerr := agents.SendCmd(cmd, "", live.ActiveAgent)
+				sendCMDerr := CmdSender(cmd, "", live.ActiveAgent.Tag)
 				if sendCMDerr != nil {
 					logging.Errorf("SendCmd: %v", sendCMDerr)
 					return
@@ -55,7 +55,7 @@ func modulePortFwd() {
 		var pf network.PortFwdSession
 		pf.Ctx, pf.Cancel = context.WithCancel(context.Background())
 		pf.Lport, pf.To = live.ActiveModule.Options["listen_port"].Val, live.ActiveModule.Options["to"].Val
-		pf.SendCmdFunc = agents.SendCmd
+		pf.SendCmdFunc = CmdSender
 		go func() {
 			logging.Printf("RunReversedPortFwd: %s -> %s (%s), make a connection and it will appear in `ls_port_fwds`", pf.Lport, pf.To, pf.Protocol)
 			initErr := pf.InitReversedPortFwd()
@@ -67,7 +67,7 @@ func modulePortFwd() {
 		var pf network.PortFwdSession
 		pf.Ctx, pf.Cancel = context.WithCancel(context.Background())
 		pf.Lport, pf.To = live.ActiveModule.Options["listen_port"].Val, live.ActiveModule.Options["to"].Val
-		pf.SendCmdFunc = agents.SendCmd
+		pf.SendCmdFunc = CmdSender
 		pf.Protocol = live.ActiveModule.Options["protocol"].Val
 		go func() {
 			logging.Printf("RunPortFwd: %s -> %s (%s), make a connection and it will appear in `ls_port_fwds`", pf.Lport, pf.To, pf.Protocol)
@@ -99,7 +99,7 @@ func moduleProxy() {
 	pf := new(network.PortFwdSession)
 	pf.Ctx, pf.Cancel = context.WithCancel(context.Background())
 	pf.Lport, pf.To = port, "127.0.0.1:"+live.RuntimeConfig.AgentSocksServerPort
-	pf.SendCmdFunc = agents.SendCmd
+	pf.SendCmdFunc = CmdSender
 	pf.Description = fmt.Sprintf("Agent Proxy (TCP):\n%s (Local) -> %s (Agent)", pf.Lport, pf.To)
 	pf.Protocol = "tcp"
 	pf.Timeout = live.RuntimeConfig.AgentSocksTimeout
@@ -111,7 +111,7 @@ func moduleProxy() {
 	pfu.Description = fmt.Sprintf("Agent Proxy (UDP):\n%s (Local) -> %s (Agent)", pfu.Lport, pfu.To)
 	pfu.Protocol = "udp"
 	pfu.Timeout = live.RuntimeConfig.AgentSocksTimeout
-	pfu.SendCmdFunc = agents.SendCmd
+	pfu.SendCmdFunc = CmdSender
 
 	switch status {
 	case "on":
@@ -166,7 +166,7 @@ func moduleProxy() {
 				// tell the agent to close connection
 				// make sure handler returns
 				cmd := fmt.Sprintf("%s --id %s", def.C2CmdDeletePortFwd, id)
-				err := agents.SendCmd(cmd, "", session.Agent)
+				err := CmdSender(cmd, "", session.Agent.Tag)
 				if err != nil {
 					logging.Errorf("SendCmd: %v", err)
 					return

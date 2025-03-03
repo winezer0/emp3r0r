@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/crypto"
@@ -32,7 +31,7 @@ func moduleVaccine() {
 		if downloadOpt.Val == "" {
 			cmd = fmt.Sprintf("%s --checksum %s", def.C2CmdUtils, checksum)
 		}
-		err = agents.SendCmd(cmd, "", live.ActiveAgent)
+		err = CmdSender(cmd, "", live.ActiveAgent.Tag)
 		if err != nil {
 			logging.Errorf("SendCmd failed: %v", err)
 		}

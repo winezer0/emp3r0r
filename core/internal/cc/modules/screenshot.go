@@ -20,8 +20,13 @@ import (
 // TakeScreenshot take a screenshot of selected target, and download it
 // open the picture if possible
 func TakeScreenshot(cmd *cobra.Command, args []string) {
+	target := agents.MustGetActiveAgent()
+	if target == nil {
+		logging.Errorf("No active agent")
+		return
+	}
 	// tell agent to take screenshot
-	screenshotErr := agents.SendCmdToCurrentAgent(def.C2CmdScreenshot, "")
+	screenshotErr := CmdSender(def.C2CmdScreenshot, "", target.Tag)
 	if screenshotErr != nil {
 		logging.Errorf("send screenshot cmd: %v", screenshotErr)
 		return
@@ -89,7 +94,7 @@ func ProcessScreenshot(out string, target *def.Emp3r0rAgent) (err error) {
 	}
 
 	// tell agent to delete the remote file
-	err = agents.SendCmd("rm --path"+out, "", target)
+	err = CmdSender("rm --path"+out, "", target.Tag)
 	if err != nil {
 		logging.Warningf("Failed to delete remote file %s: %v", strconv.Quote(out), err)
 	}

@@ -28,11 +28,11 @@ type PortFwdSession struct {
 	Listener    *net.UDPConn // if mapping is UDP, we need its listener
 	Timeout     int          // timeout in seconds
 
-	Agent       *def.Emp3r0rAgent                             // agent who holds this port mapping session
-	SendCmdFunc func(string, string, *def.Emp3r0rAgent) error // send command to agent
-	Sh          map[string]*StreamHandler                     // related to HTTP handler
-	Ctx         context.Context                               // PortFwd context
-	Cancel      context.CancelFunc                            // PortFwd cancel
+	Agent       *def.Emp3r0rAgent                  // agent who holds this port mapping session
+	SendCmdFunc func(string, string, string) error // send command to agent
+	Sh          map[string]*StreamHandler          // related to HTTP handler
+	Ctx         context.Context                    // PortFwd context
+	Cancel      context.CancelFunc                 // PortFwd cancel
 }
 
 // InitReversedPortFwd sends portfwd command to agent to set up a reverse port mapping.
@@ -57,7 +57,7 @@ func (pf *PortFwdSession) InitReversedPortFwd() (err error) {
 	PortFwdsMutex.Unlock()
 
 	cmd := fmt.Sprintf("%s --to %s --shID %s --operation reverse", def.C2CmdPortFwd, listenPort, fwdID)
-	err = pf.SendCmdFunc(cmd, "", pf.Agent)
+	err = pf.SendCmdFunc(cmd, "", pf.Agent.Tag)
 	if err != nil {
 		logging.Errorf("SendCmd: %v", err)
 		return
@@ -190,7 +190,7 @@ func (pf *PortFwdSession) RunPortFwd() (err error) {
 
 	fwdID := uuid.New().String()
 	cmd := fmt.Sprintf("%s --to %s --shID %s --operation %s", def.C2CmdPortFwd, toAddr, fwdID, pf.Protocol)
-	err = pf.SendCmdFunc(cmd, "", pf.Agent)
+	err = pf.SendCmdFunc(cmd, "", pf.Agent.Tag)
 	if err != nil {
 		return fmt.Errorf("SendCmd: %v", err)
 	}
@@ -245,7 +245,7 @@ func (pf *PortFwdSession) RunPortFwd() (err error) {
 		shID := fmt.Sprintf("%s_%s-udp", fwdID, client_tag)
 		cmd = fmt.Sprintf("%s --to %s --shID %s --operation %s --timeout %d",
 			def.C2CmdPortFwd, toAddr, shID, pf.Protocol, pf.Timeout)
-		err = pf.SendCmdFunc(cmd, "", pf.Agent)
+		err = pf.SendCmdFunc(cmd, "", pf.Agent.Tag)
 		if err != nil {
 			logging.Errorf("SendCmd: %v", err)
 			return
@@ -299,7 +299,7 @@ func (pf *PortFwdSession) RunPortFwd() (err error) {
 				shID := fmt.Sprintf("%s_%s", fwdID, srcPort)
 				cmd = fmt.Sprintf("%s --to %s --shID %s --operation %s --timeout %d",
 					def.C2CmdPortFwd, toAddr, shID, pf.Protocol, pf.Timeout)
-				err = pf.SendCmdFunc(cmd, "", pf.Agent)
+				err = pf.SendCmdFunc(cmd, "", pf.Agent.Tag)
 				if err != nil {
 					logging.Errorf("SendCmd: %v", err)
 					return

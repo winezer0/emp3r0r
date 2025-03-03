@@ -28,16 +28,4 @@ const (
 	OperatorListConnectedAgents = OperatorRoot + "/list_connected_agents"
 	// OperatorSendCommand
 	OperatorSendCommand = OperatorRoot + "/send_command"
-	// OperatorSetActiveModule
-	OperatorSetActiveModule = OperatorRoot + "/set_active_module"
-	// OperatorModuleRun
-	OperatorModuleRun = OperatorRoot + "/module_run"
-	// OperatorModuleSetOption
-	OperatorModuleSetOption = OperatorRoot + "/module_set_option"
-	// OperatorListModules
-	OperatorListModules = OperatorRoot + "/list_modules"
-	// OperatorSearchModule
-	OperatorSearchModule = OperatorRoot + "/search_module"
-	// OperatorModuleListOptions
-	OperatorModuleListOptions = OperatorRoot + "/module_list_options"
 )

@@ -11,7 +11,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jm33-m0/arc"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
@@ -141,7 +140,7 @@ func handleInMemoryModule(config def.ModuleConfig, payload_type, envStr, downloa
 	}
 	cmd_id := uuid.NewString()
 	logging.Debugf("Sending command %s to %s", cmd, live.ActiveAgent.Tag)
-	err = agents.SendCmdToCurrentAgent(cmd, cmd_id)
+	err = CmdSender(cmd, cmd_id, live.ActiveAgent.Tag)
 	if err != nil {
 		logging.Errorf("Sending command %s to %s: %v", cmd, live.ActiveAgent.Tag, err)
 	}
@@ -172,7 +171,7 @@ func handleCompressedModule(config def.ModuleConfig, payload_type, exec_cmd, env
 		cmd += fmt.Sprintf(" --download_addr %s", strconv.Quote(download_addr))
 	}
 	cmd_id := uuid.NewString()
-	err := agents.SendCmdToCurrentAgent(cmd, cmd_id)
+	err := CmdSender(cmd, cmd_id, live.ActiveAgent.Tag)
 	if err != nil {
 		logging.Errorf("Sending command %s to %s: %v", cmd, live.ActiveAgent.Tag, err)
 	}

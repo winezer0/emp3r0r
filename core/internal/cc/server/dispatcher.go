@@ -138,16 +138,6 @@ func operationDispatcher(w http.ResponseWriter, r *http.Request) {
 		handleSetActiveAgent(w, r)
 	case transport.OperatorSendCommand:
 		handleSendCommand(w, r)
-	case transport.OperatorSetActiveModule:
-		handleSetActiveModule(w, r)
-	case transport.OperatorModuleRun:
-		handleModuleRun(w, r)
-	case transport.OperatorModuleSetOption:
-		handleModuleSetOption(w, r)
-	case transport.OperatorListModules:
-		handleListModules(w, r)
-	case transport.OperatorSearchModule:
-		handleSearchModule(w, r)
 	case transport.OperatorListConnectedAgents:
 		handleListAgents(w, r)
 	default:

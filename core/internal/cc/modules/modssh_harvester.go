@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
@@ -33,7 +32,7 @@ func module_ssh_harvester() {
 			cmd = fmt.Sprintf("%s --stop", def.C2CmdSSHHarvester)
 		}
 	}
-	err := agents.SendCmdToCurrentAgent(cmd, "")
+	err := CmdSender(cmd, "", live.ActiveAgent.Tag)
 	if err != nil {
 		logging.Errorf("SendCmd: %v", err)
 		return

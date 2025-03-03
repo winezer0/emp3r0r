@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/fatih/color"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
@@ -22,7 +21,7 @@ func modListener() {
 		live.ActiveModule.Options["payload"].Val,
 		live.ActiveModule.Options["compression"].Val,
 		live.ActiveModule.Options["passphrase"].Val)
-	err := agents.SendCmd(cmd, "", live.ActiveAgent)
+	err := CmdSender(cmd, "", live.ActiveAgent.Tag)
 	if err != nil {
 		logging.Errorf("SendCmd: %v", err)
 		return

@@ -3,7 +3,6 @@ package modules
 import (
 	"fmt"
 
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
@@ -23,7 +22,7 @@ func moduleFileServer() {
 		return
 	}
 	cmd := fmt.Sprintf("%s --port %s --switch %s", def.C2CmdFileServer, portOpt.Val, server_switch)
-	err := agents.SendCmd(cmd, "", live.ActiveAgent)
+	err := CmdSender(cmd, "", live.ActiveAgent.Tag)
 	if err != nil {
 		logging.Errorf("SendCmd: %v", err)
 		return
@@ -45,7 +44,7 @@ func moduleDownloader() {
 	path := live.ActiveModule.Options["path"].Val
 
 	cmd := fmt.Sprintf("%s --download_addr %s --checksum %s --path %s", def.C2CmdFileDownloader, download_addr, checksum, path)
-	err := agents.SendCmdToCurrentAgent(cmd, "")
+	err := CmdSender(cmd, "", live.ActiveAgent.Tag)
 	if err != nil {
 		logging.Errorf("SendCmd: %v", err)
 		return

@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/tools"
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/modules"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
@@ -49,11 +50,12 @@ func backgroundJobs() {
 	OperatorRootURL = fmt.Sprintf("https://%s", OPERATOR_ADDR)
 	logging.Infof("Operator's WireGuard address: %s", OperatorRootURL)
 
-	// set up command sender of ftp package
+	// set up command senders
 	ftp.ExecCmd = operatorSendCommand2Agent
+	modules.CmdSender = operatorSendCommand2Agent
 
 	// init modules by querying server for available modules
-	go initModules()
+	go modules.InitModules()
 	// refresh agent list every 10 seconds
 	go agentListRefresher()
 	// handle messages from operator
