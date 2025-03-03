@@ -201,7 +201,7 @@ func msgTunHandler() {
 			logging.Errorf("Failed to decode message: %v", err)
 			continue
 		}
-		logging.Debugf("Message from operator: %v", *msg)
+		logging.Debugf("Message tunnel got: %v", *msg)
 
 		// Reset the heartbeat timer after receiving a valid message
 		heartbeatCh <- struct{}{}
