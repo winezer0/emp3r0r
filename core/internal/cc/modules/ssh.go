@@ -16,7 +16,6 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
-	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
 )
 
@@ -185,7 +184,7 @@ wait:
 		}
 		time.Sleep(50 * time.Millisecond)
 		for _, p := range network.PortFwds {
-			if p.Agent == target && p.To == to {
+			if p.Agent.Tag == target.Tag && p.To == to {
 				port_mapping_exists = true
 				break wait
 			}
@@ -202,10 +201,10 @@ wait:
 		logging.Errorf("%s not found, please install it first: %v", ssh_prog, err)
 	}
 	sshCmd := fmt.Sprintf("%s -p %s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no %s",
-		sshPath, lport, netutil.WgServerIP)
+		sshPath, lport, "127.0.0.1")
 	if is_sftp {
 		sshCmd = fmt.Sprintf("%s -P %s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no %s",
-			sshPath, lport, netutil.WgServerIP)
+			sshPath, lport, "127.0.0.1")
 	}
 
 	// agent name

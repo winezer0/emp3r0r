@@ -32,17 +32,12 @@ func moduleCmd() {
 	target := live.ActiveAgent
 	if target == nil {
 		logging.Warningf("emp3r0r will execute `%s` on all targets this time", live.ActiveModule.Options["cmd_to_exec"].Val)
-		for per_target := range live.AgentControlMap {
+		for _, per_target := range live.AgentList {
 			execOnTarget(per_target)
 		}
 		return
 	}
 
-	// write to given target's connection
-	if live.AgentControlMap[target] == nil {
-		logging.Errorf("moduleCmd: agent control interface not found")
-		return
-	}
 	execOnTarget(target)
 }
 
@@ -52,17 +47,6 @@ func moduleShell() {
 	target := live.ActiveAgent
 	if target == nil {
 		logging.Errorf("Module shell: target does not exist")
-		return
-	}
-
-	// write to given target's connection
-	tControl := live.AgentControlMap[target]
-	if tControl == nil {
-		logging.Errorf("moduleShell: agent control interface not found")
-		return
-	}
-	if tControl.Conn == nil {
-		logging.Errorf("moduleShell: agent is not connected")
 		return
 	}
 

@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/tools"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
@@ -363,9 +364,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			Use:     "ls_port_fwds",
 			GroupID: "network",
 			Short:   "List active port mappings",
-			Run: func(_ *cobra.Command, _ []string) {
-				logging.Errorf("Not implemented yet")
-			},
+			Run:     network.CmdListPortFwds,
 		}
 		rootCmd.AddCommand(lsPortMapppingsCmd)
 
@@ -374,9 +373,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "network",
 			Short:   "Delete a port mapping session",
 			Example: "delete_port_fwd --id <session_id>",
-			Run: func(_ *cobra.Command, _ []string) {
-				logging.Errorf("Not implemented yet")
-			},
+			Run:     network.CmdDeletePortFwdSession,
 		}
 		rmPortMappingCmd.Flags().StringP("id", "", "", "Port mapping ID")
 		rmPortMappingCmd.MarkFlagRequired("id")
