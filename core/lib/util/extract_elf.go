@@ -14,7 +14,7 @@ import (
 )
 
 // FindEmp3r0rELFInMem search process memory for emp3r0r ELF
-// FIXME Not working when using loaders
+// FIXME: Not working when using loaders
 func FindEmp3r0rELFInMem() (elf_bytes []byte, err error) {
 	mem_regions, err := DumpSelfMem()
 	if err != nil {

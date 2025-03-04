@@ -160,7 +160,6 @@ func BroadcastServer(ctx context.Context, cancel context.CancelFunc, port string
 }
 
 // passProxy let other agents on our network use our common.RuntimeConfig.AgentProxy
-// FIXME proxy URL parsing is not working due to username/password
 func passProxy(ctx context.Context, cancel context.CancelFunc, count *int) {
 	// one time only
 	*count++

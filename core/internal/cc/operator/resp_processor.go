@@ -9,6 +9,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/modules"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
@@ -61,11 +62,10 @@ func processAgentData(data *def.MsgTunData) {
 	// screenshot command
 	case "screenshot":
 		go func() {
-			// FIXME: import cycle from `core`
-			// err = processScreenshot(out, target)
-			// if err != nil {
-			// 	logging.Errorf("%v", err)
-			// }
+			err = modules.ProcessScreenshot(out, target)
+			if err != nil {
+				logging.Errorf("%v", err)
+			}
 		}()
 
 		// ps command
