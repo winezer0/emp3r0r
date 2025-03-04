@@ -8,8 +8,6 @@ A post-exploitation framework for Linux/Windows
 
 ---
 
-**v3 is in development**, this version tries to separate operator and C2 server to enable more possibilities of this project.
-
 ## How to use
 
 ```bash
@@ -36,6 +34,7 @@ Currently, emp3r0r is a single-user C2 framework, but you can leverage the SSH C
   - [console](https://github.com/reeflective/console) and [cobra](https://github.com/spf13/cobra) for CLI infrastructure
   - Auto-completion for commands and arguments, with syntax highlighting
   - Multi-Tasking support provided by [tmux](https://github.com/tmux/tmux)
+  - Operator-Server structure powered by WireGuard and mTLS
 - Stealth
   - Automatically change `argv` so you won't notice it in `ps` listing
   - Hide files and PIDs via Glibc hijacking (`patcher` in `get_persistence`)
