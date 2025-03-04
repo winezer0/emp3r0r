@@ -70,7 +70,7 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:   "emp3r0r",
 		Short: "emp3r0r C2 framework",
-		Long:  "emp3r0r Command and Control framework for post-exploitation",
+		Long:  "A Linux C2 made by a Linux user",
 	}
 
 	// Global flags

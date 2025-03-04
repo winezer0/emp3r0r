@@ -14,6 +14,11 @@ import (
 )
 
 func modulePortFwd() {
+	activeAgent := agents.MustGetActiveAgent()
+	if activeAgent == nil {
+		logging.Errorf("No active agent")
+		return
+	}
 	switchOpt, ok := live.ActiveModule.Options["switch"]
 	if !ok {
 		logging.Errorf("Option 'switch' not found")
@@ -41,7 +46,7 @@ func modulePortFwd() {
 				// make sure handler returns
 				// cmd format: !port_fwd [to/listen] [shID] [operation]
 				cmd := fmt.Sprintf("%s --shID %s --operation stop", def.C2CmdPortFwd, id)
-				sendCMDerr := CmdSender(cmd, "", live.ActiveAgent.Tag)
+				sendCMDerr := CmdSender(cmd, "", activeAgent.Tag)
 				if sendCMDerr != nil {
 					logging.Errorf("SendCmd: %v", sendCMDerr)
 					return
@@ -56,6 +61,7 @@ func modulePortFwd() {
 		pf.Ctx, pf.Cancel = context.WithCancel(context.Background())
 		pf.Lport, pf.To = live.ActiveModule.Options["listen_port"].Val, live.ActiveModule.Options["to"].Val
 		pf.SendCmdFunc = CmdSender
+		pf.Agent = activeAgent
 		go func() {
 			logging.Printf("RunReversedPortFwd: %s -> %s (%s), make a connection and it will appear in `ls_port_fwds`", pf.Lport, pf.To, pf.Protocol)
 			initErr := pf.InitReversedPortFwd()
@@ -69,6 +75,7 @@ func modulePortFwd() {
 		pf.Lport, pf.To = live.ActiveModule.Options["listen_port"].Val, live.ActiveModule.Options["to"].Val
 		pf.SendCmdFunc = CmdSender
 		pf.Protocol = live.ActiveModule.Options["protocol"].Val
+		pf.Agent = activeAgent
 		go func() {
 			logging.Printf("RunPortFwd: %s -> %s (%s), make a connection and it will appear in `ls_port_fwds`", pf.Lport, pf.To, pf.Protocol)
 			runErr := pf.RunPortFwd()
@@ -81,6 +88,11 @@ func modulePortFwd() {
 }
 
 func moduleProxy() {
+	activeAgent := agents.MustGetActiveAgent()
+	if activeAgent == nil {
+		logging.Errorf("No active agent")
+		return
+	}
 	portOpt, ok := live.ActiveModule.Options["port"]
 	if !ok {
 		logging.Errorf("Option 'port' not found")
@@ -103,6 +115,7 @@ func moduleProxy() {
 	pf.Description = fmt.Sprintf("Agent Proxy (TCP):\n%s (Local) -> %s (Agent)", pf.Lport, pf.To)
 	pf.Protocol = "tcp"
 	pf.Timeout = live.RuntimeConfig.AgentSocksTimeout
+	pf.Agent = activeAgent
 
 	// udp port fwd
 	pfu := new(network.PortFwdSession)
@@ -112,12 +125,13 @@ func moduleProxy() {
 	pfu.Protocol = "udp"
 	pfu.Timeout = live.RuntimeConfig.AgentSocksTimeout
 	pfu.SendCmdFunc = CmdSender
+	pfu.Agent = activeAgent
 
 	switch status {
 	case "on":
 		// tell agent to start local socks5 proxy
 		cmd_id := uuid.NewString()
-		err := agents.SendCmdToCurrentAgent("!proxy --mode on --addr 0.0.0.0:"+live.RuntimeConfig.AgentSocksServerPort, cmd_id)
+		err := CmdSender("!proxy --mode on --addr 0.0.0.0:"+live.RuntimeConfig.AgentSocksServerPort, cmd_id, pf.Agent.Tag)
 		if err != nil {
 			logging.Errorf("Starting SOCKS5 proxy on target failed: %v", err)
 			return
