@@ -4,7 +4,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -20,40 +19,25 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
 	cdn2proxy "github.com/jm33-m0/go-cdn2proxy"
+	"github.com/spf13/cobra"
 )
 
 // Options struct to hold flag values
 type Options struct {
-	isServer           bool   // Run as C2 operator server
-	c2_hosts           string // C2 hosts to generate cert for
-	wg_server_ip       string // C2 operator server IP, default: 127.0.0.1
-	wg_server_port     int    // C2 operator server port (WireGuard), default: 13377
-	wg_server_peer_key string // C2 operator server wireguard public key
-	wg_server_peer_ip  string // C2 operator server wireguard IP
-	wg_operator_ip     string // Operator's wireguard IP
-	cdnProxy           string // Start cdn2proxy server on this port
-	debug              bool   // Do not kill tmux session when crashing
+	wg_server_ip       string
+	wg_server_port     int
+	wg_server_peer_key string
+	wg_server_peer_ip  string
+	wg_operator_ip     string
+	c2_hosts           string
+	cdnProxy           string
+	debug              bool
 }
 
 const (
 	operatorDefaultPort = 13377
 	operatorDefaultIP   = "127.0.0.1"
 )
-
-func parseFlags() *Options {
-	opts := &Options{}
-	flag.StringVar(&opts.cdnProxy, "cdn2proxy", "", "Start cdn2proxy server on this port")
-	flag.IntVar(&opts.wg_server_port, "port", operatorDefaultPort, "C2 server port")
-	flag.StringVar(&opts.wg_server_ip, "host", operatorDefaultIP, "Connect to this C2 server to start operations")
-	flag.StringVar(&opts.wg_server_peer_key, "server-wg-key", "", "WireGuard public key provided by the C2 server")
-	flag.StringVar(&opts.wg_server_peer_ip, "server-wg-ip", "", "WireGuard server IP provided by the C2 server")
-	flag.StringVar(&opts.wg_operator_ip, "operator-ip", "", "Operator's wireguard IP")
-	flag.StringVar(&opts.c2_hosts, "c2-hosts", "", "C2 hosts to generate cert for")
-	flag.BoolVar(&opts.debug, "debug", false, "Do not kill tmux session when crashing, so you can see the crash log")
-	flag.BoolVar(&opts.isServer, "server", false, "Run as C2 operator server (default: false, run as operator client)")
-	flag.Parse()
-	return opts
-}
 
 func init() {
 	// log to file
@@ -68,9 +52,8 @@ func init() {
 	}
 	logging.SetOutput(logf)
 
-	// set up dirs and default varaibles
-	// including config file location
-	live.Prompt = cli.Prompt // implement prompt_func
+	// set up dirs and default variables
+	live.Prompt = cli.Prompt
 	err = live.SetupFilePaths()
 	if err != nil {
 		log.Fatalf("C2 file paths setup: %v", err)
@@ -81,9 +64,101 @@ func init() {
 }
 
 func main() {
-	// Parse command-line flags
-	opts := parseFlags()
+	opts := &Options{}
 
+	// Root command
+	rootCmd := &cobra.Command{
+		Use:   "emp3r0r",
+		Short: "emp3r0r C2 framework",
+		Long:  "emp3r0r Command and Control framework for post-exploitation",
+	}
+
+	// Global flags
+	rootCmd.PersistentFlags().StringVar(&opts.cdnProxy, "cdn2proxy", "", "Start cdn2proxy server on this port")
+
+	// Client subcommand
+	clientCmd := &cobra.Command{
+		Use:   "client",
+		Short: "Run as C2 operator client",
+		Run: func(cmd *cobra.Command, args []string) {
+			runClientMode(opts)
+		},
+	}
+
+	// Client-specific flags
+	clientCmd.Flags().StringVar(&opts.wg_server_ip, "host", operatorDefaultIP, "Connect to this C2 server to start operations")
+	clientCmd.Flags().IntVar(&opts.wg_server_port, "port", operatorDefaultPort, "C2 server port")
+	clientCmd.Flags().StringVar(&opts.wg_server_peer_key, "server-wg-key", "", "WireGuard public key provided by the C2 server")
+	clientCmd.Flags().StringVar(&opts.wg_server_peer_ip, "server-wg-ip", "", "WireGuard server IP provided by the C2 server")
+	clientCmd.Flags().StringVar(&opts.wg_operator_ip, "operator-ip", "", "Operator's wireguard IP")
+	clientCmd.Flags().BoolVar(&opts.debug, "debug", false, "Do not kill tmux session when crashing, so you can see the crash log")
+
+	// Mark required flags for client mode
+	clientCmd.MarkFlagRequired("server-wg-key")
+	clientCmd.MarkFlagRequired("server-wg-ip")
+	clientCmd.MarkFlagRequired("operator-ip")
+
+	// Server subcommand
+	serverCmd := &cobra.Command{
+		Use:   "server",
+		Short: "Run as C2 operator server",
+		Run: func(cmd *cobra.Command, args []string) {
+			runServerMode(opts)
+		},
+	}
+
+	// Server-specific flags
+	serverCmd.Flags().IntVar(&opts.wg_server_port, "port", operatorDefaultPort, "Server port to listen on")
+	serverCmd.Flags().StringVar(&opts.c2_hosts, "c2-hosts", "", "C2 hosts to generate cert for")
+
+	// Completion command
+	completionCmd := &cobra.Command{
+		Use:   "completion [bash|zsh]",
+		Short: "Generate shell completion scripts",
+		Long: `To load completions:
+
+Bash:
+  $ source <(emp3r0r completion bash)
+  # To load completions for each session, execute once:
+  $ emp3r0r completion bash > /etc/bash_completion.d/emp3r0r
+
+Zsh:
+  # If shell completion is not already enabled in your environment,
+  # you will need to enable it. You can execute the following once:
+  $ echo "autoload -U compinit; compinit" >> ~/.zshrc
+  
+  # To load completions for each session, execute once:
+  $ emp3r0r completion zsh > "${fpath[1]}/_emp3r0r"
+  # You will need to start a new shell for this setup to take effect.
+`,
+		Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+		ValidArgs: []string{"bash", "zsh"},
+		Run: func(cmd *cobra.Command, args []string) {
+			switch args[0] {
+			case "bash":
+				cmd.Root().GenBashCompletion(os.Stdout)
+			case "zsh":
+				cmd.Root().GenZshCompletion(os.Stdout)
+			}
+		},
+	}
+
+	// Add subcommands to root
+	rootCmd.AddCommand(clientCmd, serverCmd, completionCmd)
+
+	// Default behavior if no subcommand is given (backwards compatibility)
+	rootCmd.Run = func(cmd *cobra.Command, args []string) {
+		// Default to client mode with local server
+		opts.wg_server_ip = operatorDefaultIP
+		runClientMode(opts)
+	}
+
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatalf("Error executing command: %v", err)
+	}
+}
+
+func runClientMode(opts *Options) {
 	// do not kill tmux session when crashing
 	if opts.debug {
 		live.TmuxPersistence = true
@@ -99,37 +174,49 @@ func main() {
 		startCDN2Proxy(opts)
 	}
 
-	if opts.isServer {
-		live.IsServer = true
-		logging.AddWriter(os.Stderr)
-		err := live.InitCertsAndConfig()
-		if err != nil {
-			logging.Fatalf("Failed to init certs and config: %v", err)
-		}
-		err = live.LoadConfig()
-		if err != nil {
-			logging.Fatalf("Failed to load config: %v", err)
-		}
-		server.ServerMain(opts.wg_server_port, opts.c2_hosts)
-	} else {
-		if opts.wg_server_ip == operatorDefaultIP {
-			logging.Warningf("Operator server IP is %s, C2 server will run along with CLI", operatorDefaultIP)
-			go server.ServerMain(opts.wg_server_port, opts.c2_hosts)
-		}
-		connectWg(opts)
-
-		// download and extract config files
-		url := fmt.Sprintf("http://%s:%d/%s", netutil.WgServerIP, netutil.WgFileServerPort, "emp3r0r_operator_config.tar.xz")
-		err := live.DownloadExtractConfig(url, ftp.DownloadFile)
-		if err != nil {
-			logging.Fatalf("Failed to extract config: %v", err)
-		}
-		err = live.LoadConfig()
-		if err != nil {
-			logging.Fatalf("Failed to load config: %v", err)
-		}
-		operator.CliMain(opts.wg_server_ip, opts.wg_server_port)
+	if opts.wg_server_ip == operatorDefaultIP {
+		logging.Warningf("Operator server IP is %s, C2 server will run along with CLI", operatorDefaultIP)
+		go server.ServerMain(opts.wg_server_port, opts.c2_hosts)
 	}
+
+	connectWg(opts)
+
+	// download and extract config files
+	url := fmt.Sprintf("http://%s:%d/%s", netutil.WgServerIP, netutil.WgFileServerPort, "emp3r0r_operator_config.tar.xz")
+	err := live.DownloadExtractConfig(url, ftp.DownloadFile)
+	if err != nil {
+		logging.Fatalf("Failed to extract config: %v", err)
+	}
+	err = live.LoadConfig()
+	if err != nil {
+		logging.Fatalf("Failed to load config: %v", err)
+	}
+	operator.CliMain(opts.wg_server_ip, opts.wg_server_port)
+}
+
+func runServerMode(opts *Options) {
+	live.IsServer = true
+	logging.AddWriter(os.Stderr)
+
+	// abort if CC is already running
+	if tools.IsCCRunning() {
+		logging.Fatalf("CC is already running")
+	}
+
+	// Start cdn2proxy server if specified
+	if opts.cdnProxy != "" {
+		startCDN2Proxy(opts)
+	}
+
+	err := live.InitCertsAndConfig()
+	if err != nil {
+		logging.Fatalf("Failed to init certs and config: %v", err)
+	}
+	err = live.LoadConfig()
+	if err != nil {
+		logging.Fatalf("Failed to load config: %v", err)
+	}
+	server.ServerMain(opts.wg_server_port, opts.c2_hosts)
 }
 
 func connectWg(opts *Options) {
