@@ -127,7 +127,7 @@ func handleInMemoryModule(config def.ModuleConfig, payload_type, envStr, downloa
 		logging.Errorf("Compressing %s: %v", path, err)
 		return
 	}
-	logging.Infof("Created %.4fMB archive (%s) for module '%s'", float64(len(compressedBytes))/1024/1024, hosted_file, live.ActiveModule)
+	logging.Infof("Created %.4fMB archive (%s) for module '%s'", float64(len(compressedBytes))/1024/1024, hosted_file, live.ActiveModule.Name)
 	err = os.WriteFile(hosted_file, compressedBytes, 0o600)
 	if err != nil {
 		logging.Errorf("Writing %s: %v", hosted_file, err)
