@@ -69,7 +69,17 @@ func DownloadExtractConfig(url string, downloader func(string, string) error) (e
 	if err != nil {
 		return
 	}
-
+	// remove existing config files for a clean start
+	err = os.RemoveAll(EmpWorkSpace)
+	if err != nil {
+		return
+	}
+	// re-create workspace
+	err = SetupFilePaths()
+	if err != nil {
+		return
+	}
+	// unarchive config files to workspace
 	return arc.Unarchive(EmpConfigTar, HOME)
 }
 
