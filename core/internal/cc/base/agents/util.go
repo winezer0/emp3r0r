@@ -3,8 +3,6 @@ package agents
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -35,43 +33,8 @@ func SendCmd(cmd, cmd_id string, a *def.Emp3r0rAgent) error {
 
 	// timestamp
 	cmdData.Time = time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST")
-	live.CmdTimeMutex.Lock()
-	live.CmdTime[cmd_id] = cmdData.Time
-	live.CmdTimeMutex.Unlock()
-
-	if !strings.HasPrefix(cmd, "!") {
-		go wait_for_cmd_response(cmd, cmd_id, a)
-	}
 
 	return SendMessageToAgent(&cmdData, a)
-}
-
-func wait_for_cmd_response(cmd, cmd_id string, agent *def.Emp3r0rAgent) {
-	ctrl, exists := live.AgentControlMap[agent]
-	if !exists || agent == nil {
-		logging.Warningf("SendCmd: agent '%s' not connected", agent.Tag)
-		return
-	}
-	now := time.Now()
-	for ctrl.Ctx.Err() == nil {
-		if resp, exists := live.CmdResults[cmd_id]; exists {
-			logging.Debugf("Got response for %s from %s: %s", strconv.Quote(cmd), strconv.Quote(agent.Name), resp)
-			return
-		}
-		wait_time := time.Since(now)
-		if wait_time > 90*time.Second && !waitNeeded(cmd) {
-			logging.Warningf("Executing %s on %s: unresponsive for %v",
-				strconv.Quote(cmd),
-				strconv.Quote(agent.Name),
-				wait_time)
-			return
-		}
-		util.TakeABlink()
-	}
-}
-
-func waitNeeded(cmd string) bool {
-	return strings.HasPrefix(cmd, "!") || strings.HasPrefix(cmd, "get") || strings.HasPrefix(cmd, "put ")
 }
 
 // SendCmdToCurrentAgent send a command to currently selected agent

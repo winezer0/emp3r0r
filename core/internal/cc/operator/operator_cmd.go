@@ -74,6 +74,7 @@ func operatorSendCommand2Agent(cmd, cmdID, agentTag string) error {
 	live.CmdTimeMutex.Lock()
 	defer live.CmdTimeMutex.Unlock()
 	live.CmdTime[cmdID] = time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST")
+
 	return nil
 }
 
