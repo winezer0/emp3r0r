@@ -48,8 +48,8 @@ func progressMonitor(bar *progressbar.ProgressBar, filewrite, targetFile string,
 	}
 }
 
-// handleFTPTransfer processes file transfer requests.
-func handleFTPTransfer(sh *network.StreamHandler, wrt http.ResponseWriter, req *http.Request) {
+// HandleFTPTransfer processes file transfer requests.
+func HandleFTPTransfer(sh *network.StreamHandler, wrt http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	token := vars["token"]
 

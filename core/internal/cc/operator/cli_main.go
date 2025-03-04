@@ -12,6 +12,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/relay"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/tools"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/modules"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
@@ -63,7 +64,7 @@ func backgroundJobs() {
 	// handle messages from operator
 	go msgTunHandler()
 	// relayed HTTP server
-	go ftp.RelayHTTP2Server()
+	go relay.RelayHTTP2Server()
 }
 
 // CliMain launches the commandline UI

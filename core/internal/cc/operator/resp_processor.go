@@ -15,7 +15,6 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
-	"github.com/olekukonko/tablewriter"
 )
 
 // processAgentData deal with data from agent side
@@ -78,39 +77,18 @@ func processAgentData(data *def.MsgTunData) {
 			return
 		}
 
-		// build table
+		// Build table data
 		tdata := [][]string{}
-		tableString := &strings.Builder{}
-		table := tablewriter.NewWriter(tableString)
-		table.SetHeader([]string{"Name", "PID", "PPID", "User"})
-		table.SetBorder(true)
-		table.SetRowLine(true)
-		table.SetAutoWrapText(true)
-		table.SetColWidth(20)
-
-		// color
-		table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor})
-
-		table.SetColumnColor(tablewriter.Colors{tablewriter.FgHiBlueColor},
-			tablewriter.Colors{tablewriter.FgBlueColor},
-			tablewriter.Colors{tablewriter.FgBlueColor},
-			tablewriter.Colors{tablewriter.FgBlueColor})
-
-		// fill table
 		for _, p := range procs {
 			pname := util.SplitLongLine(p.Name, 20)
 			tdata = append(tdata, []string{pname, strconv.Itoa(p.PID), strconv.Itoa(p.PPID), p.Token})
 		}
-		table.AppendBulk(tdata)
-		table.Render()
-		out = tableString.String()
 
-		// resize pane since table might mess up
-		x := len(strings.Split(out, "\n")[0])
-		cli.FitPanes(x)
+		// Use BuildTable instead of manual tablewriter creation
+		out = cli.BuildTable([]string{"Name", "PID", "PPID", "User"}, tdata)
+
+		// Use AdaptiveTable instead of FitPanes
+		cli.AdaptiveTable(out)
 
 		// ls command
 	case "ls":
@@ -122,43 +100,18 @@ func processAgentData(data *def.MsgTunData) {
 			return
 		}
 
-		// build table
+		// Build table data
 		tdata := [][]string{}
-		tableString := &strings.Builder{}
-		table := tablewriter.NewWriter(tableString)
-		table.SetHeader([]string{"Name", "Type", "Size", "Time", "Permission"})
-		table.SetRowLine(true)
-		table.SetBorder(true)
-		table.SetColWidth(20)
-		table.SetAutoWrapText(true)
-
-		// color
-		table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor})
-
-		table.SetColumnColor(tablewriter.Colors{tablewriter.FgHiBlueColor},
-			tablewriter.Colors{tablewriter.FgBlueColor},
-			tablewriter.Colors{tablewriter.FgBlueColor},
-			tablewriter.Colors{tablewriter.FgBlueColor},
-			tablewriter.Colors{tablewriter.FgBlueColor})
-
-		// fill table
 		for _, d := range dents {
 			dname := util.SplitLongLine(d.Name, 20)
 			tdata = append(tdata, []string{dname, d.Ftype, d.Size, d.Date, d.Permission})
 		}
 
-		// print table
-		table.AppendBulk(tdata)
-		table.Render()
-		out = tableString.String()
+		// Use BuildTable instead of manual tablewriter creation
+		out = cli.BuildTable([]string{"Name", "Type", "Size", "Time", "Permission"}, tdata)
 
-		// resize pane since table might mess up
-		x := len(strings.Split(out, "\n")[0])
-		cli.FitPanes(x)
+		// Use AdaptiveTable instead of FitPanes
+		cli.AdaptiveTable(out)
 	}
 
 	// Command output

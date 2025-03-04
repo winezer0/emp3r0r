@@ -1,4 +1,4 @@
-package ftp
+package relay
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
@@ -45,7 +46,7 @@ func dispatcher(wrt http.ResponseWriter, req *http.Request) {
 	case transport.Upload2AgentAPI:
 		for _, sh := range network.FTPStreams {
 			if token == sh.Token {
-				handleFTPTransfer(sh, wrt, req)
+				ftp.HandleFTPTransfer(sh, wrt, req)
 				return
 			}
 		}

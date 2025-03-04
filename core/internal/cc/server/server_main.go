@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/jm33-m0/arc"
-	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/relay"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
@@ -98,7 +98,7 @@ func tarConfig(hosts string) {
 	if err != nil {
 		logging.Errorf("Failed to tar config files: %v", err)
 	}
-	err = ftp.WgFileServer(live.EmpConfigTar)
+	err = relay.WgFileServer(live.EmpConfigTar)
 	if err != nil {
 		logging.Errorf("Failed to start file server to serve config tarball: %v", err)
 	}
