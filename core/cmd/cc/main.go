@@ -24,14 +24,14 @@ import (
 
 // Options struct to hold flag values
 type Options struct {
-	wg_server_ip       string
-	wg_server_port     int
-	wg_server_peer_key string
-	wg_server_peer_ip  string
-	wg_operator_ip     string
-	c2_hosts           string
-	cdnProxy           string
-	debug              bool
+	wg_server_ip       string // C2 server IP
+	wg_server_port     int    // C2 server port
+	wg_server_peer_key string // C2 server's WireGuard public key
+	wg_server_peer_ip  string // C2 server's WireGuard IP
+	wg_operator_ip     string // Operator's WireGuard IP
+	c2_hosts           string // C2 hosts to generate cert for
+	cdnProxy           string // Start cdn2proxy server on this port
+	debug              bool   // Do not kill tmux session when crashing
 }
 
 const (
@@ -231,6 +231,8 @@ func connectWg(opts *Options) {
 	}
 	netutil.WgServerIP = opts.wg_server_peer_ip
 	netutil.WgOperatorIP = opts.wg_operator_ip
+	operator.SERVER_IP = opts.wg_server_ip
+	operator.SERVER_KEY = opts.wg_server_peer_key
 	// Connect to C2 wireguard server with given wireguard keypair
 	wg_key := live.Prompt("Enter operator's WireGuard private key provided by the server")
 	_, err := netutil.PublicKeyFromPrivate(wg_key)

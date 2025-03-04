@@ -28,11 +28,13 @@ const AppName = "emp3r0r"
 var (
 	// EMP3R0R_CONSOLE: the main console interface
 	EMP3R0R_CONSOLE = console.New(AppName)
-
+	// SERVER_IP: operator server IP, non-WireGuard IP
+	SERVER_IP string
+	// SERVER_KEY: operator server's public key
+	SERVER_KEY string
 	// OPERATOR_ADDR: operator server address
 	OPERATOR_ADDR string
 	OPERATOR_PORT int
-
 	// OPERATOR_SESSION is the session ID for this operator
 	OPERATOR_SESSION = uuid.NewString()
 )
@@ -67,6 +69,7 @@ func backgroundJobs() {
 // CliMain launches the commandline UI
 func CliMain(wg_server_ip string, wg_server_port int) {
 	OPERATOR_PORT = wg_server_port + 1
+	SERVER_IP = wg_server_ip
 
 	// unlock incomplete downloads
 	err := tools.UnlockDownloads()
@@ -219,17 +222,18 @@ func CliBanner(console *console.Console) {
 	name_list := strings.Join(c2_names, ", ")
 
 	say, encodingErr := cow.Say(fmt.Sprintf("Welcome! You are using emp3r0r %s,\n"+
-		"Operating: %s\n"+
-		"C2 listening on: *:%s,\n"+
+		"C2: *:%s,\n"+
 		"KCP: *:%s,\n"+
-		"C2 names: %s\n"+
-		"CA fingerprint: %s",
+		"C2 Names: %s\n"+
+		"Server: %s (%s)\n"+
+		"Server Key: %s",
 		def.Version,
-		OPERATOR_ADDR,
 		live.RuntimeConfig.CCPort,
 		live.RuntimeConfig.KCPServerPort,
 		name_list,
-		live.RuntimeConfig.CAFingerprint,
+		OPERATOR_ADDR,
+		SERVER_IP,
+		SERVER_KEY,
 	))
 	if encodingErr != nil {
 		logging.Fatalf("CowSay: %v", encodingErr)
