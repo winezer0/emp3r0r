@@ -103,18 +103,12 @@ func SetActiveAgent(identifier string) {
 		}
 	}
 
-	select_agent := func(a *def.Emp3r0rAgent) {
-		live.ActiveAgent = a
-	}
-
 	if target_to_set == nil {
 		// if still nothing
 		logging.Errorf("Target does not exist, no target has been selected")
 		return
-
 	} else {
-		// lets start the bash shell
-		go select_agent(target_to_set)
+		live.ActiveAgent = target_to_set
 	}
 }
 

@@ -25,9 +25,11 @@ func processAgentData(data *def.MsgTunData) {
 	switch data.Tag {
 	case logging.SUCCESS:
 		logging.Successf("%s", data.Response)
+		refreshAgentList() // it might be a new agent
 		return
 	case logging.ERROR:
 		logging.Errorf("%s", data.Response)
+		refreshAgentList() // it might be an agent disconnecting
 		return
 	case logging.WARN:
 		logging.Warningf("%s", data.Response)

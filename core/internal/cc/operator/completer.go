@@ -49,8 +49,8 @@ func listPortMappings(ctx carapace.Context) carapace.Action {
 	return carapace.ActionValues(ids...)
 }
 
-// autocomplete target index and tags
-func listTargetIndexTags(ctx carapace.Context) carapace.Action {
+// autocomplete agent tags
+func listAgents(ctx carapace.Context) carapace.Action {
 	names := make([]string, 0)
 	for _, t := range live.AgentList {
 		tag := t.Tag

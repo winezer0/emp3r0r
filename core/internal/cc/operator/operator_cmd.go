@@ -94,6 +94,10 @@ func cmdSetActiveAgent(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logging.Errorf("Failed to unmarshal active agent: %v", err)
 	}
+	if live.ActiveAgent.Tag == "" {
+		logging.Errorf("Failed to set active agent: empty data from server")
+		return
+	}
 	logging.Successf("Now targeting %s", live.ActiveAgent.Tag)
 }
 

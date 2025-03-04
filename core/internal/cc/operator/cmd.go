@@ -128,7 +128,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			Run:     cmdSetActiveAgent,
 		}
 		rootCmd.AddCommand(targetCmd)
-		carapace.Gen(targetCmd).PositionalCompletion(carapace.ActionCallback(listTargetIndexTags))
+		carapace.Gen(targetCmd).PositionalCompletion(carapace.ActionCallback(listAgents))
 
 		upgradeAgentCmd := &cobra.Command{
 			Use:     "upgrade_agent",
@@ -387,7 +387,9 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "agent",
 			Short:   "Label an agent with custom name",
 			Example: "label --id <agent_id> --label <custom_name>",
-			Run:     agents.CmdSetAgentLabel, // TODO: use operator API
+			Run: func(cmd *cobra.Command, args []string) {
+				logging.Errorf("Not implemented yet")
+			}, // TODO: use operator API
 		}
 		labelAgentCmd.Flags().StringP("id", "", "0", "Agent ID")
 		labelAgentCmd.Flags().StringP("label", "", "no-label", "Custom name")
@@ -395,7 +397,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 		labelAgentCmd.MarkFlagRequired("label")
 		rootCmd.AddCommand(labelAgentCmd)
 		carapace.Gen(labelAgentCmd).FlagCompletion(carapace.ActionMap{
-			"id":    carapace.ActionCallback(listTargetIndexTags),
+			"id":    carapace.ActionCallback(listAgents),
 			"label": carapace.ActionValues("no-label", "linux", "windows", "workstation", "server", "dev", "prod", "test", "honeypot"),
 		})
 
