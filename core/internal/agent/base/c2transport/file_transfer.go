@@ -76,7 +76,7 @@ func DownloadViaC2(file_to_download, path, checksum string) (data []byte, err er
 	// if no path specified
 	if retData {
 		log.Printf("Downloading %s to memory", url)
-		client := transport.EmpHTTPClient(def.CCAddress, common.RuntimeConfig.C2TransportProxy)
+		client := def.HTTPClient
 		if client == nil {
 			err = fmt.Errorf("failed to initialize HTTP client")
 			return
@@ -112,7 +112,7 @@ func DownloadViaC2(file_to_download, path, checksum string) (data []byte, err er
 	// use grab
 	log.Printf("Downloading %s to %s", url, path)
 	client := grab.NewClient()
-	client.HTTPClient = transport.EmpHTTPClient(def.CCAddress, common.RuntimeConfig.C2TransportProxy)
+	client.HTTPClient = def.HTTPClient
 	if client.HTTPClient == nil {
 		err = fmt.Errorf("failed to initialize HTTP client")
 		return

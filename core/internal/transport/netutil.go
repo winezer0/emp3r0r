@@ -28,7 +28,7 @@ func TestConnectivity(test_url, proxy string) bool {
 	}
 	// if not using Microsoft NCSI, we need to use uTLS
 	if test_url != MicrosoftNCSIURL {
-		client = HTTPClientWithEmpCA(test_url, proxy)
+		client = CreateEmp3r0rHTTPClient(test_url, proxy)
 		if client == nil {
 			log.Printf("TestConnectivity: cannot create http client for %s", test_url)
 			return false
@@ -64,7 +64,7 @@ func IsProxyOK(proxy, test_url string) bool {
 		return false
 	}
 	log.Printf("IsProxyOK: testing proxy %s with %s", proxy, test_url)
-	client := HTTPClientWithEmpCA(test_url, proxy)
+	client := CreateEmp3r0rHTTPClient(test_url, proxy)
 	if client == nil {
 		log.Printf("IsProxyOK: cannot create http client")
 		return false

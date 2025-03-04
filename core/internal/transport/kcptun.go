@@ -76,7 +76,7 @@ type Config struct {
 	CloseWait    int    `json:"closewait"`   // Time (in seconds) to wait before tearing down a connection
 }
 
-func parseJSONConfig(config *Config, path string) error {
+func ParseJSONConfig(config *Config, path string) error {
 	file, err := os.Open(path) // For read access.
 	if err != nil {
 		return err

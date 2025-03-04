@@ -20,7 +20,7 @@ var SSServerConfig struct {
 const SSAEADCipher = "AEAD_CHACHA20_POLY1305"
 
 // shadowsocks config options
-var flags struct {
+var Flags struct {
 	Client     string // client connect address or url
 	Server     string // server listen address or url
 	Cipher     string // AEAD_CHACHA20_POLY1305

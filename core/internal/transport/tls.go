@@ -4,15 +4,16 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
 	utls "github.com/refraction-networking/utls"
 )
 
-// EmpHTTPClient add our CA to trusted CAs, while keeps TLS InsecureVerify on
-func EmpHTTPClient(c2_addr, proxyServer string) *http.Client {
+// CreateEmp3r0rHTTPClient add our CA to trusted CAs, while keeps TLS InsecureVerify on
+// c2_addr: C2 address, only the hostname will be used
+// proxyServer: proxy server URL, if empty, direct connection will be used
+func CreateEmp3r0rHTTPClient(c2_addr, proxyServer string) *http.Client {
 	// Extract CA bundle from built-in certs
 	rootCAs, err := ExtractCABundle(CACrtPEM)
 	if err != nil {
@@ -74,17 +75,4 @@ init_transport:
 
 	log.Printf("Transport initialized (%s)", c2url)
 	return &http.Client{Transport: tr}
-}
-
-// HTTPClientWithEmpCA is a http client with system CA pool
-// with utls client hello randomization
-// url: target URL, proxy: proxy URL
-func HTTPClientWithEmpCA(target_url, proxy string) (client *http.Client) {
-	client = EmpHTTPClient(target_url, proxy)
-	if client == nil {
-		return nil
-	}
-
-	client.Timeout = 5 * time.Second
-	return
 }
