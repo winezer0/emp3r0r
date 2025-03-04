@@ -8,8 +8,10 @@ import (
 
 // CmdOpenFileManager open SFTP file manager on target machine
 func CmdOpenFileManager(cmd *cobra.Command, args []string) {
-	sshErr := SSHClient("sftp", "", live.RuntimeConfig.SSHDShellPort, false)
-	if sshErr != nil {
-		logging.Errorf("openFileManager: %v", sshErr)
-	}
+	go func() {
+		sshErr := SSHClient("sftp", "", live.RuntimeConfig.SSHDShellPort, false)
+		if sshErr != nil {
+			logging.Errorf("openFileManager: %v", sshErr)
+		}
+	}()
 }

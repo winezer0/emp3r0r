@@ -25,7 +25,7 @@ import (
 type Command struct {
 	Name   string
 	Help   string
-	Func   interface{}
+	Func   any
 	HasArg bool
 }
 
