@@ -10,6 +10,7 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/tools"
+	"github.com/jm33-m0/emp3r0r/core/internal/cc/modules"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/internal/transport"
 	"github.com/jm33-m0/emp3r0r/core/lib/cli"
@@ -156,9 +157,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "filesystem",
 			Short:   "Browse remote files in your local file manager with SFTP protocol",
 			Args:    cobra.NoArgs,
-			Run: func(_ *cobra.Command, _ []string) {
-				logging.Errorf("Not implemented yet")
-			},
+			Run:     modules.CmdOpenFileManager,
 		}
 		rootCmd.AddCommand(fileManagerCmd)
 
@@ -318,9 +317,7 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 			GroupID: "util",
 			Short:   "Take a screenshot of selected agent",
 			Args:    cobra.NoArgs,
-			Run: func(_ *cobra.Command, _ []string) {
-				logging.Errorf("Not implemented yet")
-			},
+			Run:     modules.TakeScreenshot,
 		}
 		rootCmd.AddCommand(screenshotCmd)
 
