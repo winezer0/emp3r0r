@@ -14,9 +14,6 @@ var (
 	// use: C2 message construction and encryption
 	MagicString = "64781530-1475-4cf8-950c-dcdf4c619dbc"
 
-	// OneTimeMagicBytes as separator/password, generated at runtime, only used by agent program
-	OneTimeMagicBytes = []byte("6byKQ3Hcidum0NCdvJGK0w==")
-
 	// Transport what transport is this agent using? (HTTP2 / CDN / TOR)
 	Transport = "HTTP2"
 

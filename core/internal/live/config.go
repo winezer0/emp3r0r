@@ -62,6 +62,24 @@ const (
 	UtilsArchive = WWWRoot + "utils.tar.xz"
 )
 
+func cleanupConfig() (err error) {
+	dents, err := os.ReadDir(EmpWorkSpace)
+	if err != nil {
+		return
+	}
+	for _, d := range dents {
+		if strings.HasSuffix(d.Name(), ".json") ||
+			strings.HasSuffix(d.Name(), ".pem") ||
+			strings.HasSuffix(d.Name(), ".history") {
+			err = os.Remove(EmpWorkSpace + "/" + d.Name())
+			if err != nil {
+				return
+			}
+		}
+	}
+	return
+}
+
 func DownloadExtractConfig(url string, downloader func(string, string) error) (err error) {
 	logging.Infof("Downloading and extracting config from %s to %s", url, EmpConfigTar)
 	// download config tarball from server
@@ -70,7 +88,7 @@ func DownloadExtractConfig(url string, downloader func(string, string) error) (e
 		return
 	}
 	// remove existing config files for a clean start
-	err = os.RemoveAll(EmpWorkSpace)
+	err = cleanupConfig()
 	if err != nil {
 		return
 	}
@@ -158,30 +176,6 @@ func ReadJSONConfig() (err error) {
 	}
 
 	return def.ReadJSONConfig(jsonData, RuntimeConfig)
-}
-
-// re-generate a random magic string for this CC session
-func InitMagicAgentOneTimeBytes() {
-	default_magic_str := def.OneTimeMagicBytes
-	def.OneTimeMagicBytes = util.RandBytes(len(default_magic_str))
-
-	// update binaries
-	files, err := os.ReadDir(EmpWorkSpace)
-	if err != nil {
-		logging.Fatalf("init_magic_str: %v", err)
-	}
-	for _, f := range files {
-		if f.IsDir() {
-			continue
-		}
-		if strings.HasPrefix(f.Name(), "stub-") {
-			err = util.ReplaceBytesInFile(fmt.Sprintf("%s/%s", EmpWorkSpace, f.Name()),
-				default_magic_str, def.OneTimeMagicBytes)
-			if err != nil {
-				logging.Fatalf("init_magic_str: %v", err)
-			}
-		}
-	}
 }
 
 // InitCertsAndConfig generate certs if not found, then generate config file

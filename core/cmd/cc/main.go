@@ -58,9 +58,6 @@ func init() {
 	if err != nil {
 		log.Fatalf("C2 file paths setup: %v", err)
 	}
-
-	// set up magic string
-	live.InitMagicAgentOneTimeBytes()
 }
 
 func main() {

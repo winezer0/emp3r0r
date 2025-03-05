@@ -34,8 +34,9 @@ func FindEmp3r0rELFInMem() (elf_bytes []byte, err error) {
 		return
 	}
 
+	// FIXME: it used to be def.OneTimeMagicBytes, but it's not used anymore
 	for base, mem_region := range mem_regions {
-		if bytes.Contains(mem_region, exeutil.ELFMAGIC) && bytes.Contains(mem_region, def.OneTimeMagicBytes) {
+		if bytes.Contains(mem_region, exeutil.ELFMAGIC) && bytes.Contains(mem_region, []byte(def.MagicString)) {
 			if base != 0x400000 {
 				logging.Debugf("Found magic string in memory region 0x%x, but unlikely to contain our ELF", base)
 				continue
