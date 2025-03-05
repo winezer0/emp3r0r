@@ -14,7 +14,8 @@ A post-exploitation framework for Linux/Windows
 curl -sSL https://raw.githubusercontent.com/jm33-m0/emp3r0r/refs/heads/v3/install.sh | bash
 ```
 
-Read the [wiki](https://github.com/jm33-m0/emp3r0r/wiki/Getting-started) to get started. Please also consider contributing your own documentation there to help others.
+- The wiki was written for `v2` branch, please use the command line help instead.
+- Don't rely on cross-version compatibility, sometimes I might break them because of bug fixes or new features. When something doesn't work, try deleting `~/.emp3r0r` and start over.
 
 ## Motivation
 
