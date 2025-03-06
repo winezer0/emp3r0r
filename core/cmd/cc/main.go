@@ -32,6 +32,7 @@ type Options struct {
 	c2_hosts       string // C2 hosts to generate cert for
 	cdnProxy       string // Start cdn2proxy server on this port
 	debug          bool   // Do not kill tmux session when crashing
+	num_operators  int    // Number of operator configurations to generate
 }
 
 const (
@@ -109,6 +110,7 @@ func main() {
 	// Server-specific flags
 	serverCmd.Flags().IntVar(&opts.c2_server_port, "port", operatorDefaultPort, "Server port to listen on")
 	serverCmd.Flags().StringVar(&opts.c2_hosts, "c2-hosts", "", "C2 hosts to generate cert for, separated by whitespace")
+	serverCmd.Flags().IntVar(&opts.num_operators, "operators", 1, "Number of operator configurations to generate")
 
 	// Completion command
 	completionCmd := &cobra.Command{
@@ -173,11 +175,12 @@ func runClientMode(opts *Options) {
 		startCDN2Proxy(opts)
 	}
 
+	// Must provide C2 server IP
 	if opts.c2_server_ip == operatorDefaultIP {
-		logging.Warningf("Operator server IP is %s, C2 server will run along with CLI", operatorDefaultIP)
-		go server.ServerMain(opts.c2_server_port, opts.c2_hosts)
+		logging.Fatalf("Please provide the C2 server's IP to establish WireGuard connection")
 	}
 
+	// Connect to C2 wireguard server
 	connectWg(opts)
 
 	// download and extract config files
@@ -215,7 +218,7 @@ func runServerMode(opts *Options) {
 	if err != nil {
 		logging.Fatalf("Failed to load config: %v", err)
 	}
-	server.ServerMain(opts.c2_server_port, opts.c2_hosts)
+	server.ServerMain(opts.c2_server_port, opts.c2_hosts, opts.num_operators)
 }
 
 func connectWg(opts *Options) {
