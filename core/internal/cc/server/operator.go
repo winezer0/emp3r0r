@@ -18,7 +18,6 @@ import (
 type operator_t struct {
 	sessionID string       // marks the operator session
 	conn      *h2conn.Conn // message tunnel, used to relay messages
-	wgip      string       // operator's wireguard IP address, used for port mapping and stuff
 }
 
 var (
