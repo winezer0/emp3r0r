@@ -236,6 +236,45 @@ install() {
   # wireguard socket directory needs to be accessible by the user
   sudo mkdir -p /var/run/wireguard && sudo chown -R "$current_user:$current_group" /var/run/wireguard
 
+  # Auto-complete
+  # Find a suitable zsh completion directory
+  zsh_completion_dir=""
+  # Check user's personal completion directory first
+  if [ -n "$ZDOTDIR" ] && [ -d "$ZDOTDIR/completions" ]; then
+    zsh_completion_dir="$ZDOTDIR/completions"
+  elif [ -d "$HOME/.zsh/completions" ]; then
+    zsh_completion_dir="$HOME/.zsh/completions"
+  else
+    # Fall back to system directories
+    for dir in "/usr/local/share/zsh/site-functions" "/usr/share/zsh/site-functions" "/usr/share/zsh/vendor-completions"; do
+      if [ -d "$dir" ]; then
+        zsh_completion_dir="$dir"
+        break
+      fi
+    done
+  fi
+
+  # zsh
+  if [ -n "$zsh_completion_dir" ]; then
+    # Install Zsh completion file
+    mkdir -p "$zsh_completion_dir"
+    "$data_dir/emp3r0r-cc" completion zsh | sudo tee "$zsh_completion_dir/_emp3r0r" >/dev/null
+    sudo chmod 644 "$zsh_completion_dir/_emp3r0r"
+    info "Installed Zsh completion to $zsh_completion_dir/_emp3r0r"
+  else
+    warn "No suitable Zsh completion directory found"
+    warn "You can manually set up Zsh completion by adding this to your ~/.zshrc:"
+    warn "  fpath=(/path/to/dir/with/completion $fpath)"
+    warn "  autoload -Uz compinit && compinit"
+  fi
+  
+  # bash
+  mkdir -p "/etc/bash_completion.d"
+  "$data_dir/emp3r0r-cc" completion bash | sudo tee "/etc/bash_completion.d/emp3r0r" >/dev/null
+  sudo chmod 644 "/etc/bash_completion.d/emp3r0r"
+  info "Installed Bash completion to /etc/bash_completion.d/emp3r0r"
+  info "Restart your bash shell or run 'source /etc/bash_completion.d/emp3r0r'"
+
   success "Installed emp3r0r, please check"
   if tmux has-session -t emp3r0r 2>/dev/null; then
     warn "emp3r0r is still running, stopping it in 3 seconds"

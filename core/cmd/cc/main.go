@@ -41,24 +41,18 @@ const (
 )
 
 func init() {
-	// log to file
-	home, err := os.UserHomeDir()
+	// set up dirs and default variables
+	live.Prompt = cli.Prompt
+	err := live.SetupFilePaths()
 	if err != nil {
-		log.Fatalf("Failed to get user home dir: %v", err)
+		log.Fatalf("C2 file paths setup: %v", err)
 	}
-	live.EmpLogFile = home + "/.emp3r0r/emp3r0r.log"
+	// log to file
 	logf, err := os.OpenFile(live.EmpLogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
 	if err != nil {
 		log.Fatalf("Failed to open log file: %v", err)
 	}
 	logging.SetOutput(logf)
-
-	// set up dirs and default variables
-	live.Prompt = cli.Prompt
-	err = live.SetupFilePaths()
-	if err != nil {
-		log.Fatalf("C2 file paths setup: %v", err)
-	}
 }
 
 func main() {
