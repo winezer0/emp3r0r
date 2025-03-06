@@ -190,6 +190,24 @@ uninstall() {
 
   # emp3r0r launcher
   rm -f "$bin_dir/emp3r0r" || error "Failed to remove $bin_dir/emp3r0r"
+  
+  # Remove completion files
+  info "Removing completion files"
+  rm -f "/etc/bash_completion.d/emp3r0r"
+  
+  # Try to remove zsh completion from common locations
+  for zsh_dir in "/usr/local/share/zsh/site-functions" "/usr/share/zsh/site-functions" "/usr/share/zsh/vendor-completions" "$HOME/.zsh/completions"; do
+    if [ -f "$zsh_dir/_emp3r0r" ]; then
+      rm -f "$zsh_dir/_emp3r0r"
+      info "Removed Zsh completion from $zsh_dir"
+    fi
+  done
+  
+  # Check if ZDOTDIR is set and remove completion there if it exists
+  if [ -n "$ZDOTDIR" ] && [ -f "$ZDOTDIR/completions/_emp3r0r" ]; then
+    rm -f "$ZDOTDIR/completions/_emp3r0r"
+    info "Removed Zsh completion from $ZDOTDIR/completions"
+  fi
 
   success "emp3r0r has been removed"
 }
