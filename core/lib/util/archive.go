@@ -1,7 +1,7 @@
 package util
 
 import (
-	"github.com/jm33-m0/arc"
+	"github.com/jm33-m0/arc/v2"
 )
 
 // Unarchive unarchives a tarball to a directory

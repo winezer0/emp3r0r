@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/jm33-m0/arc"
+	"github.com/jm33-m0/arc/v2"
 )
 
 // Base64Encode encodes a byte slice to a base64 URL-encoded string
