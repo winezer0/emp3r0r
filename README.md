@@ -31,6 +31,9 @@ This command initiates emp3r0r with:
 
 The server will display all necessary configuration details for operator setup.
 
+<img width="1280" alt="emp3r0r-server" src="https://github.com/user-attachments/assets/10efc305-36eb-443a-9e74-af6288358d76" />
+
+
 ### Operator Connection
 
 ```shell
@@ -43,6 +46,8 @@ This command:
 - Configures WireGuard connectivity between operator and server using the parameters provided in server output
 - Supports multiple operators (each requiring unique WireGuard profiles)
 - Note: If connection stalls after entering the operator's private key, verify that keys/IPs match correctly
+
+<img width="1280" alt="emp3r0r-operator" src="https://github.com/user-attachments/assets/67868b28-2250-45ab-9ffa-97328eec3780" />
 
 ### Agent Payload Generation
 
