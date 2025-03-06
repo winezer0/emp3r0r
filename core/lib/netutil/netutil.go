@@ -3,13 +3,12 @@ package netutil
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
-
-	"golang.org/x/exp/rand"
 )
 
 const (
