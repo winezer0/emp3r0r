@@ -24,14 +24,14 @@ import (
 
 // Options struct to hold flag values
 type Options struct {
-	wg_server_ip       string // C2 server IP
-	wg_server_port     int    // C2 server port
-	wg_server_peer_key string // C2 server's WireGuard public key
-	wg_server_peer_ip  string // C2 server's WireGuard IP
-	wg_operator_ip     string // Operator's WireGuard IP
-	c2_hosts           string // C2 hosts to generate cert for
-	cdnProxy           string // Start cdn2proxy server on this port
-	debug              bool   // Do not kill tmux session when crashing
+	c2_server_ip   string // C2 server IP
+	c2_server_port int    // C2 server port
+	wg_server_key  string // C2 server's WireGuard public key
+	wg_server_ip   string // C2 server's WireGuard IP
+	wg_operator_ip string // Operator's WireGuard IP
+	c2_hosts       string // C2 hosts to generate cert for
+	cdnProxy       string // Start cdn2proxy server on this port
+	debug          bool   // Do not kill tmux session when crashing
 }
 
 const (
@@ -83,17 +83,19 @@ func main() {
 	}
 
 	// Client-specific flags
-	clientCmd.Flags().StringVar(&opts.wg_server_ip, "host", operatorDefaultIP, "Connect to this C2 server to start operations")
-	clientCmd.Flags().IntVar(&opts.wg_server_port, "port", operatorDefaultPort, "C2 server port")
-	clientCmd.Flags().StringVar(&opts.wg_server_peer_key, "server-wg-key", "", "WireGuard public key provided by the C2 server")
-	clientCmd.Flags().StringVar(&opts.wg_server_peer_ip, "server-wg-ip", "", "WireGuard server IP provided by the C2 server")
-	clientCmd.Flags().StringVar(&opts.wg_operator_ip, "operator-ip", "", "Operator's wireguard IP")
+	clientCmd.Flags().StringVar(&opts.c2_server_ip, "c2-host", operatorDefaultIP, "Connect to this C2 server to start operations")
+	clientCmd.Flags().IntVar(&opts.c2_server_port, "c2-port", operatorDefaultPort, "C2 server port")
+	clientCmd.Flags().StringVar(&opts.wg_server_key, "server-wg-key", "", "WireGuard public key provided by the C2 server")
+	clientCmd.Flags().StringVar(&opts.wg_server_ip, "server-wg-ip", "", "WireGuard server IP provided by the C2 server")
+	clientCmd.Flags().StringVar(&opts.wg_operator_ip, "operator-wg-ip", "", "Operator's wireguard IP")
 	clientCmd.Flags().BoolVar(&opts.debug, "debug", false, "Do not kill tmux session when crashing, so you can see the crash log")
 
 	// Mark required flags for client mode
+	clientCmd.MarkFlagRequired("c2-host")
+	clientCmd.MarkFlagRequired("c2-port")
 	clientCmd.MarkFlagRequired("server-wg-key")
 	clientCmd.MarkFlagRequired("server-wg-ip")
-	clientCmd.MarkFlagRequired("operator-ip")
+	clientCmd.MarkFlagRequired("operator-wg-ip")
 
 	// Server subcommand
 	serverCmd := &cobra.Command{
@@ -105,8 +107,8 @@ func main() {
 	}
 
 	// Server-specific flags
-	serverCmd.Flags().IntVar(&opts.wg_server_port, "port", operatorDefaultPort, "Server port to listen on")
-	serverCmd.Flags().StringVar(&opts.c2_hosts, "c2-hosts", "", "C2 hosts to generate cert for")
+	serverCmd.Flags().IntVar(&opts.c2_server_port, "port", operatorDefaultPort, "Server port to listen on")
+	serverCmd.Flags().StringVar(&opts.c2_hosts, "c2-hosts", "", "C2 hosts to generate cert for, separated by whitespace")
 
 	// Completion command
 	completionCmd := &cobra.Command{
@@ -146,7 +148,7 @@ Zsh:
 	// Default behavior if no subcommand is given (backwards compatibility)
 	rootCmd.Run = func(cmd *cobra.Command, args []string) {
 		// Default to client mode with local server
-		opts.wg_server_ip = operatorDefaultIP
+		opts.c2_server_ip = operatorDefaultIP
 		runClientMode(opts)
 	}
 
@@ -171,9 +173,9 @@ func runClientMode(opts *Options) {
 		startCDN2Proxy(opts)
 	}
 
-	if opts.wg_server_ip == operatorDefaultIP {
+	if opts.c2_server_ip == operatorDefaultIP {
 		logging.Warningf("Operator server IP is %s, C2 server will run along with CLI", operatorDefaultIP)
-		go server.ServerMain(opts.wg_server_port, opts.c2_hosts)
+		go server.ServerMain(opts.c2_server_port, opts.c2_hosts)
 	}
 
 	connectWg(opts)
@@ -188,7 +190,7 @@ func runClientMode(opts *Options) {
 	if err != nil {
 		logging.Fatalf("Failed to load config: %v", err)
 	}
-	operator.CliMain(opts.wg_server_ip, opts.wg_server_port)
+	operator.CliMain(opts.c2_server_ip, opts.c2_server_port)
 }
 
 func runServerMode(opts *Options) {
@@ -213,23 +215,23 @@ func runServerMode(opts *Options) {
 	if err != nil {
 		logging.Fatalf("Failed to load config: %v", err)
 	}
-	server.ServerMain(opts.wg_server_port, opts.c2_hosts)
+	server.ServerMain(opts.c2_server_port, opts.c2_hosts)
 }
 
 func connectWg(opts *Options) {
-	if opts.wg_server_peer_key == "" {
+	if opts.wg_server_key == "" {
 		logging.Fatalf("Please provide the server's WireGuard public key")
 	}
-	if opts.wg_server_peer_ip == "" {
+	if opts.wg_server_ip == "" {
 		logging.Fatalf("Please provide the server's WireGuard IP")
 	}
 	if opts.wg_operator_ip == "" {
 		logging.Fatalf("Please provide the operator's WireGuard IP")
 	}
-	netutil.WgServerIP = opts.wg_server_peer_ip
+	netutil.WgServerIP = opts.wg_server_ip
 	netutil.WgOperatorIP = opts.wg_operator_ip
-	operator.SERVER_IP = opts.wg_server_ip
-	operator.SERVER_KEY = opts.wg_server_peer_key
+	operator.SERVER_IP = opts.c2_server_ip
+	operator.SERVER_KEY = opts.wg_server_key
 	// Connect to C2 wireguard server with given wireguard keypair
 	wg_key := live.Prompt("Enter operator's WireGuard private key provided by the server")
 	_, err := netutil.PublicKeyFromPrivate(wg_key)
@@ -242,9 +244,9 @@ func connectWg(opts *Options) {
 		ListenPort: util.RandInt(1024, 65535),
 		Peers: []netutil.PeerConfig{
 			{
-				PublicKey:  opts.wg_server_peer_key,
+				PublicKey:  opts.wg_server_key,
 				AllowedIPs: netutil.WgServerIP + "/32",
-				Endpoint:   fmt.Sprintf("%s:%d", opts.wg_server_ip, opts.wg_server_port),
+				Endpoint:   fmt.Sprintf("%s:%d", opts.c2_server_ip, opts.c2_server_port),
 			},
 		},
 	}
@@ -253,7 +255,7 @@ func connectWg(opts *Options) {
 		if err != nil {
 			logging.Fatalf("Connecting to C2 WireGuard server: %v", err)
 		}
-		logging.Successf("Connected to C2 WireGuard server at %s:%d", opts.wg_server_ip, opts.wg_server_port)
+		logging.Successf("Connected to C2 WireGuard server at %s:%d", opts.c2_server_ip, opts.c2_server_port)
 	}()
 	time.Sleep(2 * time.Second)
 }

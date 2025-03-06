@@ -15,8 +15,8 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 )
 
-// StartMTLSServer starts the operator TLS server with mTLS.
-func StartMTLSServer(port int) {
+// StartOperatorMTLSServer starts the operator TLS server with mTLS.
+func StartOperatorMTLSServer(port int) {
 	r := mux.NewRouter()
 	r.HandleFunc(fmt.Sprintf("/%s/{api}", transport.OperatorRoot), operationDispatcher)
 	if network.MTLSServer != nil && network.MTLSServerCtx != nil {

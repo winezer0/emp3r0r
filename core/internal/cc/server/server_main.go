@@ -3,12 +3,14 @@ package server
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/jm33-m0/arc"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/relay"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
+	"github.com/jm33-m0/emp3r0r/core/lib/cli"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/jm33-m0/emp3r0r/core/lib/netutil"
 )
@@ -19,8 +21,8 @@ func ServerMain(wg_port int, hosts string) {
 	go tarConfig(hosts)
 	wg(wg_port)
 	time.Sleep(3 * time.Second)
-	go StartC2TLSServer()
-	StartMTLSServer(wg_port + 1)
+	go StartC2AgentTLSServer()
+	StartOperatorMTLSServer(wg_port + 1)
 }
 
 func wg(wg_port int) {
@@ -64,18 +66,22 @@ func wg(wg_port int) {
 			logging.Fatalf("Failed to start WireGuard server: %v", err)
 		}
 	}()
-	logging.Successf(`
-══════════════════ WireGuard Configuration ════════════════════════════
 
-C2 Server IP      : %-60s
-C2 Public Key     : %-60s
-Operator IP       : %-60s
-Operator Priv Key : %-60s
+	// Create table headers and rows for WireGuard configuration
+	headers := []string{"Parameter", "Value"}
+	rows := [][]string{
+		{"C2 Server IP (WG)", netutil.WgServerIP},
+		{"C2 Server Port", strconv.Itoa(wg_port)},
+		{"C2 Public Key", server_pubkey},
+		{"Operator WG IP", netutil.WgOperatorIP},
+		{"Operator Private Key", operator_privkey},
+	}
 
+	// Build the table
+	tableStr := cli.BuildTable(headers, rows)
 
-═══════════════════════════════════════════════════════════════════════
-		     `,
-		netutil.WgServerIP, server_pubkey, netutil.WgOperatorIP, operator_privkey)
+	// Print the table with a title
+	logging.Successf("\n══════════════════ WireGuard Configuration ════════════════════════════\n\n%s\n", tableStr)
 }
 
 func tarConfig(hosts string) {

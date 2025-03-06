@@ -13,8 +13,8 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 )
 
-// StartC2TLSServer starts the TLS server.
-func StartC2TLSServer() {
+// StartC2AgentTLSServer starts the TLS server.
+func StartC2AgentTLSServer() {
 	if _, err := os.Stat(live.Temp + transport.WWW); os.IsNotExist(err) {
 		err = os.MkdirAll(live.Temp+transport.WWW, 0o700)
 		if err != nil {
@@ -32,7 +32,7 @@ func StartC2TLSServer() {
 		Handler: r,
 	}
 	network.EmpTLSServerCtx, network.EmpTLSServerCancel = context.WithCancel(context.Background())
-	logging.Printf("Starting C2 TLS service at port %s", live.RuntimeConfig.CCPort)
+	logging.Printf("Starting C2 agent listener service with TLS at port %s", live.RuntimeConfig.CCPort)
 	err := network.EmpTLSServer.ListenAndServeTLS(transport.ServerCrtFile, transport.ServerKeyFile)
 	if err != nil {
 		if err == http.ErrServerClosed {
