@@ -85,11 +85,11 @@ While emp3r0r is primarily designed as a single-operator framework, the SSH C2-R
   - [**Bring Your Own Shell**](https://github.com/jm33-m0/emp3r0r/blob/master/core/modules/elvish/config.json) functionality supporting [`elvish`](https://elv.sh) and other interactive programs through custom modules
 
 - **Secure Communications**
-  - HTTP2/TLS-based command and control
+  - **HTTP2/TLS-based** command and control
   - [**UTLS**](https://github.com/refraction-networking/utls) implementation to defeat [**JA3**](https://github.com/salesforce/ja3) fingerprinting
-  - KCP-based fast multiplexed UDP tunneling
-  - Support for external proxying via [**TOR** and **CDN**s](https://github.com/jm33-m0/emp3r0r/raw/master/img/c2transports.png)
-  - [**C2 relaying**](https://github.com/jm33-m0/emp3r0r/wiki/C2-Relay) through SSH
+  - **KCP-based** fast multiplexed UDP tunneling to obfuscate C2 traffic
+  - Support for external proxying such as [**TOR** and **CDN**s](https://github.com/jm33-m0/emp3r0r/raw/master/img/c2transports.png)
+  - Operators connect to C2 using **WireGuard** and **mTLS**
 
 - **Memory Forensics Capabilities**
   - Cross-platform memory dumping
