@@ -40,19 +40,26 @@ const (
 	operatorDefaultIP   = "127.0.0.1"
 )
 
-func init() {
-	// set up dirs and default variables
-	live.Prompt = cli.Prompt
-	err := live.SetupFilePaths()
-	if err != nil {
-		log.Fatalf("C2 file paths setup: %v", err)
-	}
-	// log to file
+func setupLogging() {
 	logf, err := os.OpenFile(live.EmpLogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
 	if err != nil {
 		log.Fatalf("Failed to open log file: %v", err)
 	}
 	logging.SetOutput(logf)
+}
+
+func init() {
+	// inject prompt function
+	live.Prompt = cli.Prompt
+
+	// setup file path names
+	err := live.SetupFilePaths()
+	if err != nil {
+		log.Fatalf("Failed to setup file paths: %v", err)
+	}
+
+	// log to file
+	setupLogging()
 }
 
 func main() {
@@ -154,6 +161,11 @@ Zsh:
 }
 
 func runClientMode(opts *Options) {
+	err := live.CopyStubs()
+	if err != nil {
+		logging.Fatalf("Failed to copy stubs: %v", err)
+	}
+
 	// do not kill tmux session when crashing
 	if opts.debug {
 		live.TmuxPersistence = true
@@ -179,7 +191,7 @@ func runClientMode(opts *Options) {
 
 	// download and extract config files
 	url := fmt.Sprintf("http://%s:%d/%s", netutil.WgServerIP, netutil.WgFileServerPort, "emp3r0r_operator_config.tar.xz")
-	err := live.DownloadExtractConfig(url, ftp.DownloadFile)
+	err = live.DownloadExtractConfig(url, ftp.DownloadFile)
 	if err != nil {
 		logging.Fatalf("Failed to extract config: %v", err)
 	}
@@ -191,6 +203,7 @@ func runClientMode(opts *Options) {
 }
 
 func runServerMode(opts *Options) {
+	var err error
 	live.IsServer = true
 	logging.AddWriter(os.Stderr)
 
@@ -204,7 +217,7 @@ func runServerMode(opts *Options) {
 		startCDN2Proxy(opts)
 	}
 
-	err := live.InitCertsAndConfig()
+	err = live.InitCertsAndConfig()
 	if err != nil {
 		logging.Fatalf("Failed to init certs and config: %v", err)
 	}

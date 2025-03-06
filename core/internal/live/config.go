@@ -140,10 +140,20 @@ func SetupFilePaths() (err error) {
 		}
 	}
 
-	// prefixes for stubs
-	def.Stub_Linux = EmpWorkSpace + "/stub"
-	def.Stub_Windows = EmpWorkSpace + "/stub-win"
+	// cd to workspace
+	err = os.Chdir(EmpWorkSpace)
+	if err != nil {
+		return fmt.Errorf("cd to workspace %s: %v", EmpWorkSpace, err)
+	}
 
+	// Module directories
+	ModuleDirs = []string{EmpDataDir + "/modules", EmpWorkSpace + "/modules"}
+
+	return nil
+}
+
+// CopyStubs copy agent stubs to ~/.emp3r0r, must be run after SetupFilePaths
+func CopyStubs() (err error) {
 	// copy stub binaries to ~/.emp3r0r
 	stubFiles, err := filepath.Glob(fmt.Sprintf("%s/stub*", EmpBuildDir))
 	if err != nil {
@@ -155,16 +165,6 @@ func SetupFilePaths() (err error) {
 			return fmt.Errorf("copying agent stubs: %v", copyErr)
 		}
 	}
-
-	// cd to workspace
-	err = os.Chdir(EmpWorkSpace)
-	if err != nil {
-		return fmt.Errorf("cd to workspace %s: %v", EmpWorkSpace, err)
-	}
-
-	// Module directories
-	ModuleDirs = []string{EmpDataDir + "/modules", EmpWorkSpace + "/modules"}
-
 	return nil
 }
 

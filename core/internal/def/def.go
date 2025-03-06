@@ -52,10 +52,6 @@ var (
 var (
 	// Version hardcoded version string
 	Version = "unknown"
-
-	// to be updated by DirSetup
-	Stub_Linux   = ""
-	Stub_Windows = ""
 )
 
 const (
