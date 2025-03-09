@@ -87,7 +87,7 @@ While emp3r0r is primarily designed as a single-operator framework, the SSH C2-R
 - **Secure Communications**
   - **HTTP2/TLS-based** command and control
   - [**UTLS**](https://github.com/refraction-networking/utls) implementation to defeat [**JA3**](https://github.com/salesforce/ja3) fingerprinting
-  - **KCP-based** fast multiplexed UDP tunneling to obfuscate C2 traffic
+  - [**KCP-based**](https://github.com/xtaci/kcp-go) fast, multiplexed, anonymous UDP tunneling to obfuscate C2 traffic
   - Support for external proxying such as [**TOR** and **CDN**s](https://github.com/jm33-m0/emp3r0r/raw/master/img/c2transports.png)
   - Operators connect to C2 using **WireGuard** and **mTLS**
 
