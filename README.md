@@ -2,7 +2,7 @@
 
 An advanced post-exploitation framework designed for Linux/Windows environments
 
-<https://github.com/user-attachments/assets/5a918e49-2073-44c6-b93a-0f9a5dd36e0c>
+<https://github.com/user-attachments/assets/cfe67dac-eaa7-4928-8cdf-86156b346c2f>
 
 [View Screenshots and Videos](./Screenshots.md)
 
