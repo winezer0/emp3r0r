@@ -67,8 +67,6 @@ emp3r0r was initially developed as a research project for implementing Linux adv
 
 For extensibility, emp3r0r offers complete [python3 support](https://github.com/jm33-m0/emp3r0r/wiki/Write-modules-for-emp3r0r#python) via the [`vaccine`](./core/modules/vaccine) module (15MB total), including essential packages like `Impacket`, `Requests`, and `MySQL`. The framework supports diverse module formats including `bash`, `powershell`, `python`, `dll`, `so`, and `exe`.
 
-While emp3r0r is primarily designed as a single-operator framework, the SSH C2-Relay feature enables separation between C2 server and operator functions.
-
 ---
 
 ## Features
