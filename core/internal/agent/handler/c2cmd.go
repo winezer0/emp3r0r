@@ -239,6 +239,7 @@ func C2Commands() *cobra.Command {
 		Short:   "Set up persistence",
 		Example: "!persistence --method <method>",
 		GroupID: "linux",
+		Run:     runPersistenceLinux,
 	}
 	persistenceCmd.Flags().StringP("method", "m", "", "Persistence method")
 	rootCmd.AddCommand(persistenceCmd)
