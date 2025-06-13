@@ -67,11 +67,31 @@ echo -e "\n[*] Uploading asset... "
 # Construct url
 GH_ASSET="https://uploads.github.com/repos/$owner/$repo/releases/$id/assets?name=$(basename $filename)"
 
-curl "$GITHUB_OAUTH_BASIC" --data-binary @"$filename" -H "Authorization: token $github_api_token" -H "Content-Type: application/octet-stream" $GH_ASSET
+upload_response=$(curl -s --data-binary @"$filename" -H "Authorization: token $github_api_token" -H "Content-Type: application/octet-stream" $GH_ASSET)
+echo "Upload response: $upload_response"
+
+# Check if upload was successful
+if echo "$upload_response" | grep -q '"state": "uploaded"'; then
+    echo "✓ Asset uploaded successfully"
+else
+    echo "✗ Asset upload failed"
+    echo "$upload_response"
+    exit 1
+fi
 
 # Upload checksum of asset
 echo -e "\n[*] Uploading checksum... "
 checksum=$(sha256sum $filename | cut -d ' ' -f 1)
 echo -n "$checksum" >"$filename.sha256"
 GH_ASSET="https://uploads.github.com/repos/$owner/$repo/releases/$id/assets?name=$(basename $filename).sha256"
-curl "$GITHUB_OAUTH_BASIC" --data-binary @"$filename.sha256" -H "Authorization: token $github_api_token" -H "Content-Type: application/octet-stream" $GH_ASSET
+checksum_response=$(curl -s --data-binary @"$filename.sha256" -H "Authorization: token $github_api_token" -H "Content-Type: application/octet-stream" $GH_ASSET)
+echo "Checksum upload response: $checksum_response"
+
+# Check if checksum upload was successful
+if echo "$checksum_response" | grep -q '"state": "uploaded"'; then
+    echo "✓ Checksum uploaded successfully"
+else
+    echo "✗ Checksum upload failed"
+    echo "$checksum_response"
+    exit 1
+fi
