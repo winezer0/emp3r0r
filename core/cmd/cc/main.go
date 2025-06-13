@@ -183,7 +183,7 @@ func runClientMode(opts *Options) {
 
 	// Must provide C2 server IP
 	if opts.c2_server_ip == operatorDefaultIP {
-		logging.Fatalf("Please provide the C2 server's IP to establish WireGuard connection")
+		logging.Fatalf("emp3r0r C2 server needs to run remotely, please provide the C2 server's IP (--c2-host) to establish WireGuard connection")
 	}
 
 	// Connect to C2 wireguard server
