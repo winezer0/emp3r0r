@@ -17,7 +17,6 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/lib/crypto"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
-	"github.com/olekukonko/tablewriter"
 )
 
 // moduleCustom run a custom module
@@ -222,38 +221,15 @@ func ModuleDetails(modName string) {
 		return
 	}
 
-	// build table
-	tdata := [][]string{}
-	tableString := &strings.Builder{}
-	table := tablewriter.NewWriter(tableString)
-	table.SetHeader([]string{"Name", "Exec", "Platform", "Author", "Date", "Comment"})
-	table.SetBorder(true)
-	table.SetRowLine(true)
-	table.SetAutoWrapText(true)
-	table.SetColWidth(20)
+	// build table using helper function
+	header := []string{"Name", "Exec", "Platform", "Author", "Date", "Comment"}
+	rows := [][]string{
+		{config.Name, config.AgentConfig.Exec, config.Platform, config.Author, config.Date, config.Comment},
+	}
 
-	// color
-	table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-		tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor})
-
-	table.SetColumnColor(tablewriter.Colors{tablewriter.FgHiBlueColor},
-		tablewriter.Colors{tablewriter.FgBlueColor},
-		tablewriter.Colors{tablewriter.FgBlueColor},
-		tablewriter.Colors{tablewriter.FgBlueColor},
-		tablewriter.Colors{tablewriter.FgBlueColor},
-		tablewriter.Colors{tablewriter.FgBlueColor})
-
-	// fill table
-	tdata = append(tdata, []string{config.Name, config.AgentConfig.Exec, config.Platform, config.Author, config.Date, config.Comment})
-	table.AppendBulk(tdata)
-	table.Render()
-	out := tableString.String()
-	cli.AdaptiveTable(out)
-	logging.Printf("Module details:\n%s", out)
+	tableStr := cli.BuildTable(header, rows)
+	cli.AdaptiveTable(tableStr)
+	logging.Printf("Module details:\n%s", tableStr)
 }
 
 // scan custom modules in ModuleDir,

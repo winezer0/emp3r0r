@@ -3,52 +3,54 @@ package cli
 import (
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 )
 
-// BuildTable creates and renders a table with the given header and rows.
+// BuildTable creates and renders a table with the given header and rows using the new tablewriter API.
 func BuildTable(header []string, rows [][]string) string {
 	builder := &strings.Builder{}
-	table := tablewriter.NewWriter(builder)
-	table.SetHeader(header)
 
-	// Dynamic header colors based on arbitrary header length.
-	defaultHeaderColors := []tablewriter.Colors{
-		{tablewriter.Bold, tablewriter.FgHiMagentaColor},
-		{tablewriter.Bold, tablewriter.FgBlueColor},
-		{tablewriter.Bold, tablewriter.FgHiWhiteColor},
-		{tablewriter.Bold, tablewriter.FgHiCyanColor},
-		{tablewriter.Bold, tablewriter.FgHiYellowColor},
+	// Configure colorized renderer with custom colors
+	colorCfg := renderer.ColorizedConfig{
+		Header: renderer.Tint{
+			FG: renderer.Colors{color.FgHiMagenta, color.Bold},
+		},
+		Column: renderer.Tint{
+			FG: renderer.Colors{color.FgHiBlue}, // Default column color
+			Columns: []renderer.Tint{
+				{FG: renderer.Colors{color.FgHiMagenta}},
+				{FG: renderer.Colors{color.FgBlue}},
+				{FG: renderer.Colors{color.FgHiWhite}},
+				{FG: renderer.Colors{color.FgHiCyan}},
+				{FG: renderer.Colors{color.FgYellow}},
+			},
+		},
+		Border:    renderer.Tint{FG: renderer.Colors{color.FgWhite}},
+		Separator: renderer.Tint{FG: renderer.Colors{color.FgWhite}},
 	}
-	headerColors := make([]tablewriter.Colors, len(header))
-	for i := range header {
-		headerColors[i] = defaultHeaderColors[i%len(defaultHeaderColors)]
-	}
-	table.SetHeaderColor(headerColors...)
 
-	// Dynamic column colors based on arbitrary header length.
-	defaultColumnColors := []tablewriter.Colors{
-		{tablewriter.FgHiMagentaColor},
-		{tablewriter.FgBlueColor},
-		{tablewriter.FgHiWhiteColor},
-		{tablewriter.FgHiCyanColor},
-		{tablewriter.FgYellowColor},
-	}
-	columnColors := make([]tablewriter.Colors, len(header))
-	for i := range header {
-		columnColors[i] = defaultColumnColors[i%len(defaultColumnColors)]
-	}
-	table.SetColumnColor(columnColors...)
+	table := tablewriter.NewTable(builder,
+		tablewriter.WithRenderer(renderer.NewColorized(colorCfg)),
+		tablewriter.WithConfig(tablewriter.Config{
+			Row: tw.CellConfig{
+				Formatting:   tw.CellFormatting{AutoWrap: tw.WrapNormal},
+				Alignment:    tw.CellAlignment{Global: tw.AlignLeft},
+				ColMaxWidths: tw.CellWidth{Global: 20},
+			},
+			Header: tw.CellConfig{
+				Formatting: tw.CellFormatting{AutoFormat: tw.On},
+				Alignment:  tw.CellAlignment{Global: tw.AlignCenter},
+			},
+		}),
+	)
 
-	table.SetBorder(true)
-	table.SetRowLine(true)
-	table.SetAutoWrapText(true)
-	table.SetAutoFormatHeaders(true)
-	table.SetReflowDuringAutoWrap(true)
-	table.SetColWidth(20)
-	table.AppendBulk(rows)
+	table.Header(header)
+	table.Bulk(rows)
 	table.Render()
 	return builder.String()
 }
