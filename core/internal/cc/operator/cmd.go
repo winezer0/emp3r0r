@@ -460,7 +460,7 @@ func gen_agent_cmd() *cobra.Command {
 		Example: "generate --type linux_executable --arch amd64",
 		Run:     CmdGenerateAgent,
 	}
-	genAgentCmd.Flags().StringP("type", "t", PayloadTypeLinuxExecutable, fmt.Sprintf("Payload type, available: %v+", PayloadTypeList))
+	genAgentCmd.Flags().StringP("type", "t", PayloadTypeLinuxExecutable, fmt.Sprintf("Payload type, available: %v+ (linux_so and windows_dll support CGO)", PayloadTypeList))
 	genAgentCmd.Flags().StringP("arch", "a", "amd64", fmt.Sprintf("Target architecture, available: %v+", Arch_List_All))
 	cc_hosts := transport.NamesInCert(transport.ServerCrtFile)
 	genAgentCmd.Flags().StringP("cc", "", cc_hosts[0], "C2 server address")

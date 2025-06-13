@@ -136,6 +136,14 @@ func CmdGenerateAgent(cmd *cobra.Command, args []string) {
 		// tell user to use shared library stager
 		logging.Printf("Use stager module to create a shared library stager that delivers the agent with encryption and compression. You will need another stager to load the shared library (or use LD_PRELOAD)")
 	}
+	if payload_type == PayloadTypeLinuxSO {
+		// inform user about CGO support
+		logging.Printf("Note: linux_so supports CGO and can be loaded as a shared library using LD_PRELOAD or dlopen()")
+	}
+	if payload_type == PayloadTypeWindowsDLL {
+		// inform user about CGO support
+		logging.Printf("Note: windows_dll supports CGO and can be loaded as a DLL using LoadLibrary() or similar methods")
+	}
 }
 
 func isArchValid(payload_type, arch_choice string) bool {
