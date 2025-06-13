@@ -11,9 +11,15 @@ var RShellStatus = make(map[string]error)
 
 // moduleCmd exec cmd on target
 func moduleCmd() {
+	// check if ActiveModule and Options are valid
+	if live.ActiveModule == nil || live.ActiveModule.Options == nil {
+		logging.Errorf("moduleCmd: ActiveModule or Options is nil")
+		return
+	}
+
 	// send command
 	execOnTarget := func(target *def.Emp3r0rAgent) {
-		if live.AgentControlMap[target].Conn == nil {
+		if live.AgentControlMap[target] == nil || live.AgentControlMap[target].Conn == nil {
 			logging.Errorf("moduleCmd: agent %s is not connected", target.Tag)
 			return
 		}
@@ -31,7 +37,12 @@ func moduleCmd() {
 	// find target
 	target := live.ActiveAgent
 	if target == nil {
-		logging.Warningf("emp3r0r will execute `%s` on all targets this time", live.ActiveModule.Options["cmd_to_exec"].Val)
+		cmdOpt, ok := live.ActiveModule.Options["cmd_to_exec"]
+		if !ok {
+			logging.Errorf("Option 'cmd_to_exec' not found")
+			return
+		}
+		logging.Warningf("emp3r0r will execute `%s` on all targets this time", cmdOpt.Val)
 		for _, per_target := range live.AgentList {
 			execOnTarget(per_target)
 		}
