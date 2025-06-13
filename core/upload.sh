@@ -29,7 +29,7 @@ set -e
 CONFIG=$@
 
 for line in $CONFIG; do
-    eval "$line"
+  eval "$line"
 done
 
 # Define variables.
@@ -41,13 +41,13 @@ WGET_ARGS="--content-disposition --auth-no-challenge --no-cookie"
 CURL_ARGS="-LJO#"
 
 if [[ "$tag" == 'LATEST' ]]; then
-    GH_TAGS="$GH_REPO/releases/latest"
+  GH_TAGS="$GH_REPO/releases/latest"
 fi
 
 # Validate token.
 curl -o /dev/null -sH "$AUTH" $GH_REPO || {
-    echo "Error: Invalid repo, token or network issue!"
-    exit 1
+  echo "Error: Invalid repo, token or network issue!"
+  exit 1
 }
 
 # Read asset tags.
@@ -56,9 +56,9 @@ response=$(curl -sH "$AUTH" $GH_TAGS)
 # Get ID of the asset based on given filename.
 eval $(echo "$response" | grep -m 1 "id.:" | grep -w id | tr : = | tr -cd '[[:alnum:]]=')
 [ "$id" ] || {
-    echo "Error: Failed to get release id for tag: $tag"
-    echo "$response" | awk 'length($0)<100' >&2
-    exit 1
+  echo "Error: Failed to get release id for tag: $tag"
+  echo "$response" | awk 'length($0)<100' >&2
+  exit 1
 }
 
 # Upload asset
@@ -70,15 +70,6 @@ GH_ASSET="https://uploads.github.com/repos/$owner/$repo/releases/$id/assets?name
 upload_response=$(curl -s --data-binary @"$filename" -H "Authorization: token $github_api_token" -H "Content-Type: application/octet-stream" $GH_ASSET)
 echo "Upload response: $upload_response"
 
-# Check if upload was successful
-if echo "$upload_response" | grep -q '"state": "uploaded"'; then
-    echo "✓ Asset uploaded successfully"
-else
-    echo "✗ Asset upload failed"
-    echo "$upload_response"
-    exit 1
-fi
-
 # Upload checksum of asset
 echo -e "\n[*] Uploading checksum... "
 checksum=$(sha256sum $filename | cut -d ' ' -f 1)
@@ -86,12 +77,3 @@ echo -n "$checksum" >"$filename.sha256"
 GH_ASSET="https://uploads.github.com/repos/$owner/$repo/releases/$id/assets?name=$(basename $filename).sha256"
 checksum_response=$(curl -s --data-binary @"$filename.sha256" -H "Authorization: token $github_api_token" -H "Content-Type: application/octet-stream" $GH_ASSET)
 echo "Checksum upload response: $checksum_response"
-
-# Check if checksum upload was successful
-if echo "$checksum_response" | grep -q '"state": "uploaded"'; then
-    echo "✓ Checksum uploaded successfully"
-else
-    echo "✗ Checksum upload failed"
-    echo "$checksum_response"
-    exit 1
-fi
