@@ -107,12 +107,14 @@ func CoreCommands() *cobra.Command {
 	rootCmd.AddCommand(psCmd)
 
 	killCmd := &cobra.Command{
-		Use:     "kill",
-		Short:   "Kill process",
+		Use:     "kill <pid> [pid...] | kill --pid <pid>",
+		Short:   "Kill process(es) by PID",
+		Long:    "Kill one or more processes by their process IDs. Supports both positional arguments and --pid flag.",
+		Example: "kill 1234 5678\nkill --pid 1234",
 		Run:     killCmdRun,
 		GroupID: "process",
 	}
-	killCmd.Flags().IntP("pid", "p", 0, "Process ID to kill")
+	killCmd.Flags().IntP("pid", "p", 0, "Process ID to kill (alternative to positional args)")
 	rootCmd.AddCommand(killCmd)
 
 	execCmd := &cobra.Command{

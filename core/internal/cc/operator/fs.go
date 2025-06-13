@@ -95,8 +95,21 @@ func CmdSuicide(_ *cobra.Command, _ []string) {
 }
 
 func CmdKill(cmd *cobra.Command, args []string) {
-	pid := args[0:]
-	executeCmd(fmt.Sprintf("kill --pid %v+", strings.Join(pid, " ")))
+	if len(args) == 0 {
+		logging.Errorf("kill: no PID specified")
+		return
+	}
+
+	// Validate that all arguments are valid PIDs
+	for _, pidStr := range args {
+		if pid, err := strconv.Atoi(pidStr); err != nil || pid <= 0 {
+			logging.Errorf("kill: invalid PID '%s': must be a positive integer", pidStr)
+			return
+		}
+	}
+
+	// Send kill command with space-separated PIDs as positional arguments
+	executeCmd(fmt.Sprintf("kill %s", strings.Join(args, " ")))
 }
 
 func CmdFSCmdDst(cmd, dst string) {
