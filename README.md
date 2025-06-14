@@ -1,5 +1,7 @@
 # emp3r0r
 
+![emp3r0r Banner](./assets/logos/banner.svg)
+
 An advanced post-exploitation framework designed for Linux/Windows environments
 
 <https://github.com/user-attachments/assets/e735b325-d9ad-43bd-b34d-79f395cc4b8f>
