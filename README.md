@@ -59,7 +59,8 @@ The server will display:
 2. **WireGuard Operator Configurations** - showing each operator's IP, private key, and public key
 3. **Client Connection Commands** - ready-to-use commands for each operator
 
-<img width="1280" alt="emp3r0r-server" src="https://github.com/user-attachments/assets/10efc305-36eb-443a-9e74-af6288358d76" />
+![image](https://github.com/user-attachments/assets/fe811121-9dc5-42ab-a45a-cf8c02c93152)
+
 
 ### Operator Connection
 
@@ -78,7 +79,8 @@ emp3r0r client --c2-port 12345 --server-wg-key 'generated_key' --server-wg-ip 'w
 - The system will prompt for the operator's private key (displayed in the server configuration table)
 - WireGuard connectivity is automatically configured using the embedded parameters
 
-<img width="1280" alt="emp3r0r-operator" src="https://github.com/user-attachments/assets/67868b28-2250-45ab-9ffa-97328eec3780" />
+![image](https://github.com/user-attachments/assets/84c5578d-a705-45d4-88e8-899a97c0d6cb)
+
 
 ### Agent Payload Generation
 
