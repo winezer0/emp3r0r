@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -121,6 +122,9 @@ func wg(wg_port int, numOperators int) {
 	// Print the tables with titles
 	logging.Successf("\n══════════════════ WireGuard Server Configuration ════════════════════════════\n\n%s\n", serverTableStr)
 	logging.Successf("\n══════════════════ WireGuard Operator Configurations ════════════════════════════\n\n%s\n", operatorsTableStr)
+
+	// Generate and display client connection commands
+	generateConnectionCommands(wg_port, server_pubkey, operators)
 }
 
 func tarConfig(hosts string) {
@@ -147,4 +151,48 @@ func tarConfig(hosts string) {
 	if err != nil {
 		logging.Errorf("Failed to start file server to serve config tarball: %v", err)
 	}
+}
+
+// generateConnectionCommands generates and displays client connection commands
+func generateConnectionCommands(wg_port int, server_pubkey string, operators []OperatorConfig) {
+	headers := []string{"Operator ID", "Connection Command"}
+	rows := make([][]string, len(operators))
+
+	for i, op := range operators {
+		// Generate command for each operator
+		cmd := generateClientCommand(wg_port, server_pubkey, op)
+		rows[i] = []string{
+			strconv.Itoa(i + 1),
+			cmd,
+		}
+	}
+
+	// Build the commands table
+	commandsTableStr := cli.BuildTable(headers, rows)
+
+	// Print the commands table
+	logging.Successf("\n══════════════════ Client Connection Commands ════════════════════════════\n\n%s\n", commandsTableStr)
+	logging.Successf("📝 Usage Instructions:")
+	logging.Successf("   • Replace '<C2_PUBLIC_IP>' with the actual public IP address of this C2 server")
+	logging.Successf("   • For LOCAL connections, use: 127.0.0.1")
+	logging.Successf("   • Each operator needs their corresponding private key from the table above")
+
+	// Generate example commands for local and remote usage
+	if len(operators) > 0 {
+		op := operators[0]
+		localCmd := fmt.Sprintf("./emp3r0r client --c2-host 127.0.0.1 --c2-port %d --server-wg-key %s --server-wg-ip %s --operator-wg-ip %s",
+			wg_port, server_pubkey, netutil.WgServerIP, op.IP)
+		remoteCmd := fmt.Sprintf("./emp3r0r client --c2-host <YOUR_PUBLIC_IP> --c2-port %d --server-wg-key %s --server-wg-ip %s --operator-wg-ip %s",
+			wg_port, server_pubkey, netutil.WgServerIP, op.IP)
+
+		logging.Successf("\n💡 Example Commands (for Operator 1):")
+		logging.Successf("   Local:  %s", localCmd)
+		logging.Successf("   Remote: %s", remoteCmd)
+	}
+}
+
+// generateClientCommand generates a client connection command for a specific operator
+func generateClientCommand(wg_port int, server_pubkey string, op OperatorConfig) string {
+	return fmt.Sprintf("./emp3r0r client --c2-port %d --server-wg-key %s --server-wg-ip %s --operator-wg-ip %s --c2-host <C2_PUBLIC_IP>",
+		wg_port, server_pubkey, netutil.WgServerIP, op.IP)
 }

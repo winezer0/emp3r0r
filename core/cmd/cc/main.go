@@ -92,12 +92,7 @@ func main() {
 	clientCmd.Flags().StringVar(&opts.wg_operator_ip, "operator-wg-ip", "", "Operator's wireguard IP")
 	clientCmd.Flags().BoolVar(&opts.debug, "debug", false, "Do not kill tmux session when crashing, so you can see the crash log")
 
-	// Mark required flags for client mode
-	clientCmd.MarkFlagRequired("c2-host")
-	clientCmd.MarkFlagRequired("c2-port")
-	clientCmd.MarkFlagRequired("server-wg-key")
-	clientCmd.MarkFlagRequired("server-wg-ip")
-	clientCmd.MarkFlagRequired("operator-wg-ip")
+	// Note: Removed MarkFlagRequired for WireGuard flags to allow local connections
 
 	// Server subcommand
 	serverCmd := &cobra.Command{
@@ -181,13 +176,18 @@ func runClientMode(opts *Options) {
 		startCDN2Proxy(opts)
 	}
 
-	// Must provide C2 server IP
-	if opts.c2_server_ip == operatorDefaultIP {
-		logging.Fatalf("emp3r0r C2 server needs to run remotely, please provide the C2 server's IP (--c2-host) to establish WireGuard connection")
+	// Allow local connections with 127.0.0.1 when all WireGuard parameters are provided
+	// For remote connections, all WireGuard parameters are required
+	if opts.c2_server_ip != "127.0.0.1" && (opts.wg_server_key == "" || opts.wg_server_ip == "" || opts.wg_operator_ip == "") {
+		logging.Fatalf("For remote C2 server connections, please provide --server-wg-key, --server-wg-ip, and --operator-wg-ip")
 	}
 
 	// Connect to C2 wireguard server
-	connectWg(opts)
+	if opts.wg_server_key != "" && opts.wg_server_ip != "" && opts.wg_operator_ip != "" {
+		connectWg(opts)
+	} else if opts.c2_server_ip == "127.0.0.1" {
+		logging.Infof("Local connection mode - skipping WireGuard setup")
+	}
 
 	// download and extract config files
 	url := fmt.Sprintf("http://%s:%d/%s", netutil.WgServerIP, netutil.WgFileServerPort, "emp3r0r_operator_config.tar.xz")
@@ -242,8 +242,16 @@ func connectWg(opts *Options) {
 	netutil.WgOperatorIP = opts.wg_operator_ip
 	operator.SERVER_IP = opts.c2_server_ip
 	operator.SERVER_KEY = opts.wg_server_key
+
 	// Connect to C2 wireguard server with given wireguard keypair
-	wg_key := live.Prompt("Enter operator's WireGuard private key provided by the server")
+	var wg_key string
+	if opts.c2_server_ip == "127.0.0.1" {
+		logging.Infof("Connecting to local C2 server...")
+		wg_key = live.Prompt("Enter operator's WireGuard private key provided by the server")
+	} else {
+		wg_key = live.Prompt("Enter operator's WireGuard private key provided by the server")
+	}
+
 	_, err := netutil.PublicKeyFromPrivate(wg_key)
 	if err != nil {
 		log.Fatalf("Invalid key: %v", err)
