@@ -13,10 +13,6 @@ import (
 func BuildTable(header []string, rows [][]string) string {
 	var result strings.Builder
 
-	// Print header
-	result.WriteString(color.HiMagentaString("=== %s ===\n", strings.Join(header, " | ")))
-	result.WriteString("\n")
-
 	// Print rows as simple formatted list
 	for i, row := range rows {
 		result.WriteString(color.HiBlueString("[%d] ", i+1))
@@ -46,8 +42,6 @@ func AdaptiveTable(tableString string) {
 
 // CliPrettyPrint prints two-column help info using simple formatting
 func CliPrettyPrint(header1, header2 string, map2write *map[string]string) {
-	logging.Printf("\n%s\n", color.HiMagentaString("=== %s | %s ===", header1, header2))
-
 	for c1, c2 := range *map2write {
 		// Split long lines to fit better
 		c1_split := util.SplitLongLine(c1, 40)
