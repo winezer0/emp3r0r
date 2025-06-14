@@ -559,3 +559,41 @@ func TmuxUpdatePanes() {
 	TmuxUpdatePane(CommandPane)
 	TmuxUpdatePane(OutputPane)
 }
+
+// ResetPaneLayout resets all panes to their default layout proportions
+func ResetPaneLayout() error {
+	TmuxUpdatePanes()
+
+	// get terminal size
+	TermWidth, TermHeight := TmuxWindowSize()
+	if TermHeight < 0 || TermWidth < 0 {
+		logging.Warningf("Unable to get terminal size for layout reset")
+		return fmt.Errorf("unable to get terminal size")
+	}
+
+	// Calculate default sizes (CommandPane should be ~50% width)
+	target_command_width := TermWidth / 2
+
+	// Resize CommandPane to target width if it differs significantly
+	if abs(CommandPane.Width-target_command_width) > 5 {
+		width_diff := target_command_width - CommandPane.Width
+		if width_diff > 0 {
+			CommandPane.ResizePane("R", width_diff)
+		} else {
+			CommandPane.ResizePane("L", -width_diff)
+		}
+		logging.Debugf("Reset CommandPane width to %d (was %d)", target_command_width, CommandPane.Width)
+	}
+
+	// Update panes after resizing
+	TmuxUpdatePanes()
+	return nil
+}
+
+// abs returns absolute value of an integer
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
