@@ -12,7 +12,7 @@ An advanced post-exploitation framework designed for Linux/Windows environments
 
 Join our Discord server for discussions, support, and updates:
 
-[![Discord](https://img.shields.io/discord/nnZwAjd9?color=7289da&label=Discord&logo=discord&logoColor=white)](https://discord.gg/nnZwAjd9)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Server-7289da?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/nnZwAjd9)
 
 ---
 
