@@ -16,6 +16,30 @@ An advanced post-exploitation framework designed for Linux/Windows environments
 curl -sSL https://raw.githubusercontent.com/jm33-m0/emp3r0r/refs/heads/v3/install.sh | bash
 ```
 
+### Quick Start Workflow
+
+1. **Start the Server:**
+
+   ```shell
+   emp3r0r server --c2-hosts 'your.domain.com' --port 12345 --operators 2
+   ```
+
+2. **Copy Operator Command:**
+
+   - The server displays pre-configured connection commands for each operator
+   - Copy the command for your desired operator ID
+   - Replace `<C2_PUBLIC_IP>` with your server's public IP or domain
+
+3. **Connect as Operator:**
+
+   ```shell
+   # Example: paste the copied command with your IP/domain
+   emp3r0r client --c2-port 12345 --server-wg-key 'key...' --server-wg-ip 'ip...' --operator-wg-ip 'ip...' --c2-host your.domain.com
+   ```
+
+4. **Generate Agent Payloads:**
+   - Use the `generate` command from within the emp3r0r shell interface
+
 ### Server Configuration
 
 ```shell
@@ -29,23 +53,30 @@ This command initiates emp3r0r with:
 - Operator mTLS server on `wg_ip:12346` (operators share the same certificate, but have different WireGuard profiles)
 - 3 pre-registered operator slots
 
-The server will display all necessary configuration details for operator setup.
+The server will display:
+
+1. **WireGuard Server Configuration** - showing server IP, port, and public key
+2. **WireGuard Operator Configurations** - showing each operator's IP, private key, and public key
+3. **Client Connection Commands** - ready-to-use commands for each operator
 
 <img width="1280" alt="emp3r0r-server" src="https://github.com/user-attachments/assets/10efc305-36eb-443a-9e74-af6288358d76" />
 
-
 ### Operator Connection
 
+After starting the server, it will display a table of pre-configured client connection commands for each operator. Simply copy the appropriate command and replace `<C2_PUBLIC_IP>` with your server's public IP address or domain:
+
 ```shell
-emp3r0r client --c2-host '192.168.200.3' --c2-port 12345 --server-wg-ip 'C2 Server IP (WG)' --server-wg-key 'C2 Public Key' --operator-wg-ip 'IP ADDRESS'
+# Example command (replace <C2_PUBLIC_IP> with your server's IP/domain)
+emp3r0r client --c2-port 12345 --server-wg-key 'generated_key' --server-wg-ip 'wg_server_ip' --operator-wg-ip 'operator_ip' --c2-host <C2_PUBLIC_IP>
 ```
 
-This command:
+**Connection Process:**
 
-- Establishes a connection between the emp3r0r operator and the remote server at `192.168.200.3:12345`
-- Configures WireGuard connectivity between operator and server using the parameters provided in server output
-- Supports multiple operators (each requiring unique WireGuard profiles)
-- Note: If connection stalls after entering the operator's private key, verify that keys/IPs match correctly
+- Each operator receives a unique, pre-configured connection command
+- For local testing, use `127.0.0.1` as the C2 host
+- For remote connections, replace `<C2_PUBLIC_IP>` with your server's public IP or domain
+- The system will prompt for the operator's private key (displayed in the server configuration table)
+- WireGuard connectivity is automatically configured using the embedded parameters
 
 <img width="1280" alt="emp3r0r-operator" src="https://github.com/user-attachments/assets/67868b28-2250-45ab-9ffa-97328eec3780" />
 
@@ -58,6 +89,10 @@ Use the `generate` command from within the emp3r0r shell interface.
 - Breaking changes are typically documented in release logs. Cross-version compatibility is not guaranteed due to ongoing feature development and bug fixes.
 - If you encounter issues, try removing `~/.emp3r0r` directory and starting fresh.
 - The wiki may not reflect all features in `v3`. Refer to command-line help for the most current information. Community contributions to the wiki are welcome.
+- **Connection Issues**: If the operator connection stalls after entering the private key, verify that:
+  - The C2 host IP/domain is correct and reachable
+  - The WireGuard keys and IPs match exactly as displayed by the server
+  - Firewall rules allow traffic on the specified WireGuard port
 
 ## Project Background
 
@@ -72,17 +107,20 @@ For extensibility, emp3r0r offers complete [python3 support](https://github.com/
 ## Features
 
 - **Advanced Command-Line Interface**
+
   - Built on [console](https://github.com/reeflective/console) and [cobra](https://github.com/spf13/cobra) frameworks
   - Comprehensive auto-completion with syntax highlighting
   - Multi-tasking capabilities through [tmux](https://github.com/tmux/tmux) integration
   - Secure operator-server architecture using WireGuard and mTLS
 
 - **Operational Security**
+
   - Dynamic `argv` manipulation for process listing obfuscation
   - File and PID concealment through Glibc hijacking (via `patcher` in `get_persistence`)
   - [**Bring Your Own Shell**](https://github.com/jm33-m0/emp3r0r/blob/master/core/modules/elvish/config.json) functionality supporting [`elvish`](https://elv.sh) and other interactive programs through custom modules
 
 - **Secure Communications**
+
   - **HTTP2/TLS-based** command and control
   - [**UTLS**](https://github.com/refraction-networking/utls) implementation to defeat [**JA3**](https://github.com/salesforce/ja3) fingerprinting
   - [**KCP-based**](https://github.com/xtaci/kcp-go) fast, multiplexed, anonymous UDP tunneling to obfuscate C2 traffic
@@ -90,25 +128,30 @@ For extensibility, emp3r0r offers complete [python3 support](https://github.com/
   - Operators connect to C2 using **WireGuard** and **mTLS**
 
 - **Memory Forensics Capabilities**
+
   - Cross-platform memory dumping
   - Windows mini-dump extraction compatible with [pypykatz](https://github.com/skelsec/pypykatz)
 
 - **Flexible Payload Delivery**
+
   - Multi-stage delivery for both Linux and Windows targets
   - [HTTP Listener with AES encryption and compression](https://github.com/jm33-m0/emp3r0r/wiki/Listener)
   - Platform-specific payloads: [**DLL agent**](https://github.com/jm33-m0/emp3r0r/wiki/DLL-Agent), [**Shellcode agent**](https://github.com/jm33-m0/emp3r0r/wiki/Shellcode-Agent-for-Windows) (Windows), and [**Shared Library stager**](https://github.com/jm33-m0/emp3r0r/wiki/Shared-Library-Stager-for-Linux) (Linux)
 
 - **Network Traversal**
+
   - Automatic agent bridging via **Shadowsocks proxy chain** for internal network access
   - Reverse proxy capabilities through SSH and KCP tunneling
   - [**External target access**](https://github.com/jm33-m0/emp3r0r/wiki/Getting-started#bring-agents-to-c2) for endpoints unreachable by direct connection
 
 - **Operational Efficiency**
+
   - Parallel command execution for uninterrupted workflow
   - Modular architecture supporting [custom extensions](https://github.com/jm33-m0/emp3r0r/wiki/Write-modules-for-emp3r0r)
   - In-memory execution for `bash`, `powershell`, `python`, and ELF binaries via [**`CGO` ELF loader**](https://jm33.me/offensive-cgo-an-elf-loader.html)
 
 - **Enhanced Shell Experience**
+
   - SSH integration with PTY support
   - Windows compatibility with standard SSH clients
 
