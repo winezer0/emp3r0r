@@ -8,6 +8,12 @@ An advanced post-exploitation framework designed for Linux/Windows environments
 
 [View Screenshots and Videos](./Screenshots.md)
 
+## Community
+
+Join our Discord server for discussions, support, and updates:
+
+[![Discord](https://img.shields.io/discord/nnZwAjd9?color=7289da&label=Discord&logo=discord&logoColor=white)](https://discord.gg/nnZwAjd9)
+
 ---
 
 ## Getting Started
@@ -63,7 +69,6 @@ The server will display:
 
 ![image](https://github.com/user-attachments/assets/fe811121-9dc5-42ab-a45a-cf8c02c93152)
 
-
 ### Operator Connection
 
 After starting the server, it will display a table of pre-configured client connection commands for each operator. Simply copy the appropriate command and replace `<C2_PUBLIC_IP>` with your server's public IP address or domain:
@@ -82,7 +87,6 @@ emp3r0r client --c2-port 12345 --server-wg-key 'generated_key' --server-wg-ip 'w
 - WireGuard connectivity is automatically configured using the embedded parameters
 
 ![image](https://github.com/user-attachments/assets/84c5578d-a705-45d4-88e8-899a97c0d6cb)
-
 
 ### Agent Payload Generation
 
