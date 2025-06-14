@@ -8,6 +8,7 @@ require (
 	github.com/Code-Hex/Neo-cowsay/v2 v2.0.4
 	github.com/Microsoft/go-winio v0.6.2
 	github.com/alecthomas/chroma v0.10.0
+	github.com/carapace-sh/carapace v1.8.3
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/creack/pty v1.1.24
 	github.com/fatih/color v1.18.0
@@ -31,7 +32,6 @@ require (
 	github.com/posener/h2conn v0.0.0-20231204025407-3997deeca0f0
 	github.com/reeflective/console v0.1.24
 	github.com/refraction-networking/utls v1.7.3
-	github.com/rsteube/carapace v0.50.2
 	github.com/schollz/progressbar/v3 v3.18.0
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5
 	github.com/shirou/gopsutil/v3 v3.24.5
@@ -60,7 +60,6 @@ require (
 	github.com/bodgit/plumbing v1.3.0 // indirect
 	github.com/bodgit/sevenzip v1.6.1 // indirect
 	github.com/bodgit/windows v1.0.1 // indirect
-	github.com/carapace-sh/carapace v1.8.3 // indirect
 	github.com/carapace-sh/carapace-shlex v1.0.1 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/coreos/go-iptables v0.8.0 // indirect
@@ -104,7 +103,6 @@ require (
 	github.com/reeflective/readline v1.1.3 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/rsteube/carapace-shlex v0.1.2 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/sorairolake/lzip-go v0.3.7 // indirect
 	github.com/spf13/afero v1.14.0 // indirect

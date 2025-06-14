@@ -8,13 +8,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/carapace-sh/carapace"
 	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/network"
 	"github.com/jm33-m0/emp3r0r/core/internal/def"
 	"github.com/jm33-m0/emp3r0r/core/internal/live"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
-	"github.com/rsteube/carapace"
 )
 
 // autocomplete module options

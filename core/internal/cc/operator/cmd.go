@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/carapace-sh/carapace"
 	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/ftp"
@@ -18,7 +19,6 @@ import (
 	"github.com/jm33-m0/emp3r0r/core/lib/util"
 	"github.com/reeflective/console"
 	"github.com/reeflective/console/commands/readline"
-	"github.com/rsteube/carapace"
 	"github.com/spf13/cobra"
 )
 
