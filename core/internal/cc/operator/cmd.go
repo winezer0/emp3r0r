@@ -279,6 +279,15 @@ func Emp3r0rCommands(app *console.Console) console.Commands {
 		}
 		rootCmd.AddCommand(killCmd)
 
+		resetLayoutCmd := &cobra.Command{
+			Use:     "reset_layout",
+			GroupID: "util",
+			Short:   "Reset tmux pane layout to default proportions",
+			Args:    cobra.NoArgs,
+			Run:     CmdResetLayout,
+		}
+		rootCmd.AddCommand(resetLayoutCmd)
+
 		getCmd := &cobra.Command{
 			Use:     "get [--recursive] [--regex regex_str] --path /path/to/file",
 			GroupID: "filesystem",

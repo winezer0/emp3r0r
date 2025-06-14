@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jm33-m0/emp3r0r/core/internal/cc/base/agents"
+	"github.com/jm33-m0/emp3r0r/core/lib/cli"
 	"github.com/jm33-m0/emp3r0r/core/lib/logging"
 	"github.com/spf13/cobra"
 )
@@ -110,6 +111,15 @@ func CmdKill(cmd *cobra.Command, args []string) {
 
 	// Send kill command with space-separated PIDs as positional arguments
 	executeCmd(fmt.Sprintf("kill %s", strings.Join(args, " ")))
+}
+
+func CmdResetLayout(_ *cobra.Command, _ []string) {
+	err := cli.ResetPaneLayout()
+	if err != nil {
+		logging.Errorf("Failed to reset pane layout: %v", err)
+	} else {
+		logging.Printf("Pane layout reset to default proportions")
+	}
 }
 
 func CmdFSCmdDst(cmd, dst string) {
