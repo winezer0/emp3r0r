@@ -35,3 +35,31 @@ func moduleLogCleaner() {
 		return
 	}
 }
+
+func moduleElfPatch() {
+	elfPathOpt, ok := live.ActiveModule.Options["elf_path"]
+	if !ok {
+		logging.Errorf("Option 'elf_path' not found")
+		return
+	}
+	soPathOpt, ok := live.ActiveModule.Options["so_path"]
+	if !ok {
+		logging.Errorf("Option 'so_path' not found")
+		return
+	}
+	if soPathOpt.Val == "" {
+		logging.Errorf("so_path cannot be empty. Please specify the path to the shared library file")
+		return
+	}
+	if elfPathOpt.Val == "" {
+		logging.Errorf("elf_path cannot be empty. Please specify the path to the ELF binary to patch")
+		return
+	}
+
+	cmd := fmt.Sprintf("%s --elf_path %s --so_path %s", def.C2CmdElfPatch, elfPathOpt.Val, soPathOpt.Val)
+	err := CmdSender(cmd, "", live.ActiveAgent.Tag)
+	if err != nil {
+		logging.Errorf("SendCmd: %v", err)
+		return
+	}
+}
