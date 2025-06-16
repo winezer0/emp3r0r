@@ -39,3 +39,8 @@ func runLPELinux(cmd *cobra.Command, args []string) {
 func runSSHHarvesterLinux(cmd *cobra.Command, args []string) {
 	c2transport.C2RespPrintf(cmd, "%s", NotSupportedMsg)
 }
+
+// runElfPatchLinux - dummy runner for non-linux targets.
+func runElfPatchLinux(cmd *cobra.Command, args []string) {
+	c2transport.C2RespPrintf(cmd, "%s", NotSupportedMsg)
+}
