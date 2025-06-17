@@ -19,7 +19,7 @@ body:
       options:
         - label: I have read the documentation
           required: true
-        - label: I have searched existing issues and discussions
+        - label: I have searched existing issues
           required: true
         - label: This is not a bug report (use the bug template instead)
           required: true
