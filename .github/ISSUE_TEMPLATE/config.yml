@@ -1,8 +1,1 @@
 blank_issues_enabled: false
-contact_links:
-  - name: 📖 Documentation
-    url: https://github.com/jm33-m0/emp3r0r/blob/master/README.md
-    about: Check the documentation for usage guides and FAQ
-  - name: Security Issues
-    url: https://github.com/jm33-m0/emp3r0r/security/policy
-    about: Report security vulnerabilities privately (do not create public issues for security bugs)
