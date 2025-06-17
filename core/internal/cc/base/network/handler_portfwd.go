@@ -153,8 +153,12 @@ func CmdListPortFwds(cmd *cobra.Command, args []string) {
 			continue
 
 		}
+		bindAddr := portmap.BindAddr
+		if bindAddr == "" {
+			bindAddr = "127.0.0.1"
+		}
 		to := portmap.To + " (Agent) "
-		lport := portmap.Lport + " (CC) "
+		lport := bindAddr + ":" + portmap.Lport + " (CC) "
 		if portmap.Reverse {
 			to = portmap.To + " (CC) "
 			lport = portmap.Lport + " (Agent) "

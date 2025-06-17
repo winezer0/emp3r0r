@@ -22,6 +22,7 @@ import (
 type PortFwdSession struct {
 	Protocol    string       // TCP or UDP
 	Lport       string       // listen_port
+	BindAddr    string       // bind address (IP to bind to), defaults to 127.0.0.1
 	To          string       // to address
 	Description string       // fmt.Sprintf("%s (Local) -> %s (Agent)", listenPort, to_addr)
 	Reverse     bool         // from agent to cc or cc to agent
@@ -157,6 +158,12 @@ func (pf *PortFwdSession) RunPortFwd() (err error) {
 	cancel := pf.Cancel
 	toAddr := pf.To
 	listenPort := pf.Lport
+	bindAddr := pf.BindAddr
+
+	// Default to localhost if not specified
+	if bindAddr == "" || bindAddr == "localhost" {
+		bindAddr = "127.0.0.1"
+	}
 
 	pf.Agent = live.ActiveAgent
 
@@ -172,12 +179,12 @@ func (pf *PortFwdSession) RunPortFwd() (err error) {
 	)
 	switch pf.Protocol {
 	case "tcp":
-		tcp_listener, err = net.Listen("tcp", ":"+listenPort)
+		tcp_listener, err = net.Listen("tcp", bindAddr+":"+listenPort)
 		if err != nil {
 			return fmt.Errorf("RunPortFwd listen TCP: %v", err)
 		}
 	case "udp":
-		udp_listen_addr, err = net.ResolveUDPAddr("udp", ":"+listenPort)
+		udp_listen_addr, err = net.ResolveUDPAddr("udp", bindAddr+":"+listenPort)
 		if err != nil {
 			return fmt.Errorf("RunPortFwd resolve UDP address: %v", err)
 		}
@@ -194,8 +201,8 @@ func (pf *PortFwdSession) RunPortFwd() (err error) {
 	if err != nil {
 		return fmt.Errorf("SendCmd: %v", err)
 	}
-	logging.Debugf("RunPortFwd (%s: %s) %s: %s to %s\n%s",
-		pf.Description, fwdID, pf.Protocol, pf.Lport, pf.To, cmd)
+	logging.Debugf("RunPortFwd (%s: %s) %s: %s:%s to %s\n%s",
+		pf.Description, fwdID, pf.Protocol, bindAddr, pf.Lport, pf.To, cmd)
 
 	pf.Sh = nil
 	if pf.Description == "" {
@@ -216,15 +223,15 @@ func (pf *PortFwdSession) RunPortFwd() (err error) {
 		PortFwdsMutex.Lock()
 		defer PortFwdsMutex.Unlock()
 		delete(PortFwds, fwdID)
-		logging.Warningf("PortFwd session (%s) has finished:\n%s: %s -> %s\n%s",
-			pf.Description, pf.Protocol, pf.Lport, pf.To, fwdID)
+		logging.Warningf("PortFwd session (%s) has finished:\n%s: %s:%s -> %s\n%s",
+			pf.Description, pf.Protocol, bindAddr, pf.Lport, pf.To, fwdID)
 	}
 
 	go func() {
 		for ctx.Err() == nil {
 			time.Sleep(1 * time.Second)
 		}
-		_, _ = net.Dial(pf.Protocol, "127.0.0.1:"+listenPort)
+		_, _ = net.Dial(pf.Protocol, bindAddr+":"+listenPort)
 	}()
 
 	defer cleanup()

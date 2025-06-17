@@ -60,10 +60,19 @@ func modulePortFwd() {
 		var pf network.PortFwdSession
 		pf.Ctx, pf.Cancel = context.WithCancel(context.Background())
 		pf.Lport, pf.To = live.ActiveModule.Options["listen_port"].Val, live.ActiveModule.Options["to"].Val
+
+		// Get bind address option, default to localhost if not specified
+		bindAddrOpt, ok := live.ActiveModule.Options["bind_addr"]
+		if ok {
+			pf.BindAddr = bindAddrOpt.Val
+		} else {
+			pf.BindAddr = "127.0.0.1"
+		}
+
 		pf.SendCmdFunc = CmdSender
 		pf.Agent = activeAgent
 		go func() {
-			logging.Printf("RunReversedPortFwd: %s -> %s (%s), make a connection and it will appear in `ls_port_fwds`", pf.Lport, pf.To, pf.Protocol)
+			logging.Printf("RunReversedPortFwd: %s:%s -> %s (%s), make a connection and it will appear in `ls_port_fwds`", pf.BindAddr, pf.Lport, pf.To, pf.Protocol)
 			initErr := pf.InitReversedPortFwd()
 			if initErr != nil {
 				logging.Errorf("PortFwd (reverse) failed: %v", initErr)
@@ -73,11 +82,20 @@ func modulePortFwd() {
 		var pf network.PortFwdSession
 		pf.Ctx, pf.Cancel = context.WithCancel(context.Background())
 		pf.Lport, pf.To = live.ActiveModule.Options["listen_port"].Val, live.ActiveModule.Options["to"].Val
+
+		// Get bind address option, default to localhost if not specified
+		bindAddrOpt, ok := live.ActiveModule.Options["bind_addr"]
+		if ok {
+			pf.BindAddr = bindAddrOpt.Val
+		} else {
+			pf.BindAddr = "127.0.0.1"
+		}
+
 		pf.SendCmdFunc = CmdSender
 		pf.Protocol = live.ActiveModule.Options["protocol"].Val
 		pf.Agent = activeAgent
 		go func() {
-			logging.Printf("RunPortFwd: %s -> %s (%s), make a connection and it will appear in `ls_port_fwds`", pf.Lport, pf.To, pf.Protocol)
+			logging.Printf("RunPortFwd: %s:%s -> %s (%s), make a connection and it will appear in `ls_port_fwds`", pf.BindAddr, pf.Lport, pf.To, pf.Protocol)
 			runErr := pf.RunPortFwd()
 			if runErr != nil {
 				logging.Errorf("PortFwd failed: %v", runErr)
@@ -107,12 +125,23 @@ func moduleProxy() {
 	}
 	status := statusOpt.Val
 
+	// Get bind address option, default to localhost if not specified
+	bindAddr := "127.0.0.1"
+	bindAddrOpt, ok := live.ActiveModule.Options["bind_addr"]
+	if ok {
+		bindAddr = bindAddrOpt.Val
+		if bindAddr == "localhost" {
+			bindAddr = "127.0.0.1"
+		}
+	}
+
 	// port-fwd
 	pf := new(network.PortFwdSession)
 	pf.Ctx, pf.Cancel = context.WithCancel(context.Background())
 	pf.Lport, pf.To = port, "127.0.0.1:"+live.RuntimeConfig.AgentSocksServerPort
+	pf.BindAddr = bindAddr
 	pf.SendCmdFunc = CmdSender
-	pf.Description = fmt.Sprintf("Agent Proxy (TCP):\n%s (Local) -> %s (Agent)", pf.Lport, pf.To)
+	pf.Description = fmt.Sprintf("Agent Proxy (TCP):\n%s:%s (Local) -> %s (Agent)", bindAddr, pf.Lport, pf.To)
 	pf.Protocol = "tcp"
 	pf.Timeout = live.RuntimeConfig.AgentSocksTimeout
 	pf.Agent = activeAgent
@@ -121,7 +150,8 @@ func moduleProxy() {
 	pfu := new(network.PortFwdSession)
 	pfu.Ctx, pfu.Cancel = context.WithCancel(context.Background())
 	pfu.Lport, pfu.To = port, "127.0.0.1:"+live.RuntimeConfig.AgentSocksServerPort
-	pfu.Description = fmt.Sprintf("Agent Proxy (UDP):\n%s (Local) -> %s (Agent)", pfu.Lport, pfu.To)
+	pfu.BindAddr = bindAddr
+	pfu.Description = fmt.Sprintf("Agent Proxy (UDP):\n%s:%s (Local) -> %s (Agent)", bindAddr, pfu.Lport, pfu.To)
 	pfu.Protocol = "udp"
 	pfu.Timeout = live.RuntimeConfig.AgentSocksTimeout
 	pfu.SendCmdFunc = CmdSender

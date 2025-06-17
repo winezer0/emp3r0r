@@ -243,6 +243,12 @@ var Modules = map[string]*ModuleConfig{
 				Vals: []string{"1080", "8080", "10800", "10888"},
 				Val:  "8080",
 			},
+			"bind_addr": &ModOption{
+				Name: "bind_addr",
+				Desc: "IP address to bind to (localhost binds to 127.0.0.1 only)",
+				Vals: []string{"127.0.0.1", "0.0.0.0", "localhost"},
+				Val:  "127.0.0.1",
+			},
 			"status": &ModOption{
 				Name: "status",
 				Desc: "Turn proxy on/off",
@@ -277,6 +283,12 @@ var Modules = map[string]*ModuleConfig{
 				Name: "listen_port",
 				Desc: "Listen port on CC/agent side",
 				Vals: []string{"8080", "1080", "22", "23", "21"},
+			},
+			"bind_addr": &ModOption{
+				Name: "bind_addr",
+				Desc: "IP address to bind to on CC side (localhost binds to 127.0.0.1 only)",
+				Vals: []string{"127.0.0.1", "0.0.0.0", "localhost"},
+				Val:  "127.0.0.1",
 			},
 			"switch": &ModOption{
 				Name: "switch",
